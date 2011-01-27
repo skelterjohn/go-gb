@@ -20,7 +20,6 @@
 * 
 */
 
-
 //target:gb
 package main
 

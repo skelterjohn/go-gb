@@ -89,7 +89,9 @@ func GetSourcesDepsDir(dir string) (pkg, target string, srcs *SourceCollection, 
 			return
 		}
 		pkg = fpkg
-		target = ftarget
+		if ftarget != "" {
+			target = ftarget
+		}
 		deps = append(deps, fdeps...)
 		funcs = append(funcs, ffuncs...)
 	}
@@ -103,7 +105,9 @@ func GetSourcesDepsDir(dir string) (pkg, target string, srcs *SourceCollection, 
 			return
 		}
 		pkg = fpkg
-		target = ftarget
+		if ftarget != "" {
+			target = ftarget
+		}
 		tdeps = append(tdeps, fdeps...)
 		funcs = append(funcs, ffuncs...)
 	}
