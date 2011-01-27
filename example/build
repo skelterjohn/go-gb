@@ -1,0 +1,4 @@
+cd a && make $1 && cd -
+cd c && make $1 && cd -
+cd d && make $1 && cd -
+cd a/b && make $1 && cd -
