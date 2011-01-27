@@ -59,9 +59,9 @@ func GetObjSuffix() (suffix string) {
 	case "amd64":
 		return ".6"
 	case "386":
-		return ".5"
-	case "arm":
 		return ".8"
+	case "arm":
+		return ".5"
 	}
 	return
 }
@@ -312,11 +312,12 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	buffer := make([]byte, 1024)
 	var cpErr os.Error
 	for {
-		_, cpErr = srcFile.Read(buffer)
+		var n int
+		n, cpErr = srcFile.Read(buffer)
 		if cpErr != nil {
 			break
 		}
-		_, cpErr = dstFile.Write(buffer)
+		_, cpErr = dstFile.Write(buffer[0:n])
 		if cpErr != nil {
 			break
 		}

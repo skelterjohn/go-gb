@@ -42,7 +42,7 @@ func (this *SourceCollection) Augment(other *SourceCollection) {
 	this.TSrcs = append(this.TSrcs, other.TSrcs...)
 }
 
-func GetSourcesDepsDir(dir string) (pkg string, srcs *SourceCollection, deps, tdeps, funcs []string, err os.Error) {
+func GetSourcesDepsDir(dir string) (pkg, target string, srcs *SourceCollection, deps, tdeps, funcs []string, err os.Error) {
 	file, err := os.Open(dir, os.O_RDONLY, 0)
 	if err != nil {
 		return
@@ -82,26 +82,28 @@ func GetSourcesDepsDir(dir string) (pkg string, srcs *SourceCollection, deps, td
 	for _, name := range srcs.Srcs {
 		srcloc := path.Join(dir, name)
 
-		var fpkg string
+		var fpkg, ftarget string
 		var fdeps, ffuncs []string
-		fpkg, fdeps, ffuncs, err = GetDeps(srcloc)
+		fpkg, ftarget, fdeps, ffuncs, err = GetDeps(srcloc)
 		if err != nil {
 			return
 		}
 		pkg = fpkg
+		target = ftarget
 		deps = append(deps, fdeps...)
 		funcs = append(funcs, ffuncs...)
 	}
 	for _, name := range srcs.TSrcs {
 		srcloc := path.Join(dir, name)
 
-		var fpkg string
+		var fpkg, ftarget string
 		var fdeps, ffuncs []string
-		fpkg, fdeps, ffuncs, err = GetDeps(srcloc)
+		fpkg, ftarget, fdeps, ffuncs, err = GetDeps(srcloc)
 		if err != nil {
 			return
 		}
 		pkg = fpkg
+		target = ftarget
 		tdeps = append(tdeps, fdeps...)
 		funcs = append(funcs, ffuncs...)
 	}
@@ -157,21 +159,22 @@ func ScanSrc(pkgdir, dir string) (srcs *SourceCollection, err os.Error) {
 }
 
 
-func GetDeps(source string) (pkg string, deps, funcs []string, err os.Error) {
+func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
 	var file *ast.File
-	file, err = parser.ParseFile(token.NewFileSet(), source, nil, 0)
+	file, err = parser.ParseFile(token.NewFileSet(), source, nil, parser.ParseComments)
 	if err != nil {
 		println(err.String())
 		BrokenPackages++
 		return
 	}
 
-	w := &Walker{"", []string{}, []string{}}
+	w := &Walker{"", "", 0, []string{}, []string{}}
 
 	ast.Walk(w, file)
 
 	deps = w.Deps
 	pkg = w.Name
+	target = w.Target
 	funcs = w.Funcs
 
 	return
@@ -191,6 +194,8 @@ func RemoveDups(list []string) (newlist []string) {
 
 type Walker struct {
 	Name  string
+	Target string
+	pkgPos token.Pos
 	Deps  []string
 	Funcs []string
 }
@@ -199,9 +204,18 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 	switch n := node.(type) {
 	case *ast.File:
 		w.Name = n.Name.Name
+		w.pkgPos = n.Package
 		return w
 	case *ast.ImportSpec:
 		w.Deps = append(w.Deps, string(n.Path.Value))
+		return w
+	case *ast.Comment:
+		if n.Pos() < w.pkgPos {
+			text := string(n.Text)
+			if strings.HasPrefix(text, "//target:") {
+				w.Target = text[len("//target:"):len(text)]
+			}
+		}
 		return nil
 	case *ast.Package, *ast.BadDecl,
 		*ast.GenDecl, *ast.Ident:
@@ -213,5 +227,5 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 		}
 		return nil
 	}
-	return nil
+	return w
 }

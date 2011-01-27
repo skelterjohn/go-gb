@@ -20,6 +20,8 @@
 * 
 */
 
+
+//target:gb
 package main
 
 import (
@@ -86,7 +88,7 @@ func GetSubDirs(dir string) (subdirs []string) {
 	return
 }
 
-func ScanDirectory(base, dir string) {
+func ScanDirectory(base, dir string) (err2 os.Error) {
 	pkg, err := ReadPackage(base, dir)
 
 	if err == nil {
@@ -112,6 +114,11 @@ func ScanDirectory(base, dir string) {
 			base = strings.TrimSpace(base)
 		}
 	}
+	
+	if pkg.Target == "." {
+		return os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
+	}
+	
 	if Recurse {
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
@@ -120,6 +127,8 @@ func ScanDirectory(base, dir string) {
 			}
 		}
 	}
+	
+	return
 }
 
 func IsListed(name string) bool {
@@ -145,7 +154,11 @@ func RunGB() (err os.Error) {
 	args := os.Args[1:len(os.Args)]
 
 	Recurse = true
-	ScanDirectory(".", ".")
+	err = ScanDirectory(".", ".")
+	if err != nil {
+		return
+	}
+	
 	for _, arg := range args {
 		if arg[0] != '-' {
 			ListedDirs[path.Clean(arg)] = true

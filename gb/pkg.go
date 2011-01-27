@@ -73,7 +73,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
 	var srcCol *SourceCollection
-	this.Name, srcCol, this.Deps, this.TestDeps, this.Funcs, err = GetSourcesDepsDir(dir)
+	this.Name, this.Target, srcCol, this.Deps, this.TestDeps, this.Funcs, err = GetSourcesDepsDir(dir)
 	this.Sources = srcCol.Srcs
 	this.TestSources = srcCol.TSrcs
 	this.CGoSources = srcCol.CGoSrcs
@@ -117,13 +117,17 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 }
 
 func (this *Package) GetTarget() (err os.Error) {
-	this.Target = this.Base
+	if this.Target == "" {
+		this.Target = this.Base
 
-	if this.IsCmd {
-		this.Target = path.Base(this.Dir)
-		if this.Target == "." {
-			this.Target = "main"
+		if this.IsCmd {
+			this.Target = path.Base(this.Dir)
+			if this.Target == "." {
+				this.Target = "main"
+			}
 		}
+	} else {
+		this.Base = this.Target
 	}
 
 	tpath := path.Join(this.Dir, "/target.gb")
@@ -150,6 +154,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.installPath = path.Join(GetInstallDirCmd(), this.Target)
 		this.result = path.Join(GetBuildDirCmd(), this.Dir, this.Target)
 	} else {
+	
 		this.installPath = path.Join(GetInstallDirPkg(), this.Target+".a")
 		this.result = path.Join(GetBuildDirPkg(), this.Target+".a")
 	}
@@ -262,6 +267,13 @@ func (this *Package) Test() (err os.Error) {
 		err = pkg.Build()
 		if err != nil {
 			return
+		}
+	}
+	if GoInstall {
+		for _, dep := range this.TestDeps {
+			if _, ok := Packages[dep]; !ok {
+				GoInstallPkg(dep)
+			}
 		}
 	}
 
