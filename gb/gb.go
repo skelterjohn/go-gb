@@ -338,7 +338,7 @@ func Usage() {
 	println()
 	println(" In addition to providing target.gb, the programmer can also put a comment in one")
 	println("of the packages source files, before the package statement. The comment is of the")
-	println("form '\/\/target:<name>'. It has the same effect as providing target.gb. If a")
+	println("form '//target:<name>'. It has the same effect as providing target.gb. If a")
 	println("target.gb file exists, it will be used over the comment.") 
 	println()
 	println(" The makefiles generated with the -M option will still allow each package to be")
