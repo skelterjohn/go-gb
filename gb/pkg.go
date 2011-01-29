@@ -567,7 +567,7 @@ func (this *Package) AddToBuild(bfile *os.File) {
 	for _, pkg := range this.DepPkgs {
 		pkg.AddToBuild(bfile)
 	}
-	fmt.Fprintf(bfile, "cd %s && make $1 && cd -\n", this.Dir)
+	fmt.Fprintf(bfile, "&& cd %s && make $1 && cd - \\\n", this.Dir)
 }
 
 func (this *Package) GoFMT() (err os.Error) {
