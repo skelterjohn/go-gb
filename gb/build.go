@@ -73,6 +73,15 @@ func ReverseDir(dir string) (rev string) {
 	return
 }
 
+func ReverseDirForwardSlash(dir string) (rev string) {
+	rev = "."
+	for dir != "." && dir != "" {
+		dir, _ = path.Split(path.Clean(dir))
+		rev += "/.."
+	}
+	return
+}
+
 func BuildPackage(pkg *Package) (err os.Error) {
 	/*
 		relativeSources := make([]string, len(pkg.Sources))
