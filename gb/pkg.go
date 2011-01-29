@@ -499,12 +499,23 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "GC+= -I %s\n", relObj)
 	_, err = fmt.Fprintf(file, "LD+= -L %s\n", relObj)
 	_, err = fmt.Fprintf(file, "\n")
+	
+	
+	
 	if this.IsCmd {
+		for _, pkg := range this.DepPkgs {
+			_, err = fmt.Fprintf(file, "$(TARG): %s/%s.a\n", relObj, pkg.Target)
+		}
+		fmt.Fprintf(file, "\n")
 		_, err = fmt.Fprintf(file, "include $(GOROOT)/src/Make.cmd\n")
 	} else {
 		_, err = fmt.Fprintf(file, "%s/$(TARG).a: _obj/$(TARG).a\n", relObj)
 		_, err = fmt.Fprintf(file, "\tmkdir -p $(dir $@); cp -f $< $@\n")
 		_, err = fmt.Fprintf(file, "package: %s/$(TARG).a\n\n", relObj)
+		for _, pkg := range this.DepPkgs {
+			_, err = fmt.Fprintf(file, "_obj/$(TARG).a: %s/%s.a\n", relObj, pkg.Target)
+		}
+		fmt.Fprintf(file, "\n")
 		_, err = fmt.Fprintf(file, "include $(GOROOT)/src/Make.pkg\n")
 	}
 
