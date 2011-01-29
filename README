@@ -16,8 +16,8 @@ Options:
  M generate standard makefiles without building
  f force overwrite of existing makefiles
  F run gofmt on source files in targeted directories
- P install only packages
- C install only cmds
+ P build/clean/install only packages
+ C build/clean/install only cmds
 
  gb will identify any possible targets existing in subdirectories of the current
 working directory, and act on them as appropriate. If a directory list is sup-
