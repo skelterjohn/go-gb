@@ -31,7 +31,7 @@ var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD strin
 
 var Install, Clean, Scan, ScanList, Test, Exclusive,
 	GoInstall, Concurrent, Verbose, GenMake, Build,
-	Force, Makefiles, GoFMT bool
+	Force, Makefiles, GoFMT, InstallPkg, InstallCmd bool
 var IncludeDir string
 var Recurse bool
 //var CWD string
@@ -313,6 +313,8 @@ func Usage() {
 	println(" M generate standard makefiles without building")
 	println(" f force overwrite of existing makefiles")
 	println(" F run gofmt on source files in targeted directories")
+	println(" P install only packages")
+	println(" C install only cmds")
 	println()
 	//println("--------------------------------------------------------------------------------")
 	println(" gb will identify any possible targets existing in subdirectories of the current")
@@ -388,6 +390,10 @@ func main() {
 					Concurrent = true
 				case 'F':
 					GoFMT = true
+				case 'P':
+					InstallPkg = true
+				case 'C':
+					InstallCmd = true
 				default:
 					Usage()
 					return

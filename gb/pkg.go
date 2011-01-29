@@ -411,7 +411,11 @@ func (this *Package) Install() (err os.Error) {
 		pkg.Install()
 	}
 
-	if !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime {
+	doInstall := (!InstallCmd && !InstallPkg)
+	doInstall = doInstall || (this.IsCmd && InstallCmd)
+	doInstall = doInstall || (!this.IsCmd && InstallPkg)
+
+	if doInstall && !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime {
 		err = InstallPackage(this)
 
 		this.Stat()

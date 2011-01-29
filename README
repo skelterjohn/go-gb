@@ -10,12 +10,14 @@ Options:
  S scan and list targets and their dependencies without building
  t run tests
  e exclusive target list (do not build/clean/test/install a target unless its
-   directory is listed
+   directory is listed)
  v verbose
  m use makefiles, when possible
  M generate standard makefiles without building
  f force overwrite of existing makefiles
  F run gofmt on source files in targeted directories
+ P install only packages
+ C install only cmds
 
  gb will identify any possible targets existing in subdirectories of the current
 working directory, and act on them as appropriate. If a directory list is sup-
@@ -31,6 +33,11 @@ relative path to that directory. By providing a file 'target.gb' in the direct-
 ory, one can change the target. This affects all subdirectories, as well. If a
 directory 'a' has a target.gb file containing the line 'a.googlecode.com/hg/a',
 then the directory 'a/b' will have the target 'a.googlecode.com/hg/a/b'.
+
+ In addition to providing target.gb, the programmer can also put a comment in
+one of the package's source files, before the package statement. The comment is
+of the form '//target:<name>'. It has the same effect as providing target.gb. If
+a target.gb file exists, it will be used instead of the comment.
 
  The makefiles generated with the -M option will still allow each package to be
 linked against each other package (if they are built in the correct order), by
