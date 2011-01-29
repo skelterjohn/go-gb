@@ -36,6 +36,7 @@ type Package struct {
 	result      string
 	installPath string
 	MyErr       os.Error
+	Active bool
 
 	cleaned, addedToBuild, gofmted bool
 
@@ -107,6 +108,9 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this.IsCmd = this.Name == "main"
 	this.ib = path.Join(this.Dir, GetIBName())
 	err = this.GetTarget()
+	
+	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
+	
 	return
 }
 
@@ -148,7 +152,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.installPath = path.Join(GetInstallDirCmd(), this.Target)
 		this.result = path.Join(GetBuildDirCmd(), this.Dir, this.Target)
 	} else {
-	
+
 		this.installPath = path.Join(GetInstallDirPkg(), this.Target+".a")
 		this.result = path.Join(GetBuildDirPkg(), this.Target+".a")
 	}
@@ -233,6 +237,11 @@ func (this *Package) Build() (err os.Error) {
 			}
 		}
 	}
+	
+	if !this.Active {
+		return
+	}
+	
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
@@ -366,6 +375,10 @@ func (this *Package) Clean() (err os.Error) {
 		pkg.Clean()
 	}
 
+	if !this.Active {
+		return
+	}
+	
 	if Makefiles && this.HasMakefile {
 		MakeClean(this)
 		PackagesBuilt++
@@ -411,11 +424,11 @@ func (this *Package) Install() (err os.Error) {
 		pkg.Install()
 	}
 
-	doInstall := (!InstallCmd && !InstallPkg)
-	doInstall = doInstall || (this.IsCmd && InstallCmd)
-	doInstall = doInstall || (!this.IsCmd && InstallPkg)
+	if !this.Active {
+		return
+	}
 
-	if doInstall && !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime {
+	if !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime {
 		err = InstallPackage(this)
 
 		this.Stat()
@@ -440,6 +453,9 @@ include $(GOROOT)/src/Make.cmd
 
 */
 func (this *Package) GenerateMakefile() (err os.Error) {
+	if !this.Active {
+		return
+	}
 
 	if len(this.CGoSources) != 0 || len(this.CSrcs) != 0 {
 		fmt.Printf("(in %s) this is a cgo project; skipping makefile generation\n", this.Dir)
@@ -500,8 +516,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "GC+= -I %s\n", relObj)
 	_, err = fmt.Fprintf(file, "LD+= -L %s\n", relObj)
 	_, err = fmt.Fprintf(file, "\n")
-	
-	
+
 	if len(this.DepPkgs) != 0 {
 		_, err = fmt.Fprintf(file, "# added by gb: local dependencies\n")
 	}
@@ -541,6 +556,10 @@ func (this *Package) AddToBuild(bfile *os.File) {
 	if Exclusive && !ListedDirs[this.Dir] {
 		return
 	}
+	
+	if !this.Active {
+		return
+	}
 
 	for _, pkg := range this.DepPkgs {
 		pkg.AddToBuild(bfile)
@@ -550,6 +569,10 @@ func (this *Package) AddToBuild(bfile *os.File) {
 
 func (this *Package) GoFMT() (err os.Error) {
 	if this.gofmted || (Exclusive && !ListedDirs[this.Dir]) {
+		return
+	}
+	
+	if !this.Active {
 		return
 	}
 
@@ -566,7 +589,7 @@ func (this *Package) GoFMT() (err os.Error) {
 		}
 	}
 
-	fmt.Printf("(in %s)\n", this.Dir)
+	fmt.Printf("(in %s) running gofmt\n", this.Dir)
 	for _, src := range this.Sources {
 		err = RunGoFMT(this.Dir, src)
 		if err != nil {

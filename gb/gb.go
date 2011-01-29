@@ -31,7 +31,7 @@ var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD strin
 
 var Install, Clean, Scan, ScanList, Test, Exclusive,
 	GoInstall, Concurrent, Verbose, GenMake, Build,
-	Force, Makefiles, GoFMT, InstallPkg, InstallCmd bool
+	Force, Makefiles, GoFMT, DoPkgs, DoCmds bool
 var IncludeDir string
 var Recurse bool
 //var CWD string
@@ -107,11 +107,11 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			base = strings.TrimSpace(base)
 		}
 	}
-	
+
 	if pkg.Target == "." {
 		return os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
-	
+
 	if Recurse {
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
@@ -120,7 +120,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			}
 		}
 	}
-	
+
 	return
 }
 
@@ -142,6 +142,8 @@ func IsListed(name string) bool {
 func RunGB() (err os.Error) {
 	Build = Build || (!GenMake && !Clean) || (Makefiles && !Clean) || Install || Test
 
+	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
+
 	ListedDirs = make(map[string]bool)
 
 	args := os.Args[1:len(os.Args)]
@@ -151,7 +153,7 @@ func RunGB() (err os.Error) {
 	if err != nil {
 		return
 	}
-	
+
 	for _, arg := range args {
 		if arg[0] != '-' {
 			ListedDirs[path.Clean(arg)] = true
@@ -174,7 +176,7 @@ func RunGB() (err os.Error) {
 	}
 
 	if GoFMT {
-		println("Running gofmt")
+		//println("Running gofmt")
 		for _, pkg := range ListedPkgs {
 			err = pkg.GoFMT()
 			if err != nil {
@@ -270,7 +272,7 @@ func RunGB() (err os.Error) {
 		if PackagesBuilt > 1 {
 			fmt.Printf("Built %d targets\n", PackagesBuilt)
 		} else if PackagesBuilt == 1 {
-			println("Built 1 targets")
+			println("Built 1 target")
 		}
 		if PackagesInstalled > 1 {
 			fmt.Printf("Installed %d targets\n", PackagesInstalled)
@@ -313,8 +315,8 @@ func Usage() {
 	println(" M generate standard makefiles without building")
 	println(" f force overwrite of existing makefiles")
 	println(" F run gofmt on source files in targeted directories")
-	println(" P install only packages")
-	println(" C install only cmds")
+	println(" P build/clean/install only packages")
+	println(" C build/clean/install only cmds")
 	println()
 	//println("--------------------------------------------------------------------------------")
 	println(" gb will identify any possible targets existing in subdirectories of the current")
@@ -335,7 +337,7 @@ func Usage() {
 	println(" In addition to providing target.gb, the programmer can also put a comment in")
 	println("one of the package's source files, before the package statement. The comment is")
 	println("of the form '//target:<name>'. It has the same effect as providing target.gb. If")
-	println("a target.gb file exists, it will be used instead of the comment.") 
+	println("a target.gb file exists, it will be used instead of the comment.")
 	println()
 	println(" The makefiles generated with the -M option will still allow each package to be")
 	println("linked against each other package (if they are built in the correct order), by")
@@ -391,9 +393,9 @@ func main() {
 				case 'F':
 					GoFMT = true
 				case 'P':
-					InstallPkg = true
+					DoPkgs = true
 				case 'C':
-					InstallCmd = true
+					DoCmds = true
 				default:
 					Usage()
 					return

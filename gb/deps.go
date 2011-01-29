@@ -191,11 +191,11 @@ func RemoveDups(list []string) (newlist []string) {
 }
 
 type Walker struct {
-	Name  string
+	Name   string
 	Target string
 	pkgPos token.Pos
-	Deps  []string
-	Funcs []string
+	Deps   []string
+	Funcs  []string
 }
 
 func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {

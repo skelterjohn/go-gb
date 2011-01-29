@@ -264,45 +264,45 @@ func InstallPackage(pkg *Package) (err os.Error) {
 
 	err = Copy(".", pkg.result, dstFile)
 	/*
-	argv := append([]string{"cp", "-f", pkg.result, dstDir})
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
-	p, err := exec.Run(CopyCMD, argv, os.Envs, ".", exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		p.Wait(0)
-	}
+		argv := append([]string{"cp", "-f", pkg.result, dstDir})
+		if Verbose {
+			fmt.Printf("%v\n", argv)
+		}
+		p, err := exec.Run(CopyCMD, argv, os.Envs, ".", exec.PassThrough, exec.PassThrough, exec.PassThrough)
+		if err != nil {
+			return
+		}
+		if p != nil {
+			p.Wait(0)
+		}
 	*/
 	return
 }
 
 func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	srcpath := path.Join(cwd, src)
-	
+
 	if Verbose {
 		fmt.Printf("Copying %s to %s\n", src, dst)
 	}
-	
+
 	dstpath := dst
 	if !path.IsAbs(dstpath) {
 		dstpath = path.Join(cwd, dst)
 	}
-	
+
 	var srcFile *os.File
 	srcFile, err = os.Open(srcpath, os.O_RDONLY, 0)
 	if err != nil {
 		return
 	}
-	
+
 	var dstFile *os.File
 	dstFile, err = os.Open(dstpath, os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		return
 	}
-	
+
 	buffer := make([]byte, 1024)
 	var cpErr os.Error
 	for {
@@ -321,7 +321,7 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	}
 
 	dstFile.Close()
-	
+
 	return
 }
 
@@ -329,7 +329,7 @@ func Copy(cwd, src, dst string) (err os.Error) {
 	if CopyCMD == "" {
 		return CopyTheHardWay(cwd, src, dst)
 	}
-	
+
 	argv := append([]string{"cp", "-f", src, dst})
 	if Verbose {
 		fmt.Printf("%v\n", argv)
@@ -341,6 +341,6 @@ func Copy(cwd, src, dst string) (err os.Error) {
 	if p != nil {
 		p.Wait(0)
 	}
-	
+
 	return
 }
