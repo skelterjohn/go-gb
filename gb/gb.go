@@ -212,6 +212,7 @@ func RunGB() (err os.Error) {
 			for _, pkg := range ListedPkgs {
 				pkg.AddToBuild(buildFile)
 			}
+			_, err = fmt.Fprintf(buildFile, "\n# The makefiles above are invoked in topological dependence order\n")
 			buildFile.Close()
 		}
 		for _, pkg := range ListedPkgs {
