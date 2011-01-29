@@ -514,14 +514,17 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		LD+= -L ../_obj
 	*/
 
-	relObj := path.Join(reverseDots, "_obj")
-	_, err = fmt.Fprintf(file, "# added by gb: compile/link against local install\n")
+	_, err = fmt.Fprintf(file, "# gb: this is the local install\n")
+	_, err = fmt.Fprintf(file, "GBROOT=%s\n", reverseDots)
+	_, err = fmt.Fprintf(file, "\n")
+	relObj := path.Join("$(GBROOT)", "_obj")	
+	_, err = fmt.Fprintf(file, "# gb: compile/link against local install\n")
 	_, err = fmt.Fprintf(file, "GC+= -I %s\n", relObj)
 	_, err = fmt.Fprintf(file, "LD+= -L %s\n", relObj)
 	_, err = fmt.Fprintf(file, "\n")
 
 	if len(this.DepPkgs) != 0 {
-		_, err = fmt.Fprintf(file, "# added by gb: local dependencies\n")
+		_, err = fmt.Fprintf(file, "# gb: local dependencies\n")
 	}
 	if this.IsCmd {
 		for _, pkg := range this.DepPkgs {
@@ -538,7 +541,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		if len(this.DepPkgs) != 0 {
 			fmt.Fprintf(file, "\n")
 		}
-		_, err = fmt.Fprintf(file, "# added by gb: copy to local install\n")
+		_, err = fmt.Fprintf(file, "# gb: copy to local install\n")
 		_, err = fmt.Fprintf(file, "%s/$(TARG).a: _obj/$(TARG).a\n", relObj)
 		_, err = fmt.Fprintf(file, "\tmkdir -p $(dir $@); cp -f $< $@\n")
 		_, err = fmt.Fprintf(file, "package: %s/$(TARG).a\n\n", relObj)

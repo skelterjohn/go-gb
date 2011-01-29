@@ -140,7 +140,7 @@ func IsListed(name string) bool {
 }
 
 func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean) || (Makefiles && !Clean) || Install || Test
+	Build = Build || (!GenMake && !Clean && !GoFMT) || (Makefiles && !Clean) || Install || Test
 
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 
