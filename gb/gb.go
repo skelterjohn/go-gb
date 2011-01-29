@@ -56,7 +56,7 @@ func GetInstallDirPkg() (dir string) {
 }
 
 func GetBuildDirCmd() (dir string) {
-	return "."
+	return "bin"
 }
 
 func GetInstallDirCmd() (dir string) {
@@ -228,8 +228,10 @@ func RunGB() (err os.Error) {
 	}
 
 	if Clean && ListedTargets == 0 {
-		println("Removing _obj")
-		os.RemoveAll("_obj")
+		println("Removing "+GetBuildDirPkg())
+		os.RemoveAll(GetBuildDirPkg())
+		println("Removing "+GetBuildDirCmd())
+		os.RemoveAll(GetBuildDirCmd())
 	}
 
 	if Clean {
@@ -462,7 +464,7 @@ func main() {
 	GLArgs = []string{}
 
 	if !Install {
-		IncludeDir = "_obj"
+		IncludeDir = GetBuildDirPkg()
 		GCArgs = append(GCArgs, []string{"-I", IncludeDir}...)
 		GLArgs = append(GLArgs, []string{"-L", IncludeDir}...)
 	}

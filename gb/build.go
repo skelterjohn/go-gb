@@ -91,7 +91,8 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	*/
 
 	reverseDots := ReverseDir(pkg.Dir)
-	pkgDest := path.Join(reverseDots, "_obj")
+	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
+	cmdDest := path.Join(reverseDots, GetBuildDirCmd())
 
 	argv := []string{GetCompilerName()}
 	argv = append(argv, "-I", pkgDest)
@@ -114,7 +115,9 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	}
 
 	if pkg.IsCmd {
-		dst := pkg.Target
+		dst := path.Join(cmdDest, pkg.Target)
+		os.MkdirAll(GetBuildDirCmd(), 0755)
+		
 		largs := []string{GetLinkerName()}
 		largs = append(largs, "-L", pkgDest)
 		largs = append(largs, "-o", dst, GetIBName())
@@ -131,7 +134,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	} else {
 		dst := path.Join(pkgDest, pkg.Target) + ".a"
 
-		mkdirdst := path.Join("_obj", pkg.Target) + ".a"
+		mkdirdst := path.Join(GetBuildDirPkg(), pkg.Target) + ".a"
 		dstDir, _ := path.Split(mkdirdst)
 		os.MkdirAll(dstDir, 0755)
 
@@ -159,7 +162,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 func BuildTest(pkg *Package) (err os.Error) {
 
 	reverseDots := ReverseDir(pkg.Dir)
-	pkgDest := path.Join(reverseDots, "_obj")
+	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
 
 	testIB := path.Join("_test", "_gotest_"+GetObjSuffix())
 
