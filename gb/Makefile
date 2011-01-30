@@ -9,5 +9,6 @@ GOFILES=\
 	make.go\
 	pkg.go\
 	gofmt.go\
+	runext.go\
 
 include $(GOROOT)/src/Make.cmd

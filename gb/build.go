@@ -132,21 +132,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		if Verbose {
 			fmt.Printf("%v\n", largs)
 		}
-		p, err = exec.Run(LinkCMD, largs, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-		if err != nil {
-			return
-		}
-		if p != nil {
-			var wmsg *os.Waitmsg
-			wmsg, err = p.Wait(0)
-			if wmsg.ExitStatus() != 0 {
-				err = os.NewError(fmt.Sprintf("%v: %s\n", largs, wmsg.String()))
-				return
-			}
-			if err != nil {
-				return
-			}
-		}
+		err = RunExternal(LinkCMD, pkg.Dir, largs)
 	} else {
 		dst := path.Join(pkgDest, pkg.Target) + ".a"
 
@@ -158,20 +144,8 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		if Verbose {
 			fmt.Printf("%v\n", argv)
 		}
-		p, err = exec.Run(PackCMD, argv, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-		if err != nil {
+		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
-		}
-		if p != nil {
-			var wmsg *os.Waitmsg
-			wmsg, err = p.Wait(0)
-			if wmsg.ExitStatus() != 0 {
-				err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-				return
-			}
-			if err != nil {
-				return
-			}
 		}
 	}
 
@@ -199,20 +173,8 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}
-	p, err := exec.Run(CompileCMD, argv, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
+	if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
 		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	//see if it was created
@@ -230,20 +192,8 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}
-	p, err = exec.Run(PackCMD, argv, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
+	if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
@@ -257,20 +207,8 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}
-	p, err = exec.Run(CompileCMD, argv, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
+	if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
 		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	testBinary := "_testmain"
@@ -285,40 +223,12 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", largs)
 	}
-	p, err = exec.Run(LinkCMD, largs, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
+	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", largs, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
-	}
-
-	if err != nil {
+	
+	if err = RunExternal(testBinary, path.Join(pkg.Dir, "_test"), []string{testBinary}); err != nil {
 		return
-	}
-
-	p, err = exec.Run(testBinary, []string{testBinary}, os.Envs, path.Join(pkg.Dir, "_test"), exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", []string{testBinary}, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	return
@@ -410,20 +320,8 @@ func Copy(cwd, src, dst string) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}
-	p, err := exec.Run(CopyCMD, argv, os.Envs, cwd, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return err
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
+	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
+		return
 	}
 
 	return
