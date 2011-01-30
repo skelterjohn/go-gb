@@ -106,7 +106,15 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	//see if it was created
@@ -129,7 +137,15 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 		if p != nil {
-			p.Wait(0)
+			var wmsg *os.Waitmsg
+			wmsg, err = p.Wait(0)
+			if wmsg.ExitStatus() != 0 {
+				err = os.NewError(fmt.Sprintf("%v: %s\n", largs, wmsg.String()))
+				return
+			}
+			if err != nil {
+				return
+			}
 		}
 	} else {
 		dst := path.Join(pkgDest, pkg.Target) + ".a"
@@ -147,7 +163,15 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 		if p != nil {
-			p.Wait(0)
+			var wmsg *os.Waitmsg
+			wmsg, err = p.Wait(0)
+			if wmsg.ExitStatus() != 0 {
+				err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+				return
+			}
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -180,7 +204,15 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	//see if it was created
@@ -203,7 +235,15 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
@@ -222,7 +262,15 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	testBinary := "_testmain"
@@ -242,7 +290,15 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", largs, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	if err != nil {
@@ -254,7 +310,15 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", []string{testBinary}, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	return
@@ -351,7 +415,15 @@ func Copy(cwd, src, dst string) (err os.Error) {
 		return err
 	}
 	if p != nil {
-		p.Wait(0)
+		var wmsg *os.Waitmsg
+		wmsg, err = p.Wait(0)
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			return
+		}
+		if err != nil {
+			return
+		}
 	}
 
 	return

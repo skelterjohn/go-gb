@@ -2,10 +2,10 @@ package main
 
 import (
        "different/a"
-       "c"
+       "different/a/b"
 )
 
 func main() {
      a.AFoo()
-     c.CFoo()
+	 b.BFoo()
 }

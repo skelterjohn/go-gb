@@ -261,6 +261,10 @@ func (this *Package) Build() (err os.Error) {
 		}
 	}
 
+	if err != nil {
+		this.CleanFiles()
+	}
+
 	this.Stat()
 
 	return
@@ -362,23 +366,8 @@ func main() {
 }
 
 */
-func (this *Package) Clean() (err os.Error) {
-	if this.cleaned {
-		return
-	}
-	this.cleaned = true
-	if Exclusive && !ListedDirs[this.Dir] {
-		return
-	}
 
-	for _, pkg := range this.DepPkgs {
-		pkg.Clean()
-	}
-
-	if !this.Active {
-		return
-	}
-	
+func (this *Package) CleanFiles() (err os.Error) {
 	if Makefiles && this.HasMakefile {
 		MakeClean(this)
 		PackagesBuilt++
@@ -409,9 +398,32 @@ func (this *Package) Clean() (err os.Error) {
 		fmt.Printf(" Removing %s\n", testdir)
 	}
 	err = os.RemoveAll(testdir)
-	PackagesBuilt++
 
 	this.Stat()
+
+	return
+}
+
+func (this *Package) Clean() (err os.Error) {
+	if this.cleaned {
+		return
+	}
+	this.cleaned = true
+	if Exclusive && !ListedDirs[this.Dir] {
+		return
+	}
+
+	for _, pkg := range this.DepPkgs {
+		pkg.Clean()
+	}
+
+	if !this.Active {
+		return
+	}
+	
+	err = this.CleanFiles()
+	
+	PackagesBuilt++
 
 	return
 }
