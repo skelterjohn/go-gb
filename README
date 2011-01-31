@@ -42,4 +42,5 @@ a target.gb file exists, it will be used instead of the comment.
  The makefiles generated with the -M option will still allow each package to be
 linked against each other package (if they are built in the correct order), by
 copying binaries to a top level _obj directory and adding that directory to the
-compile and link command line.
+compile and link command line. A build script is also provided that runs the
+makefiles in the correct topological order.
