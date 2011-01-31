@@ -348,7 +348,8 @@ func Usage() {
 	fmt.Printf(" The makefiles generated with the -M option will still allow each package to be\n")
 	fmt.Printf("linked against each other package (if they are built in the correct order), by\n")
 	fmt.Printf("copying binaries to a top level _obj directory and adding that directory to the\n")
-	fmt.Printf("compile and link command line.\n")
+	fmt.Printf("compile and link command line. A build script is also provided that runs the\n")
+	fmt.Printf("makefiles in the correct topological order.\n")
 }
 
 func main() {
