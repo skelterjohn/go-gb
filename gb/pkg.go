@@ -36,7 +36,7 @@ type Package struct {
 	result      string
 	installPath string
 	MyErr       os.Error
-	Active bool
+	Active      bool
 
 	cleaned, addedToBuild, gofmted bool
 
@@ -108,9 +108,9 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this.IsCmd = this.Name == "main"
 	this.ib = path.Join(this.Dir, GetIBName())
 	err = this.GetTarget()
-	
+
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
-	
+
 	return
 }
 
@@ -237,11 +237,11 @@ func (this *Package) Build() (err os.Error) {
 			}
 		}
 	}
-	
+
 	if !this.Active {
 		return
 	}
-	
+
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
@@ -420,9 +420,9 @@ func (this *Package) Clean() (err os.Error) {
 	if !this.Active {
 		return
 	}
-	
+
 	err = this.CleanFiles()
-	
+
 	PackagesBuilt++
 
 	return
@@ -569,7 +569,7 @@ func (this *Package) AddToBuild(bfile *os.File) {
 	if Exclusive && !ListedDirs[this.Dir] {
 		return
 	}
-	
+
 	if !this.Active {
 		return
 	}
@@ -584,7 +584,7 @@ func (this *Package) GoFMT() (err os.Error) {
 	if this.gofmted || (Exclusive && !ListedDirs[this.Dir]) {
 		return
 	}
-	
+
 	if !this.Active {
 		return
 	}

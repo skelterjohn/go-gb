@@ -125,7 +125,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	if pkg.IsCmd {
 		dst := path.Join(cmdDest, pkg.Target)
 		os.MkdirAll(GetBuildDirCmd(), 0755)
-		
+
 		largs := []string{GetLinkerName()}
 		largs = append(largs, "-L", pkgDest)
 		largs = append(largs, "-o", dst, GetIBName())
@@ -226,7 +226,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
-	
+
 	if err = RunExternal(testBinary, path.Join(pkg.Dir, "_test"), []string{testBinary}); err != nil {
 		return
 	}

@@ -81,45 +81,74 @@ func GetSubDirs(dir string) (subdirs []string) {
 	return
 }
 
-func ScanDirectory(base, dir string) (err2 os.Error) {
-	pkg, err := ReadPackage(base, dir)
-
-	if err == nil {
-		if Scan {
-			if pkg.IsCmd {
-				fmt.Printf("in %s: cmd \"%s\"\n", pkg.Dir, pkg.Target)
-			} else {
-				fmt.Printf("in %s: pkg \"%s\"\n", pkg.Dir, pkg.Target)
-			}
-			if ScanList {
-				fmt.Printf(" Deps: %v\n", pkg.Deps)
-				fmt.Printf(" TestDeps: %v\n", pkg.TestDeps)
-			}
+func ScanDirectory(base, dir string, done chan bool) (err2 os.Error) {
+	defer func() {
+		if done != nil {
+			done <- true
 		}
-		Packages["\""+pkg.Target+"\""] = pkg
-		base = pkg.Base
-	} else {
-		tpath := path.Join(dir, "target.gb")
-		fin, err := os.Open(tpath, os.O_RDONLY, 0)
+	}()
+	_, basedir := path.Split(dir)
+	if basedir == "_obj" ||
+		basedir == "_test" ||
+		basedir == "bin" ||
+		(basedir != "." && strings.HasPrefix(basedir, ".")) {
+		//println("skipping", basedir)
+		return
+	}
+
+	pkgdone := make(chan bool)
+	var pkg *Package
+	var err os.Error
+	go func() {
+		defer func() { pkgdone <- true }()
+		pkg, err = ReadPackage(base, dir)
 		if err == nil {
-			bfrd := bufio.NewReader(fin)
-			base, err = bfrd.ReadString('\n')
-			base = strings.TrimSpace(base)
+			if Scan {
+				if pkg.IsCmd {
+					fmt.Printf("in %s: cmd \"%s\"\n", pkg.Dir, pkg.Target)
+				} else {
+					fmt.Printf("in %s: pkg \"%s\"\n", pkg.Dir, pkg.Target)
+				}
+				if ScanList {
+					fmt.Printf(" Deps: %v\n", pkg.Deps)
+					fmt.Printf(" TestDeps: %v\n", pkg.TestDeps)
+				}
+			}
+			Packages["\""+pkg.Target+"\""] = pkg
+			base = pkg.Base
+		} else {
+			//println("couldn't use", dir)
+		
+			tpath := path.Join(dir, "target.gb")
+			fin, err := os.Open(tpath, os.O_RDONLY, 0)
+			if err == nil {
+				bfrd := bufio.NewReader(fin)
+				base, err = bfrd.ReadString('\n')
+				base = strings.TrimSpace(base)
+			}
 		}
-	}
 
-	if pkg.Target == "." {
-		return os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
-	}
+		if pkg.Target == "." {
+			err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
+		}
+	}()
 
 	if Recurse {
+
+		subdone := make(chan bool)
+		subcount := 0
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
 			if subdir != "src" {
-				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
+				subcount++
+				go ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), subdone)
 			}
 		}
+		for i := 0; i < subcount; i++ {
+			<-subdone
+		}
 	}
+	<-pkgdone
 
 	return
 }
@@ -149,7 +178,8 @@ func RunGB() (err os.Error) {
 	args := os.Args[1:len(os.Args)]
 
 	Recurse = true
-	err = ScanDirectory(".", ".")
+
+	err = ScanDirectory(".", ".", nil)
 	if err != nil {
 		return
 	}
@@ -228,9 +258,9 @@ func RunGB() (err os.Error) {
 	}
 
 	if Clean && ListedTargets == 0 {
-		println("Removing "+GetBuildDirPkg())
+		println("Removing " + GetBuildDirPkg())
 		os.RemoveAll(GetBuildDirPkg())
-		println("Removing "+GetBuildDirCmd())
+		println("Removing " + GetBuildDirCmd())
 		os.RemoveAll(GetBuildDirCmd())
 	}
 
