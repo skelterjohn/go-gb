@@ -41,13 +41,17 @@ func GetSourcesDepsDir(dir string) (pkg, target string, srcs *SourceCollection, 
 	if err != nil {
 		return
 	}
-	names, err := file.Readdirnames(-1)
+	finfos, err := file.Readdir(-1)
 	if err != nil {
 		return
 	}
 	deps = []string{}
 	srcs = new(SourceCollection)
-	for _, name := range names {
+	for _, finfo := range finfos {
+		if finfo.IsDirectory() {
+			continue
+		}
+		name := finfo.Name
 		if strings.HasSuffix(name, ".c") {
 			srcs.CSrcs = append(srcs.CSrcs, name)
 		}
