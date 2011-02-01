@@ -144,7 +144,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
 		if this.Name != "" && fpkg != this.Name {
 			err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
-			println(err.String())
+			fmt.Printf("%v\n", err)
 			return
 		}
 		if err != nil {
@@ -164,6 +164,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
 			if this.Name != "" && fpkg != this.Name {
 				err = os.NewError(fmt.Sprintf("in %s: more than one test package (ignoring test source)", this.Dir))
+				fmt.Printf("%v\n", err)
 				this.TestDeps = nil
 				break
 			}
@@ -258,6 +259,40 @@ func (this *Package) ResolveDeps() {
 		}
 	}
 }
+
+func (this *Package) Touched() (build, install bool) {
+
+	var inTime int64
+
+	for _, pkg := range this.DepPkgs {
+		if pkg.BinTime > inTime {
+			inTime = pkg.BinTime
+		}
+		db, di := pkg.Touched()
+		if db {
+			build = true
+		}
+		if di {
+			install = true
+		}
+	}
+	if this.SourceTime > inTime {
+		inTime = this.SourceTime
+	}
+	if inTime > this.BinTime {
+		build = true
+	}
+	if this.InstTime < this.BinTime {
+		install = true
+	}
+	
+	if build == true {
+		install = true
+	}
+	
+	return
+}
+
 func (this *Package) Build() (err os.Error) {
 	if this.built {
 		return

@@ -100,10 +100,18 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		pkg, err = ReadPackage(base, dir)
 		if err == nil {
 			if Scan {
+				build, install := pkg.Touched()
+				bis := ""
+				if !build {
+					bis = "(up to date)"
+				}
+				if !install {
+					bis = "(installed)"
+				}
 				if pkg.IsCmd {
-					fmt.Printf("in %s: cmd \"%s\"\n", pkg.Dir, pkg.Target)
+					fmt.Printf("in %s: cmd \"%s\"%s\n", pkg.Dir, pkg.Target, bis)
 				} else {
-					fmt.Printf("in %s: pkg \"%s\"\n", pkg.Dir, pkg.Target)
+					fmt.Printf("in %s: pkg \"%s\"%s\n", pkg.Dir, pkg.Target, bis)
 				}
 				if ScanList {
 					fmt.Printf(" Deps: %v\n", pkg.Deps)
