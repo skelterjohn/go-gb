@@ -18,6 +18,7 @@ package main
 
 import (
 	"os"
+	"path"
 	"strings"
 	"go/parser"
 	"go/token"
@@ -82,9 +83,25 @@ func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
 	}
 }
 
+func GetDepsMany(dir string, srcs []string) (err os.Error) {
+	fset := token.NewFileSet()
+	filenames := make([]string, len(srcs))
+	for i, src := range srcs {
+		filenames[i] = path.Join(dir, src)
+	}
+	pkgs, err := parser.ParseFiles(fset, filenames, parser.ParseComments)
+	for _, pkg := range pkgs {
+		w := &Walker{"", "", 0, []string{}, []string{}, false}
+
+		ast.Walk(w, pkg)
+
+	}
+	return
+}
+
 func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
 	var file *ast.File
-	file, err = parser.ParseFile(token.NewFileSet(), source, nil, parser.ParseComments)
+	file, err = parser.ParseFile(token.NewFileSet(), source, nil, parser.ParseComments | parser.ImportsOnly)
 	if err != nil {
 		println(err.String())
 		BrokenPackages++
@@ -133,8 +150,6 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 	case *ast.ImportSpec:
 		w.Deps = append(w.Deps, string(n.Path.Value))
 		return nil
-	case *ast.CommentGroup:
-		return w
 	case *ast.Comment:
 		if n.Pos() < w.pkgPos {
 			text := string(n.Text)
@@ -143,8 +158,6 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 			}
 		}
 		return nil
-	case *ast.GenDecl:
-		return w
 	case *ast.FuncDecl:
 		if w.ScanFuncs {
 			fdecl, ok := node.(*ast.FuncDecl)
@@ -153,6 +166,8 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 			}
 		}
 		return nil
+	case *ast.GenDecl, *ast.CommentGroup:
+		return w
 	}
 	return nil
 }

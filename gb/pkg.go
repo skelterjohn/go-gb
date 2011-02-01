@@ -143,7 +143,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
 		if this.Name != "" && fpkg != this.Name {
-			err = os.NewError("Source for more than one target in "+this.Dir)
+			err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
 			println(err.String())
 			return
 		}
@@ -156,26 +156,29 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.Name = fpkg
 		this.Deps = append(this.Deps, fdeps...)
 	}
-	for _, src := range this.TestSources {
-		var fpkg, ftarget string
-		var fdeps, ffuncs []string
-		fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
-		if this.Name != "" && fpkg != this.Name {
-			err = os.NewError("source for more than one target in "+this.Dir)
-			return
-		}
-		if err != nil {
-			return
-		}
-		if ftarget != "" {
-			this.Target = ftarget
-		}
-		this.Name = fpkg
-		this.TestDeps = append(this.TestDeps, fdeps...)
-		this.Funcs = append(this.Funcs, ffuncs...)
-	}
 	this.Deps = RemoveDups(this.Deps)
-	this.TestDeps = RemoveDups(this.TestDeps)
+	if Test {
+		for _, src := range this.TestSources {
+			var fpkg, ftarget string
+			var fdeps, ffuncs []string
+			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
+			if this.Name != "" && fpkg != this.Name {
+				err = os.NewError(fmt.Sprintf("in %s: more than one test package (ignoring test source)", this.Dir))
+				this.TestDeps = nil
+				break
+			}
+			if err != nil {
+				break
+			}
+			if ftarget != "" {
+				this.Target = ftarget
+			}
+			this.Name = fpkg
+			this.TestDeps = append(this.TestDeps, fdeps...)
+			this.Funcs = append(this.Funcs, ffuncs...)
+		}
+		this.TestDeps = RemoveDups(this.TestDeps)
+	}
 	return
 	//fpkg, ftarget, fdeps, ffuncs, err = GetDeps(srcloc)
 }	
