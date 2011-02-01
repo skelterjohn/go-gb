@@ -100,15 +100,20 @@ func GetDepsMany(dir string, srcs []string) (err os.Error) {
 }
 
 func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
+	isTest := strings.HasSuffix(source, "_test.go") && Test
 	var file *ast.File
-	file, err = parser.ParseFile(token.NewFileSet(), source, nil, parser.ParseComments | parser.ImportsOnly)
+	flag := parser.ParseComments
+	if !isTest {
+		flag = flag | parser.ImportsOnly
+	}
+	file, err = parser.ParseFile(token.NewFileSet(), source, nil, flag)
 	if err != nil {
 		println(err.String())
 		BrokenPackages++
 		return
 	}
 
-	w := &Walker{"", "", 0, []string{}, []string{}, strings.HasSuffix(source, "_test.go")}
+	w := &Walker{"", "", 0, []string{}, []string{}, isTest}
 
 	ast.Walk(w, file)
 
