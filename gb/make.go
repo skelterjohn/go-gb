@@ -23,6 +23,8 @@ import (
 )
 
 func MakeBuild(pkg *Package) (err os.Error) {
+	buildBlock <- true
+	defer func(){ <-buildBlock }()
 	margs := []string{"make"}
 	if Install {
 		margs = append(margs, "install")

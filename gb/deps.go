@@ -24,6 +24,64 @@ import (
 	"go/ast"
 )
 
+func FilterFlag(src string) bool {
+
+	os_flags := []string{"windows", "darwin", "freebsd", "bsd", "linux"}
+	arch_flags := []string{"amd64", "386", "arm"}
+	for _, flag := range os_flags {
+		if strings.Contains(src, "_"+flag) && GOOS != flag {
+			return false
+		}
+	}
+	for _, flag := range arch_flags {
+		if strings.Contains(src, "_"+flag) && GOARCH != flag {
+			return false
+		}
+	}
+	if strings.Contains(src, "_unix") && 
+		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
+		return false
+	}
+	
+	return true
+}
+
+type SourceWalker struct {
+	root string
+	srcroot string
+	srcs []string
+	tsrcs []string
+	csrcs []string
+	cgosrcs []string
+}
+func (this *SourceWalker) VisitDir(dpath string, f *os.FileInfo) bool {
+	return dpath == this.root || strings.HasPrefix(dpath, this.srcroot)
+}
+func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
+	if !FilterFlag(fpath) {
+		return
+	}
+	if strings.HasSuffix(fpath, "_testmain.go") {
+		return
+	}
+	rootl := len(this.root)+1
+	if this.root != "." {
+		fpath = fpath[rootl:len(fpath)]
+	}
+	if strings.HasSuffix(fpath, ".go") {
+		if strings.HasSuffix(fpath, "_test.go") {
+			this.tsrcs = append(this.tsrcs, fpath)
+		} else if strings.HasPrefix(fpath, "cgo_") {
+			this.cgosrcs = append(this.cgosrcs, fpath)
+		} else {
+			this.srcs = append(this.srcs, fpath)
+		}
+	}
+	if strings.HasSuffix(fpath, ".c") {
+		this.csrcs = append(this.csrcs, fpath)
+	}
+}
+
 func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
 	var file *ast.File
 	file, err = parser.ParseFile(token.NewFileSet(), source, nil, parser.ParseComments)

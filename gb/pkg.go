@@ -38,7 +38,7 @@ type Package struct {
 	MyErr       os.Error
 	Active      bool
 
-	cleaned, addedToBuild, gofmted bool
+	built, cleaned, addedToBuild, gofmted bool
 
 	CGoSources []string
 	CSrcs      []string
@@ -115,39 +115,6 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 
 
 	return
-}
-
-type SourceWalker struct {
-	root string
-	srcroot string
-	srcs []string
-	tsrcs []string
-	csrcs []string
-	cgosrcs []string
-}
-func (this *SourceWalker) VisitDir(dpath string, f *os.FileInfo) bool {
-	return dpath == this.root || strings.HasPrefix(dpath, this.srcroot)
-}
-func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
-	if strings.HasSuffix(fpath, "_testmain.go") {
-		return
-	}
-	rootl := len(this.root)+1
-	if this.root != "." {
-		fpath = fpath[rootl:len(fpath)]
-	}
-	if strings.HasSuffix(fpath, ".go") {
-		if strings.HasSuffix(fpath, "_test.go") {
-			this.tsrcs = append(this.tsrcs, fpath)
-		} else if strings.HasPrefix(fpath, "cgo_") {
-			this.cgosrcs = append(this.cgosrcs, fpath)
-		} else {
-			this.srcs = append(this.srcs, fpath)
-		}
-	}
-	if strings.HasSuffix(fpath, ".c") {
-		this.csrcs = append(this.csrcs, fpath)
-	}
 }
 
 func (this *Package) ScanForSource() (err os.Error) {
@@ -289,21 +256,23 @@ func (this *Package) ResolveDeps() {
 	}
 }
 func (this *Package) Build() (err os.Error) {
+	if this.built {
+		return
+	}
+	this.built = true
 	if this.MyErr != nil {
 		return
 	}
 	if !this.HasMakefile && len(this.CGoSources) + len(this.CSrcs) != 0 {
-		err = os.NewError(fmt.Sprintf("(in %s) this is a cgo project; please create a makefile", this.Dir))
+		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
 		return
 	}
-	//println("+", this.Dir)
 	this.block <- true
 	defer func() {
 		this.MyErr = err
 		if this.MyErr != nil {
 			BrokenPackages++
 		}
-		//println("-", this.Dir)
 		<-this.block
 	}()
 
@@ -385,7 +354,7 @@ func (this *Package) Test() (err os.Error) {
 		}
 	}
 
-	if Makefiles {
+	if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0)  {
 		err = MakeTest(this)
 		return
 	}
@@ -469,7 +438,7 @@ func main() {
 */
 
 func (this *Package) CleanFiles() (err os.Error) {
-	if Makefiles && this.HasMakefile {
+	if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0) {
 		MakeClean(this)
 		PackagesBuilt++
 		return

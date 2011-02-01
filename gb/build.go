@@ -83,6 +83,9 @@ func ReverseDirForwardSlash(dir string) (rev string) {
 }
 
 func BuildPackage(pkg *Package) (err os.Error) {
+	buildBlock <- true
+	defer func(){ <-buildBlock }()
+
 	/*
 		relativeSources := make([]string, len(pkg.Sources))
 		for i, src := range pkg.Sources {

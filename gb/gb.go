@@ -22,6 +22,7 @@ import (
 	"bufio"
 	"os"
 	"fmt"
+	"strconv"
 	"path"
 	"exec"
 	//"gonicetrace.googlecode.com/hg/nicetrace"
@@ -43,6 +44,8 @@ var BrokenPackages int
 var ListedTargets int
 var ListedDirs map[string]bool
 
+
+var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
 var GOROOT, GOOS, GOARCH string
@@ -385,6 +388,13 @@ func main() {
 		println("Environental variable GOROOT not set")
 		return
 	}
+	GOMAXPROCS := os.Getenv("GOMAXPROCS")
+	n, nerr := strconv.Atoi(GOMAXPROCS)
+	if nerr != nil {
+		n = 1
+	}
+	n = 2
+	buildBlock = make(chan bool, n)
 	for _, arg := range os.Args[1:len(os.Args)] {
 		if len(arg) > 0 && arg[0] == '-' {
 			for _, flag := range arg[1:len(arg)] {
