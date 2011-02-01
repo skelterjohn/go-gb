@@ -1,35 +1,40 @@
-===GB===
-
+GB
 A(nother) tool to build (pure) go projects. Special emphasis on multi-package projects with inter-dependencies.
 
-Once goinstall works with cgo projects, *gb* will be modified to work with cgo projects the same way.
+Once goinstall works with cgo projects, gb will be modified to work with cgo projects the same way.
 
-To install *gb*:
-{{{
+To install gb:
+
 gb> make install
-}}}
 
-==Overview==
 
-*gb* is nearly configuration-free project builder for the go language. It works on a "one target per directory" rule to discover which source files are to be compiled with each other. The idea is to obviate the need for any sort of build script. The only exception to this rule is when a {{{src}}} directory exists. If a directory {{{mytarget}}} has a subdirectory {{{mytarget/src}}}, this {{{src}}} directory will be exhaustively searched for source files, and they will all belong to the target based in {{{mytarget}}}.
+Overview
 
-With *gb*, one only has to run the simple command line, {{{gb}}}, in order to bring all binaries up to date. To clean, {{{gb -c}}}. To install, {{{gb -i}}}. There are a few other options to do other tasks, but never should one have to write scripts that, for instance, specify lists of which source files should be used. *gb* figures that out by analyzing the directory structure and source.
+gb is nearly configuration-free project builder for the go language. It works on a "one target per directory" rule to discover which source files are to be compiled with each other. The idea is to obviate the need for any sort of build script. The only exception to this rule is when a src directory exists. If a directory mytarget has a subdirectory mytarget/src, this src directory will be exhaustively searched for source files, and they will all belong to the target based in mytarget.
 
-The most effective way to use *gb* is to have a top-level root directory for all your code, similar to the concept of a workspace with eclipse. Within the root directory, each target (whether it be a cmd or pkg) must reside entirely within its own subdirectory. Nested targets are allowed; source in a directory {{{a/b}}} will not be compiled with source in a directory {{{a}}}.
+With gb, one only has to run the simple command line, gb, in order to bring all binaries up to date. To clean, gb -c. To install, gb -i. There are a few other options to do other tasks, but never should one have to write scripts that, for instance, specify lists of which source files should be used. gb figures that out by analyzing the directory structure and source.
 
-When *gb* is run, it first recursively scans all subdirectories from its working directory to identify targets. Any directory that contains .go files or .c files will be identified as a target. Each target's name is then determined by first looking at its relative path, but can be overridden by either a {{{target.gb}}} file containing a new name, or a {{{//target:<name>}}} comment in one of the source files, before the {{{package}}} statement. This renaming of targets is primarily useful for projects that are intended to be installed with *goinstall*, which requires that the target name match a URL.
+The most effective way to use gb is to have a top-level root directory for all your code, similar to the concept of a workspace with eclipse. Within the root directory, each target (whether it be a cmd or pkg) must reside entirely within its own subdirectory. Nested targets are allowed; source in a directory a/b will not be compiled with source in a directory a.
 
-*gb* will match target names with import statements found in the source to determine the workspace dependency structure. It will use this structure to do incremental building correctly.
+When gb is run, it first recursively scans all subdirectories from its working directory to identify targets. Any directory that contains .go files or .c files will be identified as a target. Each target's name is then determined by first looking at its relative path, but can be overridden by either a target.gb file containing a new name, or a //target:<name> comment in one of the source files, before the package statement. This renaming of targets is primarily useful for projects that are intended to be installed with goinstall, which requires that the target name match a URL.
 
-Packages are all built to the {{{_obj}}} directory in the root, and commands are built to the {{{bin}}} directory in the root. If {{{-i}}} is on, they will be copied to {{{$GOROOT/pkg/$GOOS_$GOOARCH}}} and {{{$GOROOT/bin}}}.
+gb will match target names with import statements found in the source to determine the workspace dependency structure. It will use this structure to do incremental building correctly.
 
-*gb* also provides tools to make it easy to distribute your projects. Running {{{gb -M}}} will generate a {{{Makefile}}} for each target, and a shell script {{{build}}} in the root. The script will invoke the makefiles in the correct order, and the makefiles support incremental building (but it's more fun to type {{{gb}}} than {{{./build}}}).
+Packages are all built to the _obj directory in the root, and commands are built to the bin directory in the root. If -i is on, they will be copied to $GOROOT/pkg/$GOOS_$GOOARCH and $GOROOT/bin.
 
-==Tips==
+gb also provides tools to make it easy to distribute your projects. Running gb -M will generate a Makefile for each target, and a shell script build in the root. The script will invoke the makefiles in the correct order, and the makefiles support incremental building (but it's more fun to type gb than ./build).
 
-  * If your root contains a few packages and a few commands, but you only want to install the packages, run {{{gb -Pi}}}.
-  * You can encode some information in file names. If a common value for $GOOS or $GOARCH appears in the file name in the form of {{{*_VALUE*.go}}}, that file will only be included if it matches $GOOS or $GOARCH. The flag {{{*_unix*.go}}} will match any of the unix-based $GOOS options.
-  * *gb* can still be used to compile cgo projects, but you must provide a makefile. *gb* identifies a cgo project by the presence of {{{cgo_*.go}}} files or {{{*.c}}} files, and will always try to use a makefile if one exists. If no makefile exists, *gb* will skip this target (with a warning).
-  * Quickly check the build status of any target with {{{gb -s}}}. It will print out a list of targets, and will tell you if they are up to date or installed (if a target is installed, it is also up to date).
-  * Tell *gb* to use *goinstall* to download packages with {{{gb -g}}}.
-  * To build a simple one-target package or command, you can run {{{gb}}} from within its directory if you use either {{{target.gb}}} or a {{{//target:<name>}}} comment.
+
+Tips
+
+If your root contains a few packages and a few commands, but you only want to install the packages, run gb -Pi.
+
+You can encode some information in file names. If a common value for $GOOS or $GOARCH appears in the file name in the form of *_VALUE*.go, that file will only be included if it matches $GOOS or $GOARCH. The flag *_unix*.go will match any of the unix-based $GOOS options.
+
+gb can still be used to compile cgo projects, but you must provide a makefile. gb identifies a cgo project by the presence of cgo_*.go files or *.c files, and will always try to use a makefile if one exists. If no makefile exists, gb will skip this target (with a warning).
+
+Quickly check the build status of any target with gb -s. It will print out a list of targets, and will tell you if they are up to date or installed (if a target is installed, it is also up to date).
+
+Tell gb to use goinstall to download packages with gb -g.
+
+To build a simple one-target package or command, you can run gb from within its directory if you use either target.gb or a //target:<name> comment.
