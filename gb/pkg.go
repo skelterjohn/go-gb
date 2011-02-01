@@ -129,6 +129,9 @@ func (this *SourceWalker) VisitDir(dpath string, f *os.FileInfo) bool {
 	return dpath == this.root || strings.HasPrefix(dpath, this.srcroot)
 }
 func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
+	if strings.HasSuffix(fpath, "_testmain.go") {
+		return
+	}
 	rootl := len(this.root)+1
 	if this.root != "." {
 		fpath = fpath[rootl:len(fpath)]
@@ -172,6 +175,11 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fpkg, ftarget string
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
+		if this.Name != "" && fpkg != this.Name {
+			err = os.NewError("Source for more than one target in "+this.Dir)
+			println(err.String())
+			return
+		}
 		if err != nil {
 			return
 		}
@@ -185,6 +193,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fpkg, ftarget string
 		var fdeps, ffuncs []string
 		fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
+		if this.Name != "" && fpkg != this.Name {
+			err = os.NewError("source for more than one target in "+this.Dir)
+			return
+		}
 		if err != nil {
 			return
 		}
@@ -280,16 +292,18 @@ func (this *Package) Build() (err os.Error) {
 	if this.MyErr != nil {
 		return
 	}
-	if len(this.CGoSources) != 0 || len(this.CSrcs) != 0 {
+	if !this.HasMakefile && len(this.CGoSources) + len(this.CSrcs) != 0 {
 		err = os.NewError(fmt.Sprintf("(in %s) this is a cgo project; please create a makefile", this.Dir))
 		return
 	}
+	//println("+", this.Dir)
 	this.block <- true
 	defer func() {
 		this.MyErr = err
 		if this.MyErr != nil {
 			BrokenPackages++
 		}
+		//println("-", this.Dir)
 		<-this.block
 	}()
 
@@ -338,7 +352,7 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		if Makefiles && this.HasMakefile {
+		if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0) { 
 			err = MakeBuild(this)
 		} else {
 			err = BuildPackage(this)

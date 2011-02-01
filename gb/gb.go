@@ -435,12 +435,10 @@ func main() {
 
 	var err os.Error
 
-	if Makefiles {
-		MakeCMD, err = exec.LookPath("make")
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			return
-		}
+	MakeCMD, err = exec.LookPath("make")
+	if err != nil {
+		fmt.Printf("%v\n", err)
+		return
 	}
 
 	CompileCMD, err = exec.LookPath(GetCompilerName())
