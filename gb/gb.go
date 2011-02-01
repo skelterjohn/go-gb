@@ -117,6 +117,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 				bfrd := bufio.NewReader(fin)
 				base, err = bfrd.ReadString('\n')
 				base = strings.TrimSpace(base)
+
 			}
 		}
 
@@ -162,6 +163,11 @@ func RunGB() (err os.Error) {
 
 	Recurse = true
 
+/*
+	sw := &SourceWalker{make(map[string][]string)}
+	path.Walk(".", sw, make(chan os.Error))
+	fmt.Printf("%v\n", sw.pkgs)
+*/
 	err = ScanDirectory(".", ".")
 	if err != nil {
 		return

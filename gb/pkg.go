@@ -67,15 +67,17 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this = new(Package)
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
-	var srcCol *SourceCollection
-	this.Name, this.Target, srcCol, this.Deps, this.TestDeps, this.Funcs, err = GetSourcesDepsDir(dir)
-	this.Sources = srcCol.Srcs
-	this.TestSources = srcCol.TSrcs
-	this.CGoSources = srcCol.CGoSrcs
-	this.CSrcs = srcCol.CSrcs
+	
+	
+	err = this.ScanForSource()
 	if err != nil {
 		return
 	}
+	err = this.GetSourceDeps()
+	if err != nil {
+		return
+	}
+	
 	this.Base = base
 	this.DepPkgs = make([]*Package, 0)
 
@@ -111,8 +113,93 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
 
+
 	return
 }
+
+type SourceWalker struct {
+	root string
+	srcroot string
+	srcs []string
+	tsrcs []string
+	csrcs []string
+	cgosrcs []string
+}
+func (this *SourceWalker) VisitDir(dpath string, f *os.FileInfo) bool {
+	return dpath == this.root || strings.HasPrefix(dpath, this.srcroot)
+}
+func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
+	rootl := len(this.root)+1
+	if this.root != "." {
+		fpath = fpath[rootl:len(fpath)]
+	}
+	if strings.HasSuffix(fpath, ".go") {
+		if strings.HasSuffix(fpath, "_test.go") {
+			this.tsrcs = append(this.tsrcs, fpath)
+		} else if strings.HasPrefix(fpath, "cgo_") {
+			this.cgosrcs = append(this.cgosrcs, fpath)
+		} else {
+			this.srcs = append(this.srcs, fpath)
+		}
+	}
+	if strings.HasSuffix(fpath, ".c") {
+		this.csrcs = append(this.csrcs, fpath)
+	}
+}
+
+func (this *Package) ScanForSource() (err os.Error) {
+	var sw SourceWalker
+	sw.root = this.Dir
+	sw.srcroot = path.Join(this.Dir, "src")
+	errch := make(chan os.Error)
+	path.Walk(this.Dir, &sw, errch)
+	//fmt.Printf("%v: %v %v\n", this.Dir, sw.srcs, sw.tsrcs)
+	
+	this.Sources = sw.srcs
+	this.TestSources = sw.tsrcs
+	this.CGoSources = sw.cgosrcs
+	this.CSrcs = sw.csrcs
+	
+	if len(this.Sources) + len(this.TestSources) == 0 {
+		err = os.NewError("No source files in " + this.Dir)
+	}
+	
+	return
+}
+
+func (this *Package) GetSourceDeps() (err os.Error) {
+	for _, src := range this.Sources {
+		var fpkg, ftarget string
+		var fdeps []string
+		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
+		if err != nil {
+			return
+		}
+		if ftarget != "" {
+			this.Target = ftarget
+		}
+		this.Name = fpkg
+		this.Deps = append(this.Deps, fdeps...)
+	}
+	for _, src := range this.TestSources {
+		var fpkg, ftarget string
+		var fdeps, ffuncs []string
+		fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
+		if err != nil {
+			return
+		}
+		if ftarget != "" {
+			this.Target = ftarget
+		}
+		this.Name = fpkg
+		this.TestDeps = append(this.TestDeps, fdeps...)
+		this.Funcs = append(this.Funcs, ffuncs...)
+	}
+	this.Deps = RemoveDups(this.Deps)
+	this.TestDeps = RemoveDups(this.TestDeps)
+	return
+	//fpkg, ftarget, fdeps, ffuncs, err = GetDeps(srcloc)
+}	
 
 func (this *Package) GetTarget() (err os.Error) {
 	if this.Target == "" {
