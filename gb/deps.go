@@ -170,7 +170,7 @@ func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Er
 		return
 	}
 
-	w := &Walker{"", "", 0, []string{}, []string{}}
+	w := &Walker{"", "", 0, []string{}, []string{}, strings.HasSuffix(source, "_test.go")}
 
 	ast.Walk(w, file)
 
@@ -200,6 +200,7 @@ type Walker struct {
 	pkgPos token.Pos
 	Deps   []string
 	Funcs  []string
+	ScanFuncs bool
 }
 
 func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
@@ -210,7 +211,7 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 		return w
 	case *ast.ImportSpec:
 		w.Deps = append(w.Deps, string(n.Path.Value))
-		return w
+		return nil
 	case *ast.CommentGroup:
 		return w
 	case *ast.Comment:
@@ -221,13 +222,14 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 			}
 		}
 		return nil
-	case *ast.Package, *ast.BadDecl,
-		*ast.GenDecl, *ast.Ident:
+	case *ast.GenDecl:
 		return w
 	case *ast.FuncDecl:
-		fdecl, ok := node.(*ast.FuncDecl)
-		if ok {
-			w.Funcs = append(w.Funcs, fdecl.Name.Name)
+		if w.ScanFuncs {
+			fdecl, ok := node.(*ast.FuncDecl)
+			if ok {
+				w.Funcs = append(w.Funcs, fdecl.Name.Name)
+			}
 		}
 		return nil
 	}
