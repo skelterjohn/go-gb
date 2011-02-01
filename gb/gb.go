@@ -103,10 +103,10 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 				build, install := pkg.Touched()
 				bis := ""
 				if !build {
-					bis = "(up to date)"
+					bis = " (up to date)"
 				}
 				if !install {
-					bis = "(installed)"
+					bis = " (installed)"
 				}
 				if pkg.IsCmd {
 					fmt.Printf("in %s: cmd \"%s\"%s\n", pkg.Dir, pkg.Target, bis)
