@@ -211,6 +211,8 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 	case *ast.ImportSpec:
 		w.Deps = append(w.Deps, string(n.Path.Value))
 		return w
+	case *ast.CommentGroup:
+		return w
 	case *ast.Comment:
 		if n.Pos() < w.pkgPos {
 			text := string(n.Text)
@@ -229,5 +231,5 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 		}
 		return nil
 	}
-	return w
+	return nil
 }

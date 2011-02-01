@@ -81,12 +81,7 @@ func GetSubDirs(dir string) (subdirs []string) {
 	return
 }
 
-func ScanDirectory(base, dir string, done chan bool) (err2 os.Error) {
-	defer func() {
-		if done != nil {
-			done <- true
-		}
-	}()
+func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||
 		basedir == "_test" ||
@@ -96,11 +91,9 @@ func ScanDirectory(base, dir string, done chan bool) (err2 os.Error) {
 		return
 	}
 
-	pkgdone := make(chan bool)
-	var pkg *Package
 	var err os.Error
-	go func() {
-		defer func() { pkgdone <- true }()
+
+	var pkg *Package
 		pkg, err = ReadPackage(base, dir)
 		if err == nil {
 			if Scan {
@@ -117,10 +110,9 @@ func ScanDirectory(base, dir string, done chan bool) (err2 os.Error) {
 			Packages["\""+pkg.Target+"\""] = pkg
 			base = pkg.Base
 		} else {
-			//println("couldn't use", dir)
-		
+			var fin *os.File
 			tpath := path.Join(dir, "target.gb")
-			fin, err := os.Open(tpath, os.O_RDONLY, 0)
+			fin, err = os.Open(tpath, os.O_RDONLY, 0)
 			if err == nil {
 				bfrd := bufio.NewReader(fin)
 				base, err = bfrd.ReadString('\n')
@@ -131,24 +123,15 @@ func ScanDirectory(base, dir string, done chan bool) (err2 os.Error) {
 		if pkg.Target == "." {
 			err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
 		}
-	}()
 
 	if Recurse {
-
-		subdone := make(chan bool)
-		subcount := 0
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
 			if subdir != "src" {
-				subcount++
-				go ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), subdone)
+				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 			}
 		}
-		for i := 0; i < subcount; i++ {
-			<-subdone
-		}
 	}
-	<-pkgdone
 
 	return
 }
@@ -179,7 +162,7 @@ func RunGB() (err os.Error) {
 
 	Recurse = true
 
-	err = ScanDirectory(".", ".", nil)
+	err = ScanDirectory(".", ".")
 	if err != nil {
 		return
 	}
