@@ -247,17 +247,28 @@ func (this *Package) Stat() {
 	}
 }
 
-func (this *Package) ResolveDeps() {
+func (this *Package) ResolveDeps() (err os.Error) {
 	for _, dep := range this.Deps {
 		if pkg, ok := Packages[dep]; ok {
 			this.DepPkgs = append(this.DepPkgs, pkg)
+		} else if !IsGoInstallable(dep) {
+			if !PkgExistsInGOROOT(dep) {
+				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
+				return
+			}
 		}
 	}
 	for _, dep := range this.TestDeps {
 		if pkg, ok := Packages[dep]; ok {
 			this.TestDepPkgs = append(this.TestDepPkgs, pkg)
+		} else if !IsGoInstallable(dep) {
+			if !PkgExistsInGOROOT(dep) {
+				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
+				return
+			}
 		}
 	}
+	return
 }
 
 func (this *Package) Touched() (build, install bool) {

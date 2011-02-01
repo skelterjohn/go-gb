@@ -202,7 +202,10 @@ func RunGB() (err os.Error) {
 	}
 
 	for _, pkg := range Packages {
-		pkg.ResolveDeps()
+		err = pkg.ResolveDeps()
+		if err != nil {
+			return
+		}
 	}
 
 	if GoFMT {

@@ -25,6 +25,22 @@ import (
 	"go/ast"
 )
 
+func PkgExistsInGOROOT(target string) bool {
+	if target[0] == '"' {
+		target = target[1:len(target)]
+	}
+	if target[len(target)-1] == '"' {
+		target = target[0 : len(target)-1]
+	}
+
+	pkgbin := path.Join(GetInstallDirPkg(), target)
+	pkgbin += ".a"
+	
+	_, err := os.Stat(pkgbin)
+	
+	return err == nil
+}
+
 func FilterFlag(src string) bool {
 
 	os_flags := []string{"windows", "darwin", "freebsd", "bsd", "linux"}

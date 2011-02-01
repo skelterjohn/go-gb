@@ -36,17 +36,7 @@ var goinstallBlock = make(chan bool, 1)
 
 var goinstalledAlready = make(map[string]bool)
 
-func GoInstallPkg(target string) (touched int64) {
-	goinstallBlock <- true
-	defer func() { <-goinstallBlock }()
-
-	if goinstalledAlready[target] {
-		return
-	}
-	goinstalledAlready[target] = true
-
-	matches := false
-
+func IsGoInstallable(target string) (matches bool) {
 	//trim quote marks
 	if target[0] == '"' {
 		target = target[1:len(target)]
@@ -62,10 +52,30 @@ func GoInstallPkg(target string) (touched int64) {
 		}
 	}
 
-	if !matches {
+	return
+}
+
+func GoInstallPkg(target string) (touched int64) {
+	goinstallBlock <- true
+	defer func() { <-goinstallBlock }()
+
+	if goinstalledAlready[target] {
 		return
 	}
-
+	goinstalledAlready[target] = true
+	
+	if !IsGoInstallable(target) {
+		return
+	}
+	
+	//trim quote marks
+	if target[0] == '"' {
+		target = target[1:len(target)]
+	}
+	if target[len(target)-1] == '"' {
+		target = target[0 : len(target)-1]
+	}
+	
 	argv := []string{"goinstall", target}
 	//if Verbose {
 	fmt.Printf("%v\n", argv)
