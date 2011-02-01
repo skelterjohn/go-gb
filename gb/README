@@ -1,24 +1,3 @@
-Usage: gb [-options] [directory list]
-Options:
- ? print this usage text
- i install
- c clean
- b build after cleaning
- g use goinstall when appropriate
- p build packages in parallel, when possible
- s scan and list targets without building
- S scan and list targets and their dependencies without building
- t run tests
- e exclusive target list (do not build/clean/test/install a target unless its
-   directory is listed)
- v verbose
- m use makefiles, when possible
- M generate standard makefiles without building
- f force overwrite of existing makefiles
- F run gofmt on source files in targeted directories
- P build/clean/install only packages
- C build/clean/install only cmds
-
  gb will identify any possible targets existing in subdirectories of the current
 working directory, and act on them as appropriate. If a directory list is sup-
 plied on the command line, only targets residing in those directories and their
