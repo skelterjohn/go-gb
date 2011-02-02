@@ -59,6 +59,10 @@ func FilterFlag(src string) bool {
 		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
 		return false
 	}
+	if strings.Contains(src, "_bsd") && 
+		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+		return false
+	}
 	
 	return true
 }

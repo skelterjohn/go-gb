@@ -42,6 +42,9 @@ type Package struct {
 
 	CGoSources []string
 	CSrcs      []string
+	AsmSrcs		[]string
+	
+	IsCGo bool
 
 	TestSources []string
 	TestDeps    []string
@@ -125,6 +128,8 @@ func (this *Package) ScanForSource() (err os.Error) {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 	
+	this.IsCGo = len(this.CGoSources)+len(this.CSrcs)+len(this.AsmSrcs) > 0
+	
 	return
 }
 func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
@@ -140,6 +145,9 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	rootl := len(this.Dir)+1
 	if this.Dir != "." {
 		fpath = fpath[rootl:len(fpath)]
+	}
+	if strings.HasSuffix(fpath, ".s") {
+		this.AsmSrcs = append(this.AsmSrcs, fpath)
 	}
 	if strings.HasSuffix(fpath, ".go") {
 		if strings.HasSuffix(fpath, "_test.go") {
@@ -333,7 +341,7 @@ func (this *Package) Build() (err os.Error) {
 	if this.MyErr != nil {
 		return
 	}
-	if !this.HasMakefile && len(this.CGoSources) + len(this.CSrcs) != 0 {
+	if !this.HasMakefile && this.IsCGo {
 		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
 		return
 	}
@@ -391,7 +399,7 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0) { 
+		if (Makefiles && this.HasMakefile) || this.IsCGo { 
 			err = MakeBuild(this)
 		} else {
 			err = BuildPackage(this)
@@ -424,7 +432,7 @@ func (this *Package) Test() (err os.Error) {
 		}
 	}
 
-	if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0)  {
+	if (Makefiles && this.HasMakefile) || this.IsCGo  {
 		err = MakeTest(this)
 		return
 	}
@@ -508,7 +516,7 @@ func main() {
 */
 
 func (this *Package) CleanFiles() (err os.Error) {
-	if Makefiles && this.HasMakefile || (len(this.CGoSources) + len(this.CSrcs) != 0) {
+	if (Makefiles && this.HasMakefile) || this.IsCGo {
 		MakeClean(this)
 		PackagesBuilt++
 		return
@@ -589,6 +597,54 @@ func (this *Package) Install() (err os.Error) {
 	}
 	return
 }
+
+func (this *Package) CollectDistributionFiles(ch chan string) (err os.Error) {
+	if Exclusive && !ListedDirs[this.Dir] {
+		return
+	}
+	var f string
+	f = path.Join(this.Dir, "Makefile")
+	if _, err2 := os.Stat(f); err2 == nil {
+		ch <- f
+	}
+	f = path.Join(this.Dir, "target.gb")
+	if _, err2 := os.Stat(f); err2 == nil {
+		ch <- f
+	}
+	f = path.Join(this.Dir, "README")
+	if _, err2 := os.Stat(f); err2 == nil {
+		ch <- f
+	}
+	for _, src := range this.Sources {
+		ch <- path.Join(this.Dir, src)
+	}
+	for _, src := range this.CSrcs {
+		ch <- path.Join(this.Dir, src)
+	}
+	for _, src := range this.CGoSources {
+		ch <- path.Join(this.Dir, src)
+	}
+	for _, src := range this.TestSources {
+		ch <- path.Join(this.Dir, src)
+	}
+
+	for _, pkg := range this.DepPkgs {
+		err = pkg.CollectDistributionFiles(ch)
+		if err != nil {
+			return
+		}
+	}
+
+	for _, pkg := range this.TestDepPkgs {
+		err = pkg.CollectDistributionFiles(ch)
+		if err != nil {
+			return
+		}
+	}
+	
+	return
+}
+
 /*
 include $(GOROOT)/src/Make.inc
 
@@ -609,7 +665,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		return
 	}
 
-	if len(this.CGoSources) != 0 || len(this.CSrcs) != 0 {
+	if this.IsCGo {
 		fmt.Printf("(in %s) this is a cgo project; skipping makefile generation\n", this.Dir)
 		return
 	}

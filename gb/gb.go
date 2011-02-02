@@ -32,7 +32,7 @@ var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD strin
 
 var Install, Clean, Scan, ScanList, Test, Exclusive,
 	GoInstall, Concurrent, Verbose, GenMake, Build,
-	Force, Makefiles, GoFMT, DoPkgs, DoCmds bool
+	Force, Makefiles, GoFMT, DoPkgs, DoCmds, Distribution bool
 var IncludeDir string
 var Recurse bool
 //var CWD string
@@ -88,6 +88,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||
 		basedir == "_test" ||
+		basedir == "_dist_" ||
 		basedir == "bin" ||
 		(basedir != "." && strings.HasPrefix(basedir, ".")) {
 		//println("skipping", basedir)
@@ -108,11 +109,16 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 				if !install {
 					bis = " (installed)"
 				}
+				var label string
 				if pkg.IsCmd {
-					fmt.Printf("in %s: cmd \"%s\"%s\n", pkg.Dir, pkg.Target, bis)
+					label = "cmd"
 				} else {
-					fmt.Printf("in %s: pkg \"%s\"%s\n", pkg.Dir, pkg.Target, bis)
+					label = "pkg"
 				}
+				if pkg.IsCGo {
+					label = "cgo "+label
+				}
+				fmt.Printf("in %s: %s \"%s\"%s\n", pkg.Dir, label, pkg.Target, bis)
 				if ScanList {
 					fmt.Printf(" Deps: %v\n", pkg.Deps)
 					fmt.Printf(" TestDeps: %v\n", pkg.TestDeps)
@@ -163,6 +169,29 @@ func IsListed(name string) bool {
 	return false
 }
 
+func MakeDist(ch chan string) (err os.Error) {
+	fmt.Printf("Removing _dist_\n")
+	if err = os.RemoveAll("_dist_"); err != nil {
+		return
+	}
+
+	if err = os.MkdirAll("_dist_", 0755); err != nil {
+		return
+	}
+	
+	fmt.Printf("Copying distribution files to _dist_\n")
+	for file := range ch {
+		nfile := path.Join("_dist_", file)
+		npdir, _ := path.Split(nfile)
+		if err = os.MkdirAll(npdir, 0755); err != nil {
+			return
+		}
+		Copy(".", file, nfile)
+	}
+	
+	return
+}
+
 func RunGB() (err os.Error) {
 	Build = Build || (!GenMake && !Clean && !GoFMT) || (Makefiles && !Clean) || Install || Test
 
@@ -202,13 +231,7 @@ func RunGB() (err os.Error) {
 	}
 
 	for _, pkg := range Packages {
-		err2 := pkg.ResolveDeps()
-		if err2 != nil {
-			err = err2
-		}
-	}
-	if err != nil {
-		return
+		pkg.ResolveDeps()
 	}
 
 	if GoFMT {
@@ -259,6 +282,31 @@ func RunGB() (err os.Error) {
 		}
 
 		if !Build {
+			return
+		}
+	}
+
+	if Distribution {
+		ch := make(chan string)
+		go func() {
+			_, ferr := os.Stat("build")
+			if ferr == nil {
+				ch <- "build"
+			}
+			_, ferr = os.Stat("README")
+			if ferr == nil {
+				ch <- "README"
+			}
+			for _, pkg := range ListedPkgs {
+				err = pkg.CollectDistributionFiles(ch)
+				if err != nil {
+					return
+				}
+			}
+			close(ch)
+		}()
+		err = MakeDist(ch)
+		if err != nil {
 			return
 		}
 	}
@@ -359,6 +407,7 @@ func Usage() {
 	fmt.Printf(" F run gofmt on source files in targeted directories\n")
 	fmt.Printf(" P build/clean/install only packages\n")
 	fmt.Printf(" C build/clean/install only cmds\n")
+	fmt.Printf(" D create distribution\n")
 }
 
 func main() {
@@ -419,6 +468,8 @@ func main() {
 					DoPkgs = true
 				case 'C':
 					DoCmds = true
+				case 'D':
+					Distribution = true
 				default:
 					Usage()
 					return
