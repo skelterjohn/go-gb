@@ -347,6 +347,9 @@ func (this *Package) CheckStatus() {
 func (this *Package) ResolveDeps() (err os.Error) {
 	CheckDeps := func(deps []string) (err os.Error) {
 		for _, dep := range deps {
+			if dep == "C" {
+				this.IsCGo = true
+			}
 			if pkg, ok := Packages[dep]; ok {
 				this.DepPkgs = append(this.DepPkgs, pkg)
 			} else {

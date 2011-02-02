@@ -482,7 +482,7 @@ func main() {
 	MakeCMD, err = exec.LookPath("make")
 	if err != nil {
 		fmt.Printf("%v\n", err)
-		return
+		//return
 	}
 
 	CompileCMD, err = exec.LookPath(GetCompilerName())

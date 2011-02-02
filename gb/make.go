@@ -23,6 +23,11 @@ import (
 )
 
 func MakeBuild(pkg *Package) (err os.Error) {
+	if MakeCMD == "" {
+		fmt.Printf("(in %s) Can't use make to build %s\n", pkg.Dir, pkg.Target)
+		return
+	}
+
 	buildBlock <- true
 	defer func() { <-buildBlock }()
 	
@@ -47,6 +52,10 @@ func MakeBuild(pkg *Package) (err os.Error) {
 }
 
 func MakeClean(pkg *Package) (err os.Error) {
+	if MakeCMD == "" {
+		fmt.Printf("(in %s) Can't use make to clean %s\n", pkg.Dir, pkg.Target)
+		return
+	}
 	margs := []string{"make", "clean"}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
