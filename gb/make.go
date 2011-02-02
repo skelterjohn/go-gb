@@ -24,9 +24,14 @@ import (
 
 func MakeBuild(pkg *Package) (err os.Error) {
 	buildBlock <- true
-	defer func(){ <-buildBlock }()
+	defer func() { <-buildBlock }()
+	
+	if pkg.NeedsBuild {
+		MakeClean(pkg)
+	}
+	
 	margs := []string{"make"}
-	if Install {
+	if Install || pkg.IsInGOROOT {
 		margs = append(margs, "install")
 	}
 	//fmt.Printf("(in %v)\n", pkg.Dir)

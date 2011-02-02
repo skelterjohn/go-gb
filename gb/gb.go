@@ -44,11 +44,13 @@ var BrokenPackages int
 var ListedTargets int
 var ListedDirs map[string]bool
 
+var RunningInGOROOT bool
 
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
 var GOROOT, GOOS, GOARCH string
+var CWD string
 
 func GetBuildDirPkg() (dir string) {
 	return "_obj"
@@ -98,49 +100,25 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	var err os.Error
 
 	var pkg *Package
-		pkg, err = ReadPackage(base, dir)
+	pkg, err = ReadPackage(base, dir)
+	if err == nil {
+		Packages["\""+pkg.Target+"\""] = pkg
+		base = pkg.Base
+	} else {
+		var fin *os.File
+		tpath := path.Join(dir, "target.gb")
+		fin, err = os.Open(tpath, os.O_RDONLY, 0)
 		if err == nil {
-			if Scan {
-				build, install := pkg.Touched()
-				bis := ""
-				if !build {
-					bis = " (up to date)"
-				}
-				if !install {
-					bis += " (installed)"
-				}
-				var label string
-				if pkg.IsCmd {
-					label = "cmd"
-				} else {
-					label = "pkg"
-				}
-				if pkg.IsCGo {
-					label = "cgo "+label
-				}
-				fmt.Printf("in %s: %s \"%s\"%s\n", pkg.Dir, label, pkg.Target, bis)
-				if ScanList {
-					fmt.Printf(" Deps: %v\n", pkg.Deps)
-					fmt.Printf(" TestDeps: %v\n", pkg.TestDeps)
-				}
-			}
-			Packages["\""+pkg.Target+"\""] = pkg
-			base = pkg.Base
-		} else {
-			var fin *os.File
-			tpath := path.Join(dir, "target.gb")
-			fin, err = os.Open(tpath, os.O_RDONLY, 0)
-			if err == nil {
-				bfrd := bufio.NewReader(fin)
-				base, err = bfrd.ReadString('\n')
-				base = strings.TrimSpace(base)
+			bfrd := bufio.NewReader(fin)
+			base, err = bfrd.ReadString('\n')
+			base = strings.TrimSpace(base)
 
-			}
 		}
+	}
 
-		if pkg.Target == "." {
-			err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
-		}
+	if pkg.Target == "." {
+		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
+	}
 
 	if Recurse {
 		subdirs := GetSubDirs(dir)
@@ -178,7 +156,7 @@ func MakeDist(ch chan string) (err os.Error) {
 	if err = os.MkdirAll("_dist_", 0755); err != nil {
 		return
 	}
-	
+
 	fmt.Printf("Copying distribution files to _dist_\n")
 	for file := range ch {
 		nfile := path.Join("_dist_", file)
@@ -188,7 +166,7 @@ func MakeDist(ch chan string) (err os.Error) {
 		}
 		Copy(".", file, nfile)
 	}
-	
+
 	return
 }
 
@@ -203,11 +181,11 @@ func RunGB() (err os.Error) {
 
 	Recurse = true
 
-/*
-	sw := &SourceWalker{make(map[string][]string)}
-	path.Walk(".", sw, make(chan os.Error))
-	fmt.Printf("%v\n", sw.pkgs)
-*/
+	/*
+		sw := &SourceWalker{make(map[string][]string)}
+		path.Walk(".", sw, make(chan os.Error))
+		fmt.Printf("%v\n", sw.pkgs)
+	*/
 	err = ScanDirectory(".", ".")
 	if err != nil {
 		return
@@ -226,12 +204,23 @@ func RunGB() (err os.Error) {
 		}
 	}
 
-	if Scan {
-		return
+	for _, pkg := range Packages {
+		pkg.Stat()
 	}
 
 	for _, pkg := range Packages {
 		pkg.ResolveDeps()
+	}
+
+	for _, pkg := range Packages {
+		pkg.CheckStatus()
+	}
+
+	if Scan {
+		for _, pkg := range Packages {
+			pkg.PrintScan()
+		}
+		return
 	}
 
 	if GoFMT {
@@ -424,6 +413,10 @@ func main() {
 		println("Environental variable GOROOT not set")
 		return
 	}
+
+	CWD, _ = os.Getwd()
+	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
+
 	GOMAXPROCS := os.Getenv("GOMAXPROCS")
 	n, nerr := strconv.Atoi(GOMAXPROCS)
 	if nerr != nil {

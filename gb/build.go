@@ -84,7 +84,7 @@ func ReverseDirForwardSlash(dir string) (rev string) {
 
 func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
-	defer func(){ <-buildBlock }()
+	defer func() { <-buildBlock }()
 
 	/*
 		relativeSources := make([]string, len(pkg.Sources))
@@ -95,12 +95,14 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 	reverseDots := ReverseDir(pkg.Dir)
 	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
-	cmdDest := path.Join(reverseDots, GetBuildDirCmd())
+	//cmdDest := path.Join(reverseDots, GetBuildDirCmd())
 
 	srcs := pkg.PkgSrc[pkg.Name]
 
 	argv := []string{GetCompilerName()}
-	argv = append(argv, "-I", pkgDest)
+	if !pkg.IsInGOROOT {
+		argv = append(argv, "-I", pkgDest)
+	}
 	argv = append(argv, "-o", GetIBName())
 	argv = append(argv, srcs...)
 	if Verbose {
@@ -126,23 +128,28 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	if _, err = os.Stat(pkg.ib); err != nil {
 		return os.NewError("compile error")
 	}
+	
+	dst := pkg.result
 
 	if pkg.IsCmd {
-		dst := path.Join(cmdDest, pkg.Target)
+		//dst := path.Join(cmdDest, pkg.Target)
 		os.MkdirAll(GetBuildDirCmd(), 0755)
 
 		largs := []string{GetLinkerName()}
-		largs = append(largs, "-L", pkgDest)
+		if !pkg.IsInGOROOT {
+			largs = append(largs, "-L", pkgDest)
+		}
 		largs = append(largs, "-o", dst, GetIBName())
 		if Verbose {
 			fmt.Printf("%v\n", largs)
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 	} else {
-		dst := path.Join(pkgDest, pkg.Target) + ".a"
+		//dst := path.Join(pkgDest, pkg.Target) + ".a"
+		//dst := pkg.result
 
-		mkdirdst := path.Join(GetBuildDirPkg(), pkg.Target) + ".a"
-		dstDir, _ := path.Split(mkdirdst)
+		//mkdirdst := path.Join(GetBuildDirPkg(), pkg.Target) + ".a"
+		dstDir, _ := path.Split(dst)
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, GetIBName()}
@@ -253,7 +260,7 @@ func InstallPackage(pkg *Package) (err os.Error) {
 	}
 	fmt.Printf("Installing %s \"%s\"\n", which, pkg.Target)
 
-	err = Copy(".", pkg.result, dstFile)
+	Copy(".", pkg.result, dstFile)
 	/*
 		argv := append([]string{"cp", "-f", pkg.result, dstDir})
 		if Verbose {

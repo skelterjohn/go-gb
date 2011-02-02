@@ -35,9 +35,9 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 
 	pkgbin := path.Join(GetInstallDirPkg(), target)
 	pkgbin += ".a"
-	
+
 	finfo, err := os.Stat(pkgbin)
-	
+
 	if err == nil {
 		return true, finfo.Mtime_ns
 	}
@@ -58,15 +58,15 @@ func FilterFlag(src string) bool {
 			return false
 		}
 	}
-	if strings.Contains(src, "_unix") && 
+	if strings.Contains(src, "_unix") &&
 		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
 		return false
 	}
-	if strings.Contains(src, "_bsd") && 
+	if strings.Contains(src, "_bsd") &&
 		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -125,11 +125,11 @@ func RemoveDups(list []string) (newlist []string) {
 }
 
 type Walker struct {
-	Name   string
-	Target string
-	pkgPos token.Pos
-	Deps   []string
-	Funcs  []string
+	Name      string
+	Target    string
+	pkgPos    token.Pos
+	Deps      []string
+	Funcs     []string
 	ScanFuncs bool
 }
 

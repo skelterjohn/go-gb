@@ -63,11 +63,11 @@ func GoInstallPkg(target string) (touched int64) {
 		return
 	}
 	goinstalledAlready[target] = true
-	
+
 	if !IsGoInstallable(target) {
 		return
 	}
-	
+
 	//trim quote marks
 	if target[0] == '"' {
 		target = target[1:len(target)]
@@ -75,7 +75,7 @@ func GoInstallPkg(target string) (touched int64) {
 	if target[len(target)-1] == '"' {
 		target = target[0 : len(target)-1]
 	}
-	
+
 	argv := []string{"goinstall", target}
 	if GoInstallUpdate {
 		argv = []string{"goinstall", "-u", target}
