@@ -277,7 +277,7 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				}
 			} else {
 				if !PkgExistsInGOROOT(dep) && !GoInstall {
-					fmt.Pprintf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
+					fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
 					err = os.NewError("unresolved packages")
 				}
 			}
