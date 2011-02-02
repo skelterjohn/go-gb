@@ -1,4 +1,7 @@
 // This is a Windows Script Host script to build gb-go on windows without gnu
+//
+// To run this file on windows just double click it or navigate to the current
+// directory in command prompt and run 'wscript install.js'
 
 var fso = WScript.CreateObject("Scripting.FileSystemObject");
 var shell = WScript.CreateObject("WScript.Shell")
