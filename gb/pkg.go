@@ -30,7 +30,6 @@ type Package struct {
 	Target      string
 	Base        string
 	IsCmd       bool
-	Sources     []string
 	Deps        []string
 	ib          string
 	result      string
@@ -40,9 +39,13 @@ type Package struct {
 
 	built, cleaned, addedToBuild, gofmted bool
 
+	Sources     []string
 	CGoSources []string
 	CSrcs      []string
 	AsmSrcs		[]string
+	
+	PkgSrc	map[string][]string
+	BuildSrc	[]string
 	
 	IsCGo bool
 
@@ -56,7 +59,7 @@ type Package struct {
 	DepPkgs     []*Package
 	TestDepPkgs []*Package
 
-	SourceTime, BinTime, InstTime int64
+	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
 	block chan bool
 }
@@ -70,6 +73,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this = new(Package)
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
+	this.PkgSrc = make(map[string][]string)
 	
 	
 	err = this.ScanForSource()
@@ -168,10 +172,11 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fpkg, ftarget string
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
+		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
 		if this.Name != "" && fpkg != this.Name {
-			err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
-			fmt.Printf("%v\n", err)
-			return
+			//err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
+			//fmt.Printf("%v\n", err)
+			//return
 		}
 		if err != nil {
 			return
@@ -179,9 +184,14 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		if ftarget != "" {
 			this.Target = ftarget
 		}
-		this.Name = fpkg
+		if (fpkg != "main" && fpkg != "documentation")|| this.Name == "" {
+			this.Name = fpkg
+		}
 		this.Deps = append(this.Deps, fdeps...)
 	}
+	
+	
+	
 	this.Deps = RemoveDups(this.Deps)
 	if Test {
 		for _, src := range this.TestSources {
@@ -190,7 +200,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
 			if this.Name != "" && fpkg != this.Name {
 				err = os.NewError(fmt.Sprintf("in %s: more than one test package (ignoring test source)", this.Dir))
-				fmt.Printf("%v\n", err)
+				//fmt.Printf("%v\n", err)
 				this.TestDeps = nil
 				break
 			}
@@ -207,7 +217,6 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.TestDeps = RemoveDups(this.TestDeps)
 	}
 	return
-	//fpkg, ftarget, fdeps, ffuncs, err = GetDeps(srcloc)
 }	
 
 func (this *Package) GetTarget() (err os.Error) {
@@ -278,15 +287,23 @@ func (this *Package) ResolveDeps() (err os.Error) {
 		for _, dep := range deps {
 			if pkg, ok := Packages[dep]; ok {
 				this.DepPkgs = append(this.DepPkgs, pkg)
-			} else if !IsGoInstallable(dep) {
-				if !PkgExistsInGOROOT(dep) {
-					fmt.Printf("in %s: can't resolve pkg %s (maybe you aren't in the root?)\n", this.Dir, dep)
-					err = os.NewError("unresolved packages")
-				}
 			} else {
-				if !PkgExistsInGOROOT(dep) && !GoInstall {
-					fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
-					err = os.NewError("unresolved packages")
+				exists, when := PkgExistsInGOROOT(dep)
+				if exists {
+					if this.GOROOTPkgTime < when {
+						this.GOROOTPkgTime = when
+					}
+				}
+				if !IsGoInstallable(dep) {
+					if !exists {
+						fmt.Printf("in %s: can't resolve pkg %s (maybe you aren't in the root?)\n", this.Dir, dep)
+						err = os.NewError("unresolved packages")
+					}
+				} else {
+					if !exists && !GoInstall {
+						fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
+						err = os.NewError("unresolved packages")
+					}
 				}
 			}
 		}
@@ -322,7 +339,7 @@ func (this *Package) Touched() (build, install bool) {
 	if inTime > this.BinTime {
 		build = true
 	}
-	if this.InstTime < this.BinTime {
+	if this.InstTime < this.BinTime || this.InstTime < inTime {
 		install = true
 	}
 	
@@ -364,7 +381,7 @@ func (this *Package) Build() (err os.Error) {
 		}
 	}
 
-	var inTime int64
+	inTime := this.GOROOTPkgTime
 
 	for _, pkg := range this.DepPkgs {
 		err = pkg.Build()
@@ -706,7 +723,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "\n")
 	_, err = fmt.Fprintf(file, "TARG=%s\n", this.Target)
 	_, err = fmt.Fprintf(file, "GOFILES=\\\n")
-	for _, src := range this.Sources {
+	for _, src := range this.PkgSrc[this.Name] {
 		_, err = fmt.Fprintf(file, "\t%s\\\n", src)
 	}
 	_, err = fmt.Fprintf(file, "\n")

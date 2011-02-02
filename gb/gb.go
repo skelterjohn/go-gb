@@ -31,7 +31,7 @@ import (
 var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
 
 var Install, Clean, Scan, ScanList, Test, Exclusive,
-	GoInstall, Concurrent, Verbose, GenMake, Build,
+	GoInstall, GoInstallUpdate, Concurrent, Verbose, GenMake, Build,
 	Force, Makefiles, GoFMT, DoPkgs, DoCmds, Distribution bool
 var IncludeDir string
 var Recurse bool
@@ -107,7 +107,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 					bis = " (up to date)"
 				}
 				if !install {
-					bis = " (installed)"
+					bis += " (installed)"
 				}
 				var label string
 				if pkg.IsCmd {
@@ -460,6 +460,9 @@ func main() {
 					Force = true
 				case 'g':
 					GoInstall = true
+				case 'G':
+					GoInstall = true
+					GoInstallUpdate = true
 				case 'p':
 					Concurrent = true
 				case 'F':

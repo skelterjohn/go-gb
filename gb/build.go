@@ -97,10 +97,12 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
 	cmdDest := path.Join(reverseDots, GetBuildDirCmd())
 
+	srcs := pkg.PkgSrc[pkg.Name]
+
 	argv := []string{GetCompilerName()}
 	argv = append(argv, "-I", pkgDest)
 	argv = append(argv, "-o", GetIBName())
-	argv = append(argv, pkg.Sources...)
+	argv = append(argv, srcs...)
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}

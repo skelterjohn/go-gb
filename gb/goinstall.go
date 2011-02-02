@@ -77,6 +77,9 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 	
 	argv := []string{"goinstall", target}
+	if GoInstallUpdate {
+		argv = []string{"goinstall", "-u", target}
+	}
 	//if Verbose {
 	fmt.Printf("%v\n", argv)
 	//}

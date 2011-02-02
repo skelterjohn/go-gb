@@ -25,7 +25,7 @@ import (
 	"go/ast"
 )
 
-func PkgExistsInGOROOT(target string) bool {
+func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 	if target[0] == '"' {
 		target = target[1:len(target)]
 	}
@@ -36,14 +36,17 @@ func PkgExistsInGOROOT(target string) bool {
 	pkgbin := path.Join(GetInstallDirPkg(), target)
 	pkgbin += ".a"
 	
-	_, err := os.Stat(pkgbin)
+	finfo, err := os.Stat(pkgbin)
 	
-	return err == nil
+	if err == nil {
+		return true, finfo.Mtime_ns
+	}
+	return
 }
 
 func FilterFlag(src string) bool {
 
-	os_flags := []string{"windows", "darwin", "freebsd", "bsd", "linux"}
+	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
 	arch_flags := []string{"amd64", "386", "arm"}
 	for _, flag := range os_flags {
 		if strings.Contains(src, "_"+flag) && GOOS != flag {
