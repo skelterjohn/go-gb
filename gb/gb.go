@@ -282,7 +282,7 @@ func RunGB() (err os.Error) {
 		}
 
 		if !Build {
-			return
+			//return
 		}
 	}
 
@@ -369,7 +369,7 @@ func RunGB() (err os.Error) {
 		} else if PackagesInstalled == 1 {
 			println("Installed 1 target")
 		}
-		if PackagesBuilt == 0 && PackagesInstalled == 0 && BrokenPackages == 0 {
+		if Build && PackagesBuilt == 0 && PackagesInstalled == 0 && BrokenPackages == 0 {
 			println("Up to date")
 		}
 		if BrokenPackages > 1 {
