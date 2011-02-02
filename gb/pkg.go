@@ -118,23 +118,41 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 }
 
 func (this *Package) ScanForSource() (err os.Error) {
-	var sw SourceWalker
-	sw.root = this.Dir
-	sw.srcroot = path.Join(this.Dir, "src")
 	errch := make(chan os.Error)
-	path.Walk(this.Dir, &sw, errch)
-	//fmt.Printf("%v: %v %v\n", this.Dir, sw.srcs, sw.tsrcs)
-	
-	this.Sources = sw.srcs
-	this.TestSources = sw.tsrcs
-	this.CGoSources = sw.cgosrcs
-	this.CSrcs = sw.csrcs
+	path.Walk(this.Dir, this, errch)
 	
 	if len(this.Sources) + len(this.TestSources) == 0 {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 	
 	return
+}
+func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
+	return dpath == this.Dir || strings.HasPrefix(dpath, path.Join(this.Dir, "src"))
+}
+func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
+	if !FilterFlag(fpath) {
+		return
+	}
+	if strings.HasSuffix(fpath, "_testmain.go") {
+		return
+	}
+	rootl := len(this.Dir)+1
+	if this.Dir != "." {
+		fpath = fpath[rootl:len(fpath)]
+	}
+	if strings.HasSuffix(fpath, ".go") {
+		if strings.HasSuffix(fpath, "_test.go") {
+			this.TestSources = append(this.TestSources, fpath)
+		} else if strings.HasPrefix(fpath, "cgo_") {
+			this.CGoSources = append(this.CGoSources, fpath)
+		} else {
+			this.Sources = append(this.Sources, fpath)
+		}
+	}
+	if strings.HasSuffix(fpath, ".c") {
+		this.CSrcs = append(this.CSrcs, fpath)
+	}
 }
 
 func (this *Package) GetSourceDeps() (err os.Error) {
@@ -256,6 +274,10 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
 				return
 			}
+		} else {
+			if !PkgExistsInGOROOT(dep) && !GoInstall {
+				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
+			}
 		}
 	}
 	for _, dep := range this.TestDeps {
@@ -265,6 +287,10 @@ func (this *Package) ResolveDeps() (err os.Error) {
 			if !PkgExistsInGOROOT(dep) {
 				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
 				return
+			}
+		} else {
+			if !PkgExistsInGOROOT(dep) && !GoInstall {
+				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
 			}
 		}
 	}

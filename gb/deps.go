@@ -63,42 +63,6 @@ func FilterFlag(src string) bool {
 	return true
 }
 
-type SourceWalker struct {
-	root string
-	srcroot string
-	srcs []string
-	tsrcs []string
-	csrcs []string
-	cgosrcs []string
-}
-func (this *SourceWalker) VisitDir(dpath string, f *os.FileInfo) bool {
-	return dpath == this.root || strings.HasPrefix(dpath, this.srcroot)
-}
-func (this *SourceWalker) VisitFile(fpath string, f *os.FileInfo) {
-	if !FilterFlag(fpath) {
-		return
-	}
-	if strings.HasSuffix(fpath, "_testmain.go") {
-		return
-	}
-	rootl := len(this.root)+1
-	if this.root != "." {
-		fpath = fpath[rootl:len(fpath)]
-	}
-	if strings.HasSuffix(fpath, ".go") {
-		if strings.HasSuffix(fpath, "_test.go") {
-			this.tsrcs = append(this.tsrcs, fpath)
-		} else if strings.HasPrefix(fpath, "cgo_") {
-			this.cgosrcs = append(this.cgosrcs, fpath)
-		} else {
-			this.srcs = append(this.srcs, fpath)
-		}
-	}
-	if strings.HasSuffix(fpath, ".c") {
-		this.csrcs = append(this.csrcs, fpath)
-	}
-}
-
 func GetDepsMany(dir string, srcs []string) (err os.Error) {
 	fset := token.NewFileSet()
 	filenames := make([]string, len(srcs))

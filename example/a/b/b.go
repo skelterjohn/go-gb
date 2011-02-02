@@ -1,8 +1,8 @@
 package b
 
-import "c"
+import . "c"
 
 func BFoo() {
 	println("BFoo")
-	c.CFoo()
+	CFoo()
 }
