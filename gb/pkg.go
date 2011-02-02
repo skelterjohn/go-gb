@@ -266,34 +266,29 @@ func (this *Package) Stat() {
 }
 
 func (this *Package) ResolveDeps() (err os.Error) {
-	for _, dep := range this.Deps {
-		if pkg, ok := Packages[dep]; ok {
-			this.DepPkgs = append(this.DepPkgs, pkg)
-		} else if !IsGoInstallable(dep) {
-			if !PkgExistsInGOROOT(dep) {
-				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
-				return
-			}
-		} else {
-			if !PkgExistsInGOROOT(dep) && !GoInstall {
-				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
-			}
-		}
-	}
-	for _, dep := range this.TestDeps {
-		if pkg, ok := Packages[dep]; ok {
-			this.TestDepPkgs = append(this.TestDepPkgs, pkg)
-		} else if !IsGoInstallable(dep) {
-			if !PkgExistsInGOROOT(dep) {
-				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
-				return
-			}
-		} else {
-			if !PkgExistsInGOROOT(dep) && !GoInstall {
-				err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
+	CheckDeps := func(deps []string) (err os.Error) {
+		for _, dep := range deps {
+			if pkg, ok := Packages[dep]; ok {
+				this.DepPkgs = append(this.DepPkgs, pkg)
+			} else if !IsGoInstallable(dep) {
+				if !PkgExistsInGOROOT(dep) {
+					err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
+					fmt.Printf("%v\n", err)
+				}
+			} else {
+				if !PkgExistsInGOROOT(dep) && !GoInstall {
+					err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
+					fmt.Printf("%v\n", err)
+				}
 			}
 		}
+		return
 	}
+	err = CheckDeps(this.Deps)
+	if err != nil {
+		return
+	}
+	err = CheckDeps(this.TestDeps)
 	return
 }
 
