@@ -273,12 +273,10 @@ func (this *Package) ResolveDeps() (err os.Error) {
 			} else if !IsGoInstallable(dep) {
 				if !PkgExistsInGOROOT(dep) {
 					err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (maybe you aren't in the root?)", this.Dir, dep))
-					fmt.Printf("%v\n", err)
 				}
 			} else {
 				if !PkgExistsInGOROOT(dep) && !GoInstall {
 					err = os.NewError(fmt.Sprintf("in %s: can't resolve pkg %s (try using -g)", this.Dir, dep))
-					fmt.Printf("%v\n", err)
 				}
 			}
 		}

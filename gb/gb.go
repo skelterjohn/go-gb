@@ -486,6 +486,6 @@ func main() {
 
 	err = RunGB()
 	if err != nil {
-		//fmt.Printf("%v\n", err)
+		fmt.Printf("%v\n", err)
 	}
 }
