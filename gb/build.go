@@ -93,7 +93,10 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 	*/
 
-	reverseDots := ReverseDir(pkg.Dir)
+	reverseDots := ""
+	if !pkg.IsInGOROOT {
+		reverseDots = ReverseDir(pkg.Dir)
+	}
 	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
 	//cmdDest := path.Join(reverseDots, GetBuildDirCmd())
 
@@ -163,7 +166,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-
+	
 	var resInfo *os.FileInfo
 	resInfo, err2 := os.Stat(pkg.result)
 	if err2 == nil {

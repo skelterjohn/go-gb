@@ -181,11 +181,6 @@ func RunGB() (err os.Error) {
 
 	Recurse = true
 
-	/*
-		sw := &SourceWalker{make(map[string][]string)}
-		path.Walk(".", sw, make(chan os.Error))
-		fmt.Printf("%v\n", sw.pkgs)
-	*/
 	err = ScanDirectory(".", ".")
 	if err != nil {
 		return
