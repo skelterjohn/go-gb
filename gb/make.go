@@ -31,13 +31,15 @@ func MakeBuild(pkg *Package) (err os.Error) {
 	buildBlock <- true
 	defer func() { <-buildBlock }()
 	
-	if pkg.NeedsBuild {
-		MakeClean(pkg)
-	}
-	
-	margs := []string{"make"}
+	margs := []string{"make", "clean"}
 	if Install || pkg.IsInGOROOT {
 		margs = append(margs, "install")
+	} else {
+		if pkg.IsCmd {
+			margs = append(margs, "command")
+		} else {
+			margs = append(margs, "package")
+		}
 	}
 	//fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
