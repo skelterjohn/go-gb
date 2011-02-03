@@ -69,7 +69,7 @@ type Package struct {
 }
 
 func ReadPackage(base, dir string) (this *Package, err os.Error) {
-
+	//println("ReadPackage(",base,dir,")")
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
 		err = os.NewError("not a directory")
@@ -82,6 +82,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 
 	//global, _ := GetAbsolutePath(dir)
 	//if strings.HasPrefix(global, GOROOT) {
+	//println("rp: ", GOROOT, dir)
 	if _, perr := GetRelativePath(GOROOT, dir); perr == nil {
 		this.IsInGOROOT = true
 	}
@@ -235,6 +236,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 func (this *Package) GetTarget() (err os.Error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
+		//println("grp:", path.Join(GOROOT, "src", "pkg"), this.Dir)
 		this.Target, err = GetRelativePath(path.Join(GOROOT, "src", "pkg"), this.Dir)
 		if err != nil {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))

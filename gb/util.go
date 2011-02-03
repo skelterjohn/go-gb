@@ -38,8 +38,11 @@ func GetAbsolutePath(p string) (absp string, err os.Error) {
 }
 
 func GetRelativePath(parent, child string) (rel string, err os.Error) {
+	//println("in grp")
 	parent, err = GetAbsolutePath(parent)
 	child, err = GetAbsolutePath(child)
+
+	//println(parent, child)
 
 	if !strings.HasPrefix(child, parent) {
 		err = os.NewError(fmt.Sprintf("'%s' is not in '%s'", child, parent))

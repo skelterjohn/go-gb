@@ -116,7 +116,6 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	dst := path.Join(reverseDots, pkg.result)
 
 	if pkg.IsCmd {
-		//dst := path.Join(cmdDest, pkg.Target)
 		os.MkdirAll(GetBuildDirCmd(), 0755)
 
 		largs := []string{GetLinkerName()}
@@ -129,11 +128,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 	} else {
-		//dst := path.Join(pkgDest, pkg.Target) + ".a"
-		//dst := pkg.result
-
-		//mkdirdst := path.Join(GetBuildDirPkg(), pkg.Target) + ".a"
-		dstDir, _ := path.Split(path.Join(pkg.Dir, dst))
+		dstDir, _ := path.Split(dst)
 		if Verbose {
 			fmt.Printf("Creating directory %s\n", dstDir)
 		}

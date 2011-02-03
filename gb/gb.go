@@ -122,8 +122,10 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 
 	if Recurse {
 		subdirs := GetSubDirs(dir)
+		//fmt.Fprintf(os.Stderr, "subdirs for %s: %v\n", dir, subdirs)
 		for _, subdir := range subdirs {
 			if subdir != "src" {
+				//println("Recursive scan:", dir, subdir)
 				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 			}
 		}
@@ -426,6 +428,7 @@ func main() {
 	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
 
 	GOMAXPROCS := os.Getenv("GOMAXPROCS")
+	println(GOMAXPROCS)
 	n, nerr := strconv.Atoi(GOMAXPROCS)
 	if nerr != nil {
 		n = 1
