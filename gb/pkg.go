@@ -80,8 +80,9 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this.Dir = path.Clean(dir)
 	this.PkgSrc = make(map[string][]string)
 
-	global, _ := GetAbsolutePath(dir)
-	if strings.HasPrefix(global, GOROOT) {
+	//global, _ := GetAbsolutePath(dir)
+	//if strings.HasPrefix(global, GOROOT) {
+	if _, perr := GetRelativePath(GOROOT, dir); perr == nil {
 		this.IsInGOROOT = true
 	}
 
