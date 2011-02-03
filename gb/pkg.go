@@ -182,6 +182,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
 		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
+
 		this.SrcDeps[src] = fdeps
 		if this.Name != "" && fpkg != this.Name {
 			//err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
@@ -194,8 +195,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		if ftarget != "" {
 			this.Target = ftarget
 		}
-		if (fpkg != "main" && fpkg != "documentation") || this.Name == "" {
-			this.Name = fpkg
+		if fpkg != "documentation" {
+			if fpkg != "main" || this.Name == "" {
+				this.Name = fpkg
+			}
 		}
 		//this.Deps = append(this.Deps, fdeps...)
 	}
