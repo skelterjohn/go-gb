@@ -37,7 +37,7 @@ type Package struct {
 	MyErr       os.Error
 	Active      bool
 
-	built, cleaned, addedToBuild, gofmted bool
+	built, cleaned, addedToBuild, gofmted, scanned bool
 
 	NeedsBuild, NeedsInstall bool
 
@@ -184,11 +184,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
 
 		this.SrcDeps[src] = fdeps
-		if this.Name != "" && fpkg != this.Name {
-			//err = os.NewError(fmt.Sprintf("in %s: Source for more than one target", this.Dir))
-			//fmt.Printf("%v\n", err)
-			//return
-		}
+
 		if err != nil {
 			return
 		}
@@ -299,7 +295,15 @@ func (this *Package) GetTarget() (err os.Error) {
 }
 
 func (this *Package) PrintScan() {
-
+	if this.scanned {
+		return
+	}
+	this.scanned = true
+	
+	for _, pkg := range this.DepPkgs {
+		pkg.PrintScan()
+	}
+	
 	//build, install := this.Touched()
 	bis := ""
 	if !this.NeedsBuild {
@@ -321,7 +325,13 @@ func (this *Package) PrintScan() {
 	if this.IsInGOROOT {
 		label = "goroot " + label
 	}
-	fmt.Printf("in %s: %s \"%s\"%s\n", this.Dir, label, this.Target, bis)
+	
+	displayDir := this.Dir
+	if this.IsInGOROOT {
+		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
+	}
+	
+	fmt.Printf("in %s: %s \"%s\"%s\n", displayDir, label, this.Target, bis)
 	if ScanList {
 		fmt.Printf(" %s Deps: %v\n", this.Target, this.Deps)
 		fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)

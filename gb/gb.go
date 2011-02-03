@@ -139,6 +139,7 @@ func IsListed(name string) bool {
 	if Exclusive {
 		return ListedDirs[name]
 	}
+	
 	for lt := range ListedDirs {
 		if strings.HasPrefix(name, lt) {
 			return true
@@ -219,7 +220,12 @@ func RunGB() (err os.Error) {
 
 	if Scan {
 		for _, pkg := range Packages {
-			pkg.PrintScan()
+			if pkg.IsInGOROOT && !RunningInGOROOT {
+				continue
+			}
+			if IsListed(pkg.Dir) {
+				pkg.PrintScan()
+			}
 		}
 		return
 	}
@@ -398,7 +404,7 @@ func Usage() {
 	fmt.Printf(" P build/clean/install only packages\n")
 	fmt.Printf(" C build/clean/install only cmds\n")
 	fmt.Printf(" D create distribution\n")
-	fmt.Printf(" R update packages in $GOROOT/src\n")
+	fmt.Printf(" R update dependencies in $GOROOT/src\n")
 }
 
 func main() {
