@@ -310,7 +310,7 @@ func (this *Package) PrintScan() {
 		bis = " (up to date)"
 	}
 	if !this.NeedsInstall {
-		bis += " (installed)"
+		bis = " (installed)"
 	}
 	var label string
 
