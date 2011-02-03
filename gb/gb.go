@@ -30,7 +30,7 @@ import (
 
 var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
 
-var Install, Clean, Scan, ScanList, Test, Exclusive,
+var Install, Clean, Scan, ScanList, Test, Exclusive, BuildGOROOT,
 	GoInstall, GoInstallUpdate, Concurrent, Verbose, GenMake, Build,
 	Force, Makefiles, GoFMT, DoPkgs, DoCmds, Distribution bool
 var IncludeDir string
@@ -190,6 +190,9 @@ func RunGB() (err os.Error) {
 	if err != nil {
 		return
 	}
+	if BuildGOROOT {
+		ScanDirectory("", path.Join(GOROOT, "src"))
+	}
 
 	for _, arg := range args {
 		if arg[0] != '-' {
@@ -199,6 +202,9 @@ func RunGB() (err os.Error) {
 
 	ListedPkgs := []*Package{}
 	for _, pkg := range Packages {
+		if !RunningInGOROOT && pkg.IsInGOROOT {
+			continue
+		}
 		if IsListed(pkg.Dir) {
 			ListedPkgs = append(ListedPkgs, pkg)
 		}
@@ -397,6 +403,7 @@ func Usage() {
 	fmt.Printf(" P build/clean/install only packages\n")
 	fmt.Printf(" C build/clean/install only cmds\n")
 	fmt.Printf(" D create distribution\n")
+	fmt.Printf(" R update packages in $GOROOT/src\n")
 }
 
 func main() {
@@ -466,6 +473,8 @@ func main() {
 					DoCmds = true
 				case 'D':
 					Distribution = true
+				case 'R':
+					BuildGOROOT = true
 				default:
 					Usage()
 					return

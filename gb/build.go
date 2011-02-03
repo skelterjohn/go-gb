@@ -129,7 +129,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		return os.NewError("compile error")
 	}
 	
-	dst := pkg.result
+	dst := path.Join(reverseDots, pkg.result)
 
 	if pkg.IsCmd {
 		//dst := path.Join(cmdDest, pkg.Target)
@@ -149,7 +149,10 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		//dst := pkg.result
 
 		//mkdirdst := path.Join(GetBuildDirPkg(), pkg.Target) + ".a"
-		dstDir, _ := path.Split(dst)
+		dstDir, _ := path.Split(path.Join(pkg.Dir, dst))
+		if Verbose {
+			fmt.Printf("Creating directory %s\n", dstDir)
+		}
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, GetIBName()}
