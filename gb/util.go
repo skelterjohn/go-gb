@@ -43,7 +43,7 @@ func GetRelativePath(parent, child string) (rel string, err os.Error) {
 
 	if !strings.HasPrefix(child, parent) {
 		err = os.NewError(fmt.Sprintf("'%s' is not in '%s'", child, parent))
-		//fmt.Printf("%v\n", err)
+		return
 	}
 
 	rel = path.Clean(child[len(parent)+1 : len(child)])
