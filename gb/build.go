@@ -86,13 +86,6 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
 	defer func() { <-buildBlock }()
 
-	/*
-		relativeSources := make([]string, len(pkg.Sources))
-		for i, src := range pkg.Sources {
-			relativeSources[i] = path.Join(pkg.Dir, src)
-		}
-	*/
-
 	reverseDots := ""
 	if !pkg.IsInGOROOT {
 		reverseDots = ReverseDir(pkg.Dir)
@@ -267,19 +260,7 @@ func InstallPackage(pkg *Package) (err os.Error) {
 	fmt.Printf("Installing %s \"%s\"\n", which, pkg.Target)
 
 	Copy(".", pkg.result, dstFile)
-	/*
-		argv := append([]string{"cp", "-f", pkg.result, dstDir})
-		if Verbose {
-			fmt.Printf("%v\n", argv)
-		}
-		p, err := exec.Run(CopyCMD, argv, os.Envs, ".", exec.PassThrough, exec.PassThrough, exec.PassThrough)
-		if err != nil {
-			return
-		}
-		if p != nil {
-			p.Wait(0)
-		}
-	*/
+	
 	return
 }
 

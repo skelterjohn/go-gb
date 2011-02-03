@@ -683,7 +683,7 @@ func (this *Package) Install() (err os.Error) {
 		return
 	}
 
-	if !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime {
+	if !(Makefiles && this.HasMakefile) && this.InstTime < this.BinTime && !this.IsInGOROOT {
 		err = InstallPackage(this)
 
 		this.Stat()
