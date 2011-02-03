@@ -445,7 +445,6 @@ func (this *Package) Build() (err os.Error) {
 		<-this.block
 	}()
 	if !this.NeedsBuild {
-		println(this.Target, "!this.NeedsBuild")
 		return
 	}
 	if this.built {

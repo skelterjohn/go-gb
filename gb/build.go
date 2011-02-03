@@ -128,7 +128,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 	} else {
-		dstDir, _ := path.Split(dst)
+		dstDir, _ := path.Split(pkg.result)
 		if Verbose {
 			fmt.Printf("Creating directory %s\n", dstDir)
 		}
