@@ -374,12 +374,12 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				}
 				if !IsGoInstallable(dep) {
 					if !exists {
-						fmt.Printf("in %s: can't resolve pkg %s (maybe you aren't in the root?)\n", this.Dir, dep)
+						//fmt.Printf("in %s: can't resolve pkg %s (maybe you aren't in the root?)\n", this.Dir, dep)
 						err = os.NewError("unresolved packages")
 					}
 				} else {
 					if !exists && !GoInstall {
-						fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
+						//fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
 						err = os.NewError("unresolved packages")
 					}
 				}
