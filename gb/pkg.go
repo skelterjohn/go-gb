@@ -256,8 +256,8 @@ func (this *Package) GetTarget() (err os.Error) {
 		}
 
 		tpath := path.Join(this.Dir, "/target.gb")
-		fin, err := os.Open(tpath, os.O_RDONLY, 0)
-		if err == nil {
+		fin, err2 := os.Open(tpath, os.O_RDONLY, 0)
+		if err2 == nil {
 			bfrd := bufio.NewReader(fin)
 			this.Target, err = bfrd.ReadString('\n')
 			this.Target = strings.TrimSpace(this.Target)

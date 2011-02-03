@@ -100,7 +100,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	var err os.Error
 
 	var pkg *Package
-	pkg, err = ReadPackage(base, dir)
+	pkg, err = ReadPackage(base, dir)		
 	if err == nil {
 		Packages["\""+pkg.Target+"\""] = pkg
 		base = pkg.Base
