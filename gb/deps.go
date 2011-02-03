@@ -95,8 +95,6 @@ func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Er
 	}
 	file, err = parser.ParseFile(token.NewFileSet(), source, nil, flag)
 	if err != nil {
-		println(err.String())
-		BrokenPackages++
 		return
 	}
 

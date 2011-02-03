@@ -49,7 +49,7 @@ var RunningInGOROOT bool
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
-var GOROOT, GOOS, GOARCH string
+var GOROOT, GOOS, GOARCH, GOBIN string
 var CWD string
 
 func GetBuildDirPkg() (dir string) {
@@ -189,7 +189,9 @@ func RunGB() (err os.Error) {
 		return
 	}
 	if BuildGOROOT {
+		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
 		ScanDirectory("", path.Join(GOROOT, "src"))
+		fmt.Printf("done\n")
 	}
 
 	for _, arg := range args {
@@ -322,6 +324,8 @@ func RunGB() (err os.Error) {
 		}
 	}
 	
+	var brokenMsg []string
+	
 	if Build {
 		if Concurrent {
 			for _, pkg := range ListedPkgs {
@@ -331,8 +335,14 @@ func RunGB() (err os.Error) {
 		for _, pkg := range ListedPkgs {
 			err = pkg.Build()
 			if err != nil {
-				return
+				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not build \"%s\"", pkg.Dir, pkg.Target))
 			}
+		}
+	}
+	
+	if len(brokenMsg) != 0 {
+		for _, msg := range brokenMsg {
+			fmt.Printf("%s\n", msg)
 		}
 	}
 
@@ -346,12 +356,19 @@ func RunGB() (err os.Error) {
 			}
 		}
 	}
-
+	
 	if Install {
+		brokenMsg = []string{}
 		for _, pkg := range ListedPkgs {
 			err = pkg.Install()
 			if err != nil {
-				return
+				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not install \"%s\"", pkg.Dir, pkg.Target))
+			}
+		}
+	
+		if len(brokenMsg) != 0 {
+			for _, msg := range brokenMsg {
+				fmt.Printf("%s\n", msg)
 			}
 		}
 	}
@@ -410,7 +427,7 @@ func Usage() {
 }
 
 func main() {
-	GOOS, GOARCH, GOROOT = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT")
+	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
 	if GOOS == "" {
 		println("Environental variable GOOS not set")
 		return
@@ -422,6 +439,9 @@ func main() {
 	if GOROOT == "" {
 		println("Environental variable GOROOT not set")
 		return
+	}
+	if GOBIN == "" {
+		GOBIN = path.Join(GOROOT, "bin")
 	}
 
 	CWD, _ = os.Getwd()

@@ -441,10 +441,6 @@ func (this *Package) Touched() (build, install bool) {
 func (this *Package) Build() (err os.Error) {
 	this.block <- true
 	defer func() {
-		this.MyErr = err
-		if this.MyErr != nil {
-			BrokenPackages++
-		}
 		<-this.block
 	}()
 	if !this.NeedsBuild {
@@ -515,7 +511,10 @@ func (this *Package) Build() (err os.Error) {
 		}
 		if err == nil {
 			PackagesBuilt++
+		} else {
+			BrokenPackages++
 		}
+		
 	}
 	if err != nil {
 		this.CleanFiles()
