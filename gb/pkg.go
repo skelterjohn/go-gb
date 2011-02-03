@@ -333,8 +333,11 @@ func (this *Package) PrintScan() {
 	if this.IsInGOROOT {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
 	}
-	
-	fmt.Printf("in %s: %s \"%s\"%s\n", displayDir, label, this.Target, bis)
+	var prefix string
+	if !this.IsInGOROOT {
+		prefix = fmt.Sprintf("in %s: ", displayDir)
+	}
+	fmt.Printf("%s%s \"%s\"%s\n", prefix, label, this.Target, bis)
 	if ScanList {
 		fmt.Printf(" %s Deps: %v\n", this.Target, this.Deps)
 		fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)
