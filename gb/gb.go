@@ -428,7 +428,7 @@ func main() {
 	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
 
 	GOMAXPROCS := os.Getenv("GOMAXPROCS")
-	println(GOMAXPROCS)
+
 	n, nerr := strconv.Atoi(GOMAXPROCS)
 	if nerr != nil {
 		n = 1
