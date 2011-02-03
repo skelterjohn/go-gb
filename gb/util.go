@@ -30,7 +30,7 @@ func GetAbsolutePath(p string) (absp string, err os.Error) {
 	}
 	wd, err := os.Getwd()
 	if p == "." {
-		absp = wd
+		absp = path.Clean(wd)
 		return
 	}
 	absp = path.Join(wd, p)
@@ -45,7 +45,7 @@ func GetRelativePath(parent, child string) (rel string, err os.Error) {
 		err = os.NewError(fmt.Sprintf("'%s' is not in '%s'", child, parent))
 	}
 
-	rel = child[len(parent)+1 : len(child)]
+	rel = path.Clean(child[len(parent)+1 : len(child)])
 
 	return
 }
