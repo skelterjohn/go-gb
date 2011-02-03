@@ -433,6 +433,14 @@ func (this *Package) Touched() (build, install bool) {
 }
 
 func (this *Package) Build() (err os.Error) {
+	this.block <- true
+	defer func() {
+		this.MyErr = err
+		if this.MyErr != nil {
+			BrokenPackages++
+		}
+		<-this.block
+	}()
 	if !this.NeedsBuild {
 		return
 	}
@@ -447,14 +455,6 @@ func (this *Package) Build() (err os.Error) {
 		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
 		return
 	}
-	this.block <- true
-	defer func() {
-		this.MyErr = err
-		if this.MyErr != nil {
-			BrokenPackages++
-		}
-		<-this.block
-	}()
 
 	if Exclusive && !ListedDirs[this.Dir] {
 		return
@@ -469,6 +469,7 @@ func (this *Package) Build() (err os.Error) {
 	inTime := this.GOROOTPkgTime
 
 	for _, pkg := range this.DepPkgs {
+		
 		err = pkg.Build()
 		if err != nil {
 			return

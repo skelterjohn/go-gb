@@ -19,7 +19,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"exec"
 	"path"
 )
 
@@ -104,20 +103,9 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", argv)
 	}
-	p, err := exec.Run(CompileCMD, argv, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	err = RunExternal(CompileCMD, pkg.Dir, argv)
 	if err != nil {
 		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	//see if it was created

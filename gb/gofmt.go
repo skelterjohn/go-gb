@@ -17,7 +17,6 @@
 package main
 
 import (
-	"exec"
 	"os"
 	"fmt"
 )
@@ -28,14 +27,6 @@ func RunGoFMT(dir, file string) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v\n", margs)
 	}
-
-	p, err := exec.Run(GoFMTCMD, margs, os.Envs, dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		p.Wait(0)
-	}
-	return
+	err = RunExternal(GoFMTCMD, dir, margs)
 	return
 }

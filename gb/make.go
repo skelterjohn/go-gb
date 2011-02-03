@@ -17,7 +17,6 @@
 package main
 
 import (
-	"exec"
 	"os"
 	"fmt"
 )
@@ -43,13 +42,7 @@ func MakeBuild(pkg *Package) (err os.Error) {
 	}
 	//fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
-	p, err := exec.Run(MakeCMD, margs, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		p.Wait(0)
-	}
+	err = RunExternal(MakeCMD, pkg.Dir, margs)
 	return
 }
 
@@ -61,13 +54,7 @@ func MakeClean(pkg *Package) (err os.Error) {
 	margs := []string{"make", "clean"}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
-	p, err := exec.Run(MakeCMD, margs, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		p.Wait(0)
-	}
+	err = RunExternal(MakeCMD, pkg.Dir, margs)
 	return
 }
 
@@ -75,12 +62,6 @@ func MakeTest(pkg *Package) (err os.Error) {
 	margs := []string{"make", "test"}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
-	p, err := exec.Run(MakeCMD, margs, os.Envs, pkg.Dir, exec.PassThrough, exec.PassThrough, exec.PassThrough)
-	if err != nil {
-		return
-	}
-	if p != nil {
-		p.Wait(0)
-	}
+	err = RunExternal(MakeCMD, pkg.Dir, margs)
 	return
 }

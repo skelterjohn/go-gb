@@ -19,7 +19,6 @@ package main
 import (
 	"regexp"
 	"fmt"
-	"exec"
 	"os"
 	"path"
 )
@@ -83,20 +82,9 @@ func GoInstallPkg(target string) (touched int64) {
 	//if Verbose {
 	fmt.Printf("%v\n", argv)
 	//}
-	p, err := exec.Run(GoInstallCMD, argv, os.Envs, ".", exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	err := RunExternal(GoInstallCMD, ".", argv)
 	if err != nil {
 		return
-	}
-	if p != nil {
-		var wmsg *os.Waitmsg
-		wmsg, err = p.Wait(0)
-		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			return
-		}
-		if err != nil {
-			return
-		}
 	}
 
 	goinstalledFile := path.Join(GetInstallDirPkg(), target) + ".a"
