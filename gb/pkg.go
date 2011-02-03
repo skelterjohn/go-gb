@@ -445,6 +445,7 @@ func (this *Package) Build() (err os.Error) {
 		<-this.block
 	}()
 	if !this.NeedsBuild {
+		println(this.Target, "!this.NeedsBuild")
 		return
 	}
 	if this.built {
@@ -625,6 +626,12 @@ func main() {
 */
 
 func (this *Package) CleanFiles() (err os.Error) {
+	defer func() {
+		this.Stat()
+		this.NeedsBuild = true
+		this.NeedsInstall = true
+	}()
+	
 	if (Makefiles && this.HasMakefile) || this.IsCGo {
 		MakeClean(this)
 		PackagesBuilt++
@@ -656,7 +663,6 @@ func (this *Package) CleanFiles() (err os.Error) {
 	}
 	err = os.RemoveAll(testdir)
 
-	this.Stat()
 
 	return
 }

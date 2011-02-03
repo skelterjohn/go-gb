@@ -321,7 +321,7 @@ func RunGB() (err os.Error) {
 			pkg.Clean()
 		}
 	}
-
+	
 	if Build {
 		if Concurrent {
 			for _, pkg := range ListedPkgs {
