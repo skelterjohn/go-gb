@@ -22,6 +22,15 @@ import (
 	"path"
 )
 
+func StatTime(p string) (time int64, err os.Error) {
+	var info *os.FileInfo
+	info, err = os.Stat(p)
+	if err != nil {
+		return
+	}
+	time = info.Mtime_ns
+	return
+}
 
 // GetAbs returns the absolute version of the path supplied.
 func GetAbs(p string) (abspath string, err os.Error) {

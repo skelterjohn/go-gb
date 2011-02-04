@@ -112,12 +112,19 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	}
 
 	for _, src := range this.Sources {
-		var srcInfo *os.FileInfo
-		srcInfo, err = os.Stat(path.Join(this.Dir, src))
+		/*
+			var srcInfo *os.FileInfo
+			srcInfo, err = os.Stat(path.Join(this.Dir, src))
+			if err != nil {
+				return
+			}
+			t := srcInfo.Mtime_ns
+		*/
+		var t int64
+		t, err = StatTime(path.Join(this.Dir, src))
 		if err != nil {
 			return
 		}
-		t := srcInfo.Mtime_ns
 		if t > this.SourceTime {
 			this.SourceTime = t
 		}
@@ -346,18 +353,22 @@ func (this *Package) PrintScan() {
 }
 
 func (this *Package) Stat() {
-	resInfo, err := os.Stat(this.result)
-	if resInfo != nil && err == nil {
-		this.BinTime = resInfo.Mtime_ns
-	} else {
-		this.BinTime = 0
-	}
-	resInfo, err = os.Stat(this.installPath)
-	if resInfo != nil && err == nil {
-		this.InstTime = resInfo.Mtime_ns
-	} else {
-		this.InstTime = 0
-	}
+	this.BinTime, _ = StatTime(this.result)
+	this.InstTime, _ = StatTime(this.installPath)
+	/*
+		resInfo, err := os.Stat(this.result)
+		if resInfo != nil && err == nil {
+			this.BinTime = resInfo.Mtime_ns
+		} else {
+			this.BinTime = 0
+		}
+		resInfo, err = os.Stat(this.installPath)
+		if resInfo != nil && err == nil {
+			this.InstTime = resInfo.Mtime_ns
+		} else {
+			this.InstTime = 0
+		}
+	*/
 }
 
 func (this *Package) CheckStatus() {

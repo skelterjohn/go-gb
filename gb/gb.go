@@ -26,7 +26,7 @@ import (
 )
 
 // command line flags
-var Install,          //-i
+var Install, //-i
 	Clean,            //-c
 	Scan,             //-sS
 	ScanList,         //-S
@@ -213,7 +213,7 @@ func TryGenMake() (err os.Error) {
 			}
 		}
 	}
-	
+
 	return
 }
 
@@ -365,9 +365,9 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.CheckStatus()
 	}
-	
+
 	TryScan()
-	
+
 	TryGoFMT()
 
 	if err = TryGenMake(); err != nil {
@@ -377,15 +377,15 @@ func RunGB() (err os.Error) {
 	if err = TryDistribution(); err != nil {
 		return
 	}
-	
+
 	TryClean()
-	
+
 	TryBuild()
-	
+
 	if err = TryTest(); err != nil {
 		return
 	}
-	
+
 	TryInstall()
 
 	if !Clean {

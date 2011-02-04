@@ -19,7 +19,6 @@ package main
 import (
 	"regexp"
 	"fmt"
-	"os"
 	"path"
 )
 
@@ -90,11 +89,6 @@ func GoInstallPkg(target string) (touched int64) {
 
 	goinstalledFile := path.Join(GetInstallDirPkg(), target) + ".a"
 
-	var info *os.FileInfo
-	info, err = os.Stat(goinstalledFile)
-	if err != nil {
-		return
-	}
-	return info.Mtime_ns
-
+	touched, _ = StatTime(goinstalledFile)
+	return
 }
