@@ -329,10 +329,12 @@ func RunGB() (err os.Error) {
 	if Build {
 		if Concurrent {
 			for _, pkg := range ListedPkgs {
+				pkg.CheckStatus()
 				go pkg.Build()
 			}
 		}
 		for _, pkg := range ListedPkgs {
+			pkg.CheckStatus()
 			err = pkg.Build()
 			if err != nil {
 				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not build \"%s\"", pkg.Dir, pkg.Target))
@@ -399,31 +401,6 @@ func RunGB() (err os.Error) {
 	}
 
 	return
-}
-
-func Usage() {
-	fmt.Printf("Usage: gb [-options] [directory list]\n")
-	fmt.Printf("Options:\n")
-	fmt.Printf(" ? print this usage text\n")
-	fmt.Printf(" i install\n")
-	fmt.Printf(" c clean\n")
-	fmt.Printf(" b build after cleaning\n")
-	fmt.Printf(" g use goinstall when appropriate\n")
-	fmt.Printf(" p build packages in parallel, when possible\n")
-	fmt.Printf(" s scan and list targets without building\n")
-	fmt.Printf(" S scan and list targets and their dependencies without building\n")
-	fmt.Printf(" t run tests\n")
-	fmt.Printf(" e exclusive target list (do not build/clean/test/install a target unless it\n")
-	fmt.Printf("   resides in a listed directory)\n")
-	fmt.Printf(" v verbose\n")
-	fmt.Printf(" m use makefiles, when possible\n")
-	fmt.Printf(" M generate standard makefiles without building\n")
-	fmt.Printf(" f force overwrite of existing makefiles\n")
-	fmt.Printf(" F run gofmt on source files in targeted directories\n")
-	fmt.Printf(" P build/clean/install only packages\n")
-	fmt.Printf(" C build/clean/install only cmds\n")
-	fmt.Printf(" D create distribution\n")
-	fmt.Printf(" R update dependencies in $GOROOT/src\n")
 }
 
 func main() {

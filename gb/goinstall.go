@@ -88,7 +88,7 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 
 	goinstalledFile := path.Join(GetInstallDirPkg(), target) + ".a"
-
+	
 	var info *os.FileInfo
 	info, err = os.Stat(goinstalledFile)
 	if err != nil {

@@ -40,6 +40,7 @@ type Package struct {
 	built, cleaned, addedToBuild, gofmted, scanned bool
 
 	NeedsBuild, NeedsInstall bool
+	NeedsGoInstall bool
 
 	Sources    []string
 	CGoSources []string
@@ -360,7 +361,9 @@ func (this *Package) Stat() {
 }
 
 func (this *Package) CheckStatus() {
-	this.NeedsBuild, this.NeedsInstall = this.Touched()
+	b, i := this.Touched()
+	this.NeedsBuild = b || this.NeedsBuild
+	this.NeedsInstall = i || this.NeedsInstall
 }
 
 func (this *Package) ResolveDeps() (err os.Error) {
@@ -384,10 +387,19 @@ func (this *Package) ResolveDeps() (err os.Error) {
 						err = os.NewError("unresolved packages")
 					}
 				} else {
-					if !exists && !GoInstall {
-						//fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
-						err = os.NewError("unresolved packages")
+					if GoInstallUpdate {
+						this.NeedsBuild = true
 					}
+					if !exists {
+						if !GoInstall {
+							//fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
+							err = os.NewError("unresolved packages")
+						} else {
+							this.NeedsGoInstall = true
+							this.NeedsBuild = true
+						}
+					}
+					
 				}
 			}
 		}
@@ -403,6 +415,9 @@ func (this *Package) ResolveDeps() (err os.Error) {
 
 func (this *Package) Touched() (build, install bool) {
 	var inTime int64
+
+	build = this.NeedsBuild
+	install = this.NeedsInstall
 
 	for _, pkg := range this.DepPkgs {
 
@@ -443,6 +458,7 @@ func (this *Package) Build() (err os.Error) {
 	defer func() {
 		<-this.block
 	}()
+	
 	if !this.NeedsBuild {
 		return
 	}
@@ -498,7 +514,8 @@ func (this *Package) Build() (err os.Error) {
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
-	if inTime > this.BinTime {
+
+	if inTime > this.BinTime || this.NeedsBuild {
 		which := "cmd"
 		if this.Name != "main" {
 			which = "pkg"
@@ -524,6 +541,7 @@ func (this *Package) Build() (err os.Error) {
 		err = this.Install()
 	}
 
+	this.NeedsBuild = false
 	this.Stat()
 
 	return
