@@ -22,20 +22,31 @@ import (
 	"bufio"
 	"os"
 	"fmt"
-	"strconv"
 	"path"
-	"exec"
-	//"gonicetrace.googlecode.com/hg/nicetrace"
 )
 
-var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
+// command line flags
+var Install,          //-i
+	Clean,            //-c
+	Scan,             //-sS
+	ScanList,         //-S
+	Test,             //-t
+	Exclusive,        //-e
+	BuildGOROOT,      //-R
+	GoInstall,        //-gG
+	GoInstallUpdate,  //-G
+	Concurrent,       //-p
+	Verbose,          //-v
+	GenMake,          //-M
+	Build,            //-b
+	Force,            //-f
+	Makefiles,        //-m
+	GoFMT,            //-F
+	DoPkgs,           //-P
+	DoCmds,           //-C
+	Distribution bool //-D
 
-var Install, Clean, Scan, ScanList, Test, Exclusive, BuildGOROOT,
-	GoInstall, GoInstallUpdate, Concurrent, Verbose, GenMake, Build,
-	Force, Makefiles, GoFMT, DoPkgs, DoCmds, Distribution bool
 var IncludeDir string
-var Recurse bool
-//var CWD string
 var GCArgs []string
 var GLArgs []string
 var PackagesBuilt int
@@ -43,48 +54,13 @@ var PackagesInstalled int
 var BrokenPackages int
 var ListedTargets int
 var ListedDirs map[string]bool
+var ListedPkgs []*Package
 
 var RunningInGOROOT bool
 
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
-var GOROOT, GOOS, GOARCH, GOBIN string
-var CWD string
-
-func GetBuildDirPkg() (dir string) {
-	return "_obj"
-}
-
-func GetInstallDirPkg() (dir string) {
-	return path.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
-}
-
-func GetBuildDirCmd() (dir string) {
-	return "bin"
-}
-
-func GetInstallDirCmd() (dir string) {
-	return path.Join(GOROOT, "bin")
-}
-
-
-func GetSubDirs(dir string) (subdirs []string) {
-	file, err := os.Open(dir, os.O_RDONLY, 0)
-	if err != nil {
-		return
-	}
-	infos, err := file.Readdir(-1)
-	if err != nil {
-		return
-	}
-	for _, info := range infos {
-		if info.IsDirectory() {
-			subdirs = append(subdirs, info.Name)
-		}
-	}
-	return
-}
 
 func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
@@ -100,7 +76,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	var err os.Error
 
 	var pkg *Package
-	pkg, err = ReadPackage(base, dir)		
+	pkg, err = ReadPackage(base, dir)
 	if err == nil {
 		Packages["\""+pkg.Target+"\""] = pkg
 		base = pkg.Base
@@ -120,14 +96,12 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
 
-	if Recurse {
-		subdirs := GetSubDirs(dir)
-		//fmt.Fprintf(os.Stderr, "subdirs for %s: %v\n", dir, subdirs)
-		for _, subdir := range subdirs {
-			if subdir != "src" {
-				//println("Recursive scan:", dir, subdir)
-				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
-			}
+	subdirs := GetSubDirs(dir)
+	//fmt.Fprintf(os.Stderr, "subdirs for %s: %v\n", dir, subdirs)
+	for _, subdir := range subdirs {
+		if subdir != "src" {
+			//println("Recursive scan:", dir, subdir)
+			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 		}
 	}
 
@@ -141,7 +115,7 @@ func IsListed(name string) bool {
 	if Exclusive {
 		return ListedDirs[name]
 	}
-	
+
 	for lt := range ListedDirs {
 		if strings.HasPrefix(name, lt) {
 			return true
@@ -173,55 +147,7 @@ func MakeDist(ch chan string) (err os.Error) {
 	return
 }
 
-func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean && !GoFMT) || (Makefiles && !Clean) || Install || Test
-
-	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
-
-	ListedDirs = make(map[string]bool)
-
-	args := os.Args[1:len(os.Args)]
-
-	Recurse = true
-
-	err = ScanDirectory(".", ".")
-	if err != nil {
-		return
-	}
-	if BuildGOROOT {
-		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
-		ScanDirectory("", path.Join(GOROOT, "src"))
-		fmt.Printf("done\n")
-	}
-
-	for _, arg := range args {
-		if arg[0] != '-' {
-			ListedDirs[path.Clean(arg)] = true
-		}
-	}
-
-	ListedPkgs := []*Package{}
-	for _, pkg := range Packages {
-		if !RunningInGOROOT && pkg.IsInGOROOT {
-			continue
-		}
-		if IsListed(pkg.Dir) {
-			ListedPkgs = append(ListedPkgs, pkg)
-		}
-	}
-
-	for _, pkg := range Packages {
-		pkg.Stat()
-	}
-
-	for _, pkg := range Packages {
-		pkg.ResolveDeps()
-	}
-
-	for _, pkg := range Packages {
-		pkg.CheckStatus()
-	}
-
+func TryScan() {
 	if Scan {
 		for _, pkg := range Packages {
 			if pkg.IsInGOROOT && !RunningInGOROOT {
@@ -233,7 +159,9 @@ func RunGB() (err os.Error) {
 		}
 		return
 	}
+}
 
+func TryGoFMT() (err os.Error) {
 	if GoFMT {
 		//println("Running gofmt")
 		for _, pkg := range ListedPkgs {
@@ -243,6 +171,10 @@ func RunGB() (err os.Error) {
 			}
 		}
 	}
+	return
+}
+
+func TryGenMake() (err os.Error) {
 
 	if GenMake {
 
@@ -280,12 +212,12 @@ func RunGB() (err os.Error) {
 				return
 			}
 		}
-
-		if !Build {
-			//return
-		}
 	}
+	
+	return
+}
 
+func TryDistribution() (err os.Error) {
 	if Distribution {
 		ch := make(chan string)
 		go func() {
@@ -310,7 +242,10 @@ func RunGB() (err os.Error) {
 			return
 		}
 	}
+	return
+}
 
+func TryClean() {
 	if Clean && ListedTargets == 0 {
 		println("Removing " + GetBuildDirPkg())
 		os.RemoveAll(GetBuildDirPkg())
@@ -323,9 +258,12 @@ func RunGB() (err os.Error) {
 			pkg.Clean()
 		}
 	}
-	
+}
+
+func TryBuild() {
+
 	var brokenMsg []string
-	
+
 	if Build {
 		if Concurrent {
 			for _, pkg := range ListedPkgs {
@@ -335,19 +273,21 @@ func RunGB() (err os.Error) {
 		}
 		for _, pkg := range ListedPkgs {
 			pkg.CheckStatus()
-			err = pkg.Build()
+			err := pkg.Build()
 			if err != nil {
 				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not build \"%s\"", pkg.Dir, pkg.Target))
 			}
 		}
 	}
-	
+
 	if len(brokenMsg) != 0 {
 		for _, msg := range brokenMsg {
 			fmt.Printf("%s\n", msg)
 		}
 	}
+}
 
+func TryTest() (err os.Error) {
 	if Test {
 		for _, pkg := range ListedPkgs {
 			if pkg.Name != "main" && len(pkg.TestSources) != 0 {
@@ -358,22 +298,95 @@ func RunGB() (err os.Error) {
 			}
 		}
 	}
-	
+	return
+}
+
+func TryInstall() {
 	if Install {
-		brokenMsg = []string{}
+		brokenMsg := []string{}
 		for _, pkg := range ListedPkgs {
-			err = pkg.Install()
+			err := pkg.Install()
 			if err != nil {
 				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not install \"%s\"", pkg.Dir, pkg.Target))
 			}
 		}
-	
+
 		if len(brokenMsg) != 0 {
 			for _, msg := range brokenMsg {
 				fmt.Printf("%s\n", msg)
 			}
 		}
 	}
+}
+
+func RunGB() (err os.Error) {
+	Build = Build || (!GenMake && !Clean && !GoFMT) || (Makefiles && !Clean) || Install || Test
+
+	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
+
+	ListedDirs = make(map[string]bool)
+
+	args := os.Args[1:len(os.Args)]
+
+	err = ScanDirectory(".", ".")
+	if err != nil {
+		return
+	}
+	if BuildGOROOT {
+		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
+		ScanDirectory("", path.Join(GOROOT, "src"))
+		fmt.Printf("done\n")
+	}
+
+	for _, arg := range args {
+		if arg[0] != '-' {
+			ListedDirs[path.Clean(arg)] = true
+		}
+	}
+
+	ListedPkgs = []*Package{}
+	for _, pkg := range Packages {
+		if !RunningInGOROOT && pkg.IsInGOROOT {
+			continue
+		}
+		if IsListed(pkg.Dir) {
+			ListedPkgs = append(ListedPkgs, pkg)
+		}
+	}
+
+	for _, pkg := range Packages {
+		pkg.Stat()
+	}
+
+	for _, pkg := range Packages {
+		pkg.ResolveDeps()
+	}
+
+	for _, pkg := range Packages {
+		pkg.CheckStatus()
+	}
+	
+	TryScan()
+	
+	TryGoFMT()
+
+	if err = TryGenMake(); err != nil {
+		return
+	}
+
+	if err = TryDistribution(); err != nil {
+		return
+	}
+	
+	TryClean()
+	
+	TryBuild()
+	
+	if err = TryTest(); err != nil {
+		return
+	}
+	
+	TryInstall()
 
 	if !Clean {
 		if PackagesBuilt > 1 {
@@ -403,35 +416,7 @@ func RunGB() (err os.Error) {
 	return
 }
 
-func main() {
-	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
-	if GOOS == "" {
-		println("Environental variable GOOS not set")
-		return
-	}
-	if GOARCH == "" {
-		println("Environental variable GOARCH not set")
-		return
-	}
-	if GOROOT == "" {
-		println("Environental variable GOROOT not set")
-		return
-	}
-	if GOBIN == "" {
-		GOBIN = path.Join(GOROOT, "bin")
-	}
-
-	CWD, _ = os.Getwd()
-	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
-
-	GOMAXPROCS := os.Getenv("GOMAXPROCS")
-
-	n, nerr := strconv.Atoi(GOMAXPROCS)
-	if nerr != nil {
-		n = 1
-	}
-	n = 2
-	buildBlock = make(chan bool, n)
+func CheckFlags() {
 	for _, arg := range os.Args[1:len(os.Args)] {
 		if len(arg) > 0 && arg[0] == '-' {
 			for _, flag := range arg[1:len(arg)] {
@@ -486,50 +471,16 @@ func main() {
 			ListedTargets++
 		}
 	}
+}
 
-	var err os.Error
+func main() {
+	LoadEnvs()
 
-	MakeCMD, err = exec.LookPath("make")
+	CheckFlags()
+
+	err := FindExternals()
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		//return
-	}
-
-	CompileCMD, err = exec.LookPath(GetCompilerName())
-	if err != nil {
-		fmt.Printf("Could not find %s in path\n", GetCompilerName())
-		fmt.Printf("%v\n", err)
 		return
-	}
-
-	LinkCMD, err = exec.LookPath(GetLinkerName())
-	if err != nil {
-		fmt.Printf("Could not find %s in path\n", GetLinkerName())
-		fmt.Printf("%v\n", err)
-		return
-	}
-	PackCMD, err = exec.LookPath("gopack")
-	if err != nil {
-		fmt.Printf("Could not find gopack in path\n")
-		fmt.Printf("%v\n", err)
-		return
-	}
-	CopyCMD, err = exec.LookPath("cp")
-	if err != nil {
-		//fmt.Printf("Could not find cp in path\n")
-		//fmt.Printf("%v\n", err)
-		//return
-		CopyCMD = ""
-	}
-	GoInstallCMD, err = exec.LookPath("goinstall")
-	if err != nil {
-		fmt.Printf("Could not find goinstall in path\n")
-		fmt.Printf("%v\n", err)
-	}
-	GoFMTCMD, err = exec.LookPath("gofmt")
-	if err != nil {
-		fmt.Printf("Could not find gofmt in path\n")
-		fmt.Printf("%v\n", err)
 	}
 
 	GCArgs = []string{}

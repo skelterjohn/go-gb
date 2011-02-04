@@ -21,6 +21,45 @@ import (
 	"fmt"
 )
 
+var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
+
+func FindExternals() (err os.Error) {
+	var err2 os.Error
+	MakeCMD, err2 = exec.LookPath("make")
+	if err2 != nil {
+		fmt.Printf("Could not find 'make' in path\n")
+	}
+
+	CompileCMD, err = exec.LookPath(GetCompilerName())
+	if err != nil {
+		fmt.Printf("Could not find '%s' in path\n", GetCompilerName())
+		return
+	}
+
+	LinkCMD, err = exec.LookPath(GetLinkerName())
+	if err != nil {
+		fmt.Printf("Could not find '%s' in path\n", GetLinkerName())
+		return
+	}
+	PackCMD, err = exec.LookPath("gopack")
+	if err != nil {
+		fmt.Printf("Could not find 'gopack' in path\n")
+		return
+	}
+	CopyCMD, _ = exec.LookPath("cp")
+
+	GoInstallCMD, err2 = exec.LookPath("goinstall")
+	if err != nil {
+		fmt.Printf("Could not find 'goinstall' in path\n")
+	}
+	GoFMTCMD, err2 = exec.LookPath("gofmt")
+	if err != nil {
+		fmt.Printf("Could not find 'gofmt' in path\n")
+	}
+
+	return
+}
+
 func RunExternal(cmd, wd string, argv []string) (err os.Error) {
 	var p *exec.Cmd
 	p, err = exec.Run(cmd, argv, os.Envs, wd, exec.PassThrough, exec.PassThrough, exec.PassThrough)

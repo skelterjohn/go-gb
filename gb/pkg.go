@@ -40,7 +40,7 @@ type Package struct {
 	built, cleaned, addedToBuild, gofmted, scanned bool
 
 	NeedsBuild, NeedsInstall bool
-	NeedsGoInstall bool
+	NeedsGoInstall           bool
 
 	Sources    []string
 	CGoSources []string
@@ -48,7 +48,7 @@ type Package struct {
 	AsmSrcs    []string
 
 	PkgSrc   map[string][]string
-	SrcDeps	map[string][]string
+	SrcDeps  map[string][]string
 	BuildSrc []string
 
 	IsCGo bool
@@ -84,7 +84,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	//global, _ := GetAbsolutePath(dir)
 	//if strings.HasPrefix(global, GOROOT) {
 	//println("rp: ", GOROOT, dir)
-	if _, perr := GetRelativePath(GOROOT, dir); perr == nil {
+	if rel, _ := GetRelative(GOROOT, dir); !strings.HasPrefix(rel, "..") {
 		this.IsInGOROOT = true
 	}
 
@@ -201,7 +201,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		}
 		//this.Deps = append(this.Deps, fdeps...)
 	}
-	
+
 	for _, buildSrc := range this.PkgSrc[this.Name] {
 		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
 	}
@@ -238,7 +238,7 @@ func (this *Package) GetTarget() (err os.Error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
 		//println("grp:", path.Join(GOROOT, "src", "pkg"), this.Dir)
-		this.Target, err = GetRelativePath(path.Join(GOROOT, "src", "pkg"), this.Dir)
+		this.Target, err = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir)
 		if err != nil {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
 			return
@@ -303,11 +303,11 @@ func (this *Package) PrintScan() {
 		return
 	}
 	this.scanned = true
-	
+
 	for _, pkg := range this.DepPkgs {
 		pkg.PrintScan()
 	}
-	
+
 	//build, install := this.Touched()
 	bis := ""
 	if !this.NeedsBuild {
@@ -329,7 +329,7 @@ func (this *Package) PrintScan() {
 	if this.IsInGOROOT {
 		label = "goroot " + label
 	}
-	
+
 	displayDir := this.Dir
 	if this.IsInGOROOT {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
@@ -369,7 +369,7 @@ func (this *Package) CheckStatus() {
 func (this *Package) ResolveDeps() (err os.Error) {
 	CheckDeps := func(deps []string) (err os.Error) {
 		for _, dep := range deps {
-			if dep == "C" {
+			if dep == "\"C\"" {
 				this.IsCGo = true
 			}
 			if pkg, ok := Packages[dep]; ok {
@@ -399,7 +399,7 @@ func (this *Package) ResolveDeps() (err os.Error) {
 							this.NeedsBuild = true
 						}
 					}
-					
+
 				}
 			}
 		}
@@ -435,7 +435,7 @@ func (this *Package) Touched() (build, install bool) {
 	if this.GOROOTPkgTime > inTime {
 		inTime = this.GOROOTPkgTime
 	}
-	
+
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
@@ -445,7 +445,7 @@ func (this *Package) Touched() (build, install bool) {
 	if this.InstTime < this.BinTime || this.InstTime < inTime {
 		install = true
 	}
-	
+
 	if build {
 		install = true
 	}
@@ -458,7 +458,7 @@ func (this *Package) Build() (err os.Error) {
 	defer func() {
 		<-this.block
 	}()
-	
+
 	if !this.NeedsBuild {
 		return
 	}
@@ -487,7 +487,7 @@ func (this *Package) Build() (err os.Error) {
 	inTime := this.GOROOTPkgTime
 
 	for _, pkg := range this.DepPkgs {
-		
+
 		err = pkg.Build()
 		if err != nil {
 			return
@@ -531,7 +531,7 @@ func (this *Package) Build() (err os.Error) {
 		} else {
 			BrokenPackages++
 		}
-		
+
 	}
 	if err != nil {
 		this.CleanFiles()
@@ -650,7 +650,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 		this.NeedsBuild = true
 		this.NeedsInstall = true
 	}()
-	
+
 	if (Makefiles && this.HasMakefile) || this.IsCGo {
 		MakeClean(this)
 		PackagesBuilt++
@@ -676,12 +676,15 @@ func (this *Package) CleanFiles() (err os.Error) {
 		fmt.Printf(" Removing %s\n", this.result)
 	}
 	err = os.Remove(this.result)
+	if Verbose {
+		fmt.Printf(" Removing %s\n", "_testmain")
+	}
+	err = os.Remove("_testmai")
 	testdir := path.Join(this.Dir, "_test")
 	if Verbose {
 		fmt.Printf(" Removing %s\n", testdir)
 	}
 	err = os.RemoveAll(testdir)
-
 
 	return
 }

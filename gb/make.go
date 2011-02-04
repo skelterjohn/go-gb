@@ -29,7 +29,7 @@ func MakeBuild(pkg *Package) (err os.Error) {
 
 	buildBlock <- true
 	defer func() { <-buildBlock }()
-	
+
 	margs := []string{"make", "clean"}
 	if Install || pkg.IsInGOROOT {
 		margs = append(margs, "install")

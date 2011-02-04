@@ -112,7 +112,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	if _, err = os.Stat(pkg.ib); err != nil {
 		return os.NewError("compile error")
 	}
-	
+
 	dst := path.Join(reverseDots, pkg.result)
 
 	if pkg.IsCmd {
@@ -142,7 +142,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-	
+
 	var resInfo *os.FileInfo
 	resInfo, err2 := os.Stat(pkg.result)
 	if err2 == nil {
@@ -213,7 +213,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 	largs := []string{GetLinkerName()}
 	largs = append(largs, "-L", path.Join("_test", "_obj"))
 	largs = append(largs, "-L", pkgDest)
-	largs = append(largs, "-o", path.Join("_test", testBinary), testmainib)
+	largs = append(largs, "-o", testBinary, testmainib)
 	if Verbose {
 		fmt.Printf("%v\n", largs)
 	}
@@ -221,7 +221,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 
-	if err = RunExternal(testBinary, path.Join(pkg.Dir, "_test"), []string{testBinary}); err != nil {
+	if err = RunExternal(testBinary, pkg.Dir, []string{testBinary}); err != nil {
 		return
 	}
 
@@ -243,7 +243,7 @@ func InstallPackage(pkg *Package) (err os.Error) {
 	fmt.Printf("Installing %s \"%s\"\n", which, pkg.Target)
 
 	Copy(".", pkg.result, dstFile)
-	
+
 	return
 }
 

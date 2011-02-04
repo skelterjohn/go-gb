@@ -19,37 +19,45 @@ package main
 import (
 	"os"
 	"strings"
-	"fmt"
 	"path"
 )
 
-func GetAbsolutePath(p string) (absp string, err os.Error) {
+
+// GetAbs returns the absolute version of the path supplied.
+func GetAbs(p string) (abspath string, err os.Error) {
+	p = path.Clean(p)
 	if path.IsAbs(p) {
-		absp = p
+		abspath = p
 		return
 	}
-	wd, err := os.Getwd()
-	if p == "." {
-		absp = path.Clean(wd)
-		return
-	}
-	absp = path.Join(wd, p)
+	var wd string
+	wd, err = os.Getwd()
+	abspath = path.Clean(path.Join(wd, p))
 	return
 }
 
-func GetRelativePath(parent, child string) (rel string, err os.Error) {
-	//println("in grp")
-	parent, err = GetAbsolutePath(parent)
-	child, err = GetAbsolutePath(child)
-
-	//println(parent, child)
-
-	if !strings.HasPrefix(child, parent) {
-		err = os.NewError(fmt.Sprintf("'%s' is not in '%s'", child, parent))
+// GetRelative(start, finish) returns the path to finish, relative to start.
+func GetRelative(start, finish string) (relative string, err os.Error) {
+	if start, err = GetAbs(start); err != nil {
 		return
 	}
+	if finish, err = GetAbs(finish); err != nil {
+		return
+	}
+	backtracking := "."
 
-	rel = path.Clean(child[len(parent)+1 : len(child)])
-
+	for !strings.HasPrefix(finish, start) {
+		backtracking = path.Join(backtracking, "..")
+		start, _ = path.Split(start)
+		start = path.Clean(start)
+	}
+	if start == finish {
+		return path.Clean(path.Join(backtracking, ".")), nil
+	}
+	if start == "/" {
+		relative = path.Clean(path.Join(backtracking, finish))
+	} else {
+		relative = path.Clean(path.Join(backtracking, finish[len(start)+1:len(finish)]))
+	}
 	return
 }

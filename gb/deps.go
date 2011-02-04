@@ -18,34 +18,13 @@ package main
 
 import (
 	"os"
-	"path"
 	"strings"
 	"go/parser"
 	"go/token"
 	"go/ast"
 )
 
-func PkgExistsInGOROOT(target string) (exists bool, time int64) {
-	if target[0] == '"' {
-		target = target[1:len(target)]
-	}
-	if target[len(target)-1] == '"' {
-		target = target[0 : len(target)-1]
-	}
-
-	pkgbin := path.Join(GetInstallDirPkg(), target)
-	pkgbin += ".a"
-
-	finfo, err := os.Stat(pkgbin)
-
-	if err == nil {
-		return true, finfo.Mtime_ns
-	}
-	return
-}
-
 func FilterFlag(src string) bool {
-
 	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
 	arch_flags := []string{"amd64", "386", "arm"}
 	for _, flag := range os_flags {
@@ -68,22 +47,6 @@ func FilterFlag(src string) bool {
 	}
 
 	return true
-}
-
-func GetDepsMany(dir string, srcs []string) (err os.Error) {
-	fset := token.NewFileSet()
-	filenames := make([]string, len(srcs))
-	for i, src := range srcs {
-		filenames[i] = path.Join(dir, src)
-	}
-	pkgs, err := parser.ParseFiles(fset, filenames, parser.ParseComments)
-	for _, pkg := range pkgs {
-		w := &Walker{"", "", 0, []string{}, []string{}, false}
-
-		ast.Walk(w, pkg)
-
-	}
-	return
 }
 
 func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {

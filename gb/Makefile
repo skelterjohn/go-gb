@@ -11,5 +11,7 @@ GOFILES=\
 	gofmt.go\
 	runext.go\
 	util.go\
+	files.go\
+	usage.go\
 
 include $(GOROOT)/src/Make.cmd

@@ -31,7 +31,7 @@ var launchpad = regexp.MustCompile(`^(launchpad\.net/([a-z0-9A-Z_.\-]+(/[a-z0-9A
 
 var goinstallables = []*regexp.Regexp{googlecode, github, bitbucket, launchpad}
 
-var goinstallBlock = make(chan bool, 1)
+//var goinstallBlock = make(chan bool, 1)
 
 var goinstalledAlready = make(map[string]bool)
 
@@ -55,8 +55,9 @@ func IsGoInstallable(target string) (matches bool) {
 }
 
 func GoInstallPkg(target string) (touched int64) {
-	goinstallBlock <- true
-	defer func() { <-goinstallBlock }()
+	// 
+	//goinstallBlock <- true
+	//defer func() { <-goinstallBlock }()
 
 	if goinstalledAlready[target] {
 		return
@@ -88,7 +89,7 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 
 	goinstalledFile := path.Join(GetInstallDirPkg(), target) + ".a"
-	
+
 	var info *os.FileInfo
 	info, err = os.Stat(goinstalledFile)
 	if err != nil {
