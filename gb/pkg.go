@@ -526,7 +526,7 @@ func (this *Package) Build() (err os.Error) {
 		inTime = this.SourceTime
 	}
 
-	if inTime > this.BinTime || this.NeedsBuild {
+	if inTime > this.BinTime {
 		which := "cmd"
 		if this.Name != "main" {
 			which = "pkg"

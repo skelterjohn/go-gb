@@ -320,7 +320,7 @@ func TryInstall() {
 }
 
 func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean && !GoFMT) || (Makefiles && !Clean) || Install || Test
+	Build = Build || (!GenMake && !Clean && !GoFMT && !Scan) || (Makefiles && !Clean) || Install || Test
 
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 
