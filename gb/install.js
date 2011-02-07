@@ -1,7 +1,7 @@
 // This is a Windows Script Host script to build gb-go on windows without gnu
 //
 // To run this file on windows just double click it or navigate to the current
-// directory in command prompt and run 'wscript install.js'
+// directory in command prompt and run 'cscript install.js'
 
 var fso = WScript.CreateObject("Scripting.FileSystemObject");
 var shell = WScript.CreateObject("WScript.Shell")
@@ -17,6 +17,14 @@ function getSourceFiles() {
 	for (; !e.atEnd(); e.moveNext()){
 		var fileName = e.item().Name;
 		var ext = fileName.substr(fileName.length-3)
+
+		// TODO: Find which package the file is in
+		//     Then ignore it if its not in 'main'
+		// For now we just ignore doc.go
+		if(fileName == "doc.go") {
+			continue
+		}
+
 		if(ext == ".go") {
 			srcs += fileName + " ";
 		}
@@ -29,6 +37,10 @@ function runAndWait(cmd) {
 	var running = shell.Exec(cmd)
 	while(running.status == 0)
 		WScript.Sleep(10)
+	result = running.StdOut.ReadAll()
+	if(result) {
+		WScript.Echo(result)
+	}
 }
 
 var srcs = getSourceFiles()
