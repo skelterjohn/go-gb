@@ -35,9 +35,17 @@ func StatTime(p string) (time int64, err os.Error) {
 // GetAbs returns the absolute version of the path supplied.
 func GetAbs(p string) (abspath string, err os.Error) {
 	p = path.Clean(p)
-	if path.IsAbs(p) {
-		abspath = p
-		return
+	// Work around IsAbs() not working on windows
+	if GOOS == "windows" {
+		if len(p) > 1 && p[1] == ':' {
+			abspath = p
+			return
+		}
+	} else {
+		if path.IsAbs(p) {
+			abspath = p
+			return
+		}
 	}
 	var wd string
 	wd, err = os.Getwd()
