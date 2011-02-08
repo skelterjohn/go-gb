@@ -221,14 +221,31 @@ func TryDistribution() (err os.Error) {
 	if Distribution {
 		ch := make(chan string)
 		go func() {
-			_, ferr := os.Stat("build")
-			if ferr == nil {
-				ch <- "build"
+			tryFile := func(name string) bool {
+				_, ferr := os.Stat(name)
+				if ferr == nil {
+					ch <- name
+					return true
+				}
+				return false
 			}
-			_, ferr = os.Stat("README")
-			if ferr == nil {
-				ch <- "README"
+			tryFile("build")
+			tryFile("README")
+			
+			if dfile, derr := os.Open("dist.gb", os.O_RDONLY, 0); derr == nil {
+				bfrd := bufio.NewReader(dfile)
+				for {
+					var installFile string
+					if installFile, derr = bfrd.ReadString('\n'); derr != nil {
+						break
+					}
+					installFile = strings.TrimSpace(installFile)
+					if !tryFile(installFile) {
+						fmt.Printf("Couldn't find '%s' for copy to _dist_.\n", installFile)
+					}
+				}
 			}
+			
 			for _, pkg := range ListedPkgs {
 				err = pkg.CollectDistributionFiles(ch)
 				if err != nil {
