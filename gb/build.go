@@ -158,41 +158,49 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	testIB := path.Join("_test", "_gotest_"+GetObjSuffix())
 
-	argv := []string{GetCompilerName()}
-	argv = append(argv, "-I", pkgDest)
-	argv = append(argv, "-o", testIB)
-	argv = append(argv, pkg.Sources...)
-	argv = append(argv, pkg.TestSources...)
+	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
+	
+	for testName, testSrcs := range pkg.TestSrc {
+	
+		argv := []string{GetCompilerName()}
+		argv = append(argv, "-I", pkgDest)
+		argv = append(argv, "-o", testIB)
+		if testName == pkg.Name {
+			argv = append(argv, pkg.Sources...)
+		}
+		argv = append(argv, testSrcs...)
 
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
-	if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
-		return
-	}
+		if Verbose {
+			fmt.Printf("%v\n", argv)
+		}
+		if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
+			return
+		}
 
-	//see if it was created
-	if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
-		return os.NewError("compile error")
-	}
+		//see if it was created
+		if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
+			return os.NewError("compile error")
+		}
 
-	dst := path.Join("_test", "_obj", pkg.Target) + ".a"
+		dst := path.Join("_test", "_obj", "_test", testName) + ".a"
 
-	mkdirdst := path.Join(pkg.Dir, "_test", "_obj", pkg.Target) + ".a"
-	dstDir, _ := path.Split(mkdirdst)
-	os.MkdirAll(dstDir, 0755)
+		mkdirdst := path.Join(pkg.Dir, "_test", "_obj", "_test", testName) + ".a"
+		dstDir, _ := path.Split(mkdirdst)
+		os.MkdirAll(dstDir, 0755)
 
-	argv = []string{"gopack", "grc", dst, testIB}
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
-	if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
-		return
+		argv = []string{"gopack", "grc", dst, testIB}
+		if Verbose {
+			fmt.Printf("%v\n", argv)
+		}
+		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
+			return
+		}
+
 	}
 
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
 
-	argv = []string{GetCompilerName()}
+	argv := []string{GetCompilerName()}
 	argv = append(argv, "-I", path.Join("_test", "_obj"))
 	argv = append(argv, "-I", pkgDest)
 	argv = append(argv, "-o", testmainib)

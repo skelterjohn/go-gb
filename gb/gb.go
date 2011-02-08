@@ -357,7 +357,7 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.Stat()
 	}
-
+	
 	for _, pkg := range Packages {
 		pkg.ResolveDeps()
 	}
@@ -365,7 +365,7 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.CheckStatus()
 	}
-
+	
 	TryScan()
 
 	TryGoFMT()

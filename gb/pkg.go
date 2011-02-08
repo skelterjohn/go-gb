@@ -49,6 +49,7 @@ type Package struct {
 
 	PkgSrc   map[string][]string
 	SrcDeps  map[string][]string
+	TestSrc  map[string][]string
 	BuildSrc []string
 
 	IsCGo bool
@@ -57,6 +58,7 @@ type Package struct {
 	TestDeps    []string
 
 	Funcs []string
+	TestFuncs map[string][]string
 
 	HasMakefile bool
 	IsInGOROOT  bool
@@ -80,6 +82,8 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
 	this.PkgSrc = make(map[string][]string)
+	this.TestSrc = make(map[string][]string)
+	this.TestFuncs = make(map[string][]string)
 
 	//global, _ := GetAbsolutePath(dir)
 	//if strings.HasPrefix(global, GOROOT) {
@@ -219,22 +223,18 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			var fpkg, ftarget string
 			var fdeps, ffuncs []string
 			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
-			this.SrcDeps[src] = fdeps
-			if this.Name != "" && fpkg != this.Name {
-				err = os.NewError(fmt.Sprintf("in %s: more than one test package (ignoring test source)", this.Dir))
-				//fmt.Printf("%v\n", err)
-				this.TestDeps = nil
-				break
-			}
+			//this.SrcDeps[src] = fdeps
+			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				break
 			}
 			if ftarget != "" {
 				this.Target = ftarget
 			}
-			this.Name = fpkg
+			//this.Name = fpkg
 			this.TestDeps = append(this.TestDeps, fdeps...)
 			this.Funcs = append(this.Funcs, ffuncs...)
+			this.TestFuncs[fpkg] = append(this.TestFuncs[fpkg], ffuncs...)
 		}
 		this.TestDeps = RemoveDups(this.TestDeps)
 	}
@@ -378,13 +378,18 @@ func (this *Package) CheckStatus() {
 }
 
 func (this *Package) ResolveDeps() (err os.Error) {
-	CheckDeps := func(deps []string) (err os.Error) {
+	CheckDeps := func(deps []string, test bool) (err os.Error) {
 		for _, dep := range deps {
 			if dep == "\"C\"" {
 				this.IsCGo = true
+				continue
 			}
 			if pkg, ok := Packages[dep]; ok {
-				this.DepPkgs = append(this.DepPkgs, pkg)
+				if test {
+					this.TestDepPkgs = append(this.TestDepPkgs, pkg)
+				} else {
+					this.DepPkgs = append(this.DepPkgs, pkg)
+				}
 			} else {
 				exists, when := PkgExistsInGOROOT(dep)
 				if exists {
@@ -416,11 +421,11 @@ func (this *Package) ResolveDeps() (err os.Error) {
 		}
 		return
 	}
-	err = CheckDeps(this.Deps)
+	err = CheckDeps(this.Deps, false)
 	if err != nil {
 		return
 	}
-	err = CheckDeps(this.TestDeps)
+	err = CheckDeps(this.TestDeps, true)
 	return
 }
 
@@ -431,7 +436,6 @@ func (this *Package) Touched() (build, install bool) {
 	install = this.NeedsInstall
 
 	for _, pkg := range this.DepPkgs {
-
 		db, di := pkg.Touched()
 		if db {
 			build = true
@@ -489,13 +493,13 @@ func (this *Package) Build() (err os.Error) {
 		return
 	}
 
+	inTime := this.GOROOTPkgTime
+
 	if Concurrent {
 		for _, pkg := range this.DepPkgs {
 			go pkg.Build()
 		}
 	}
-
-	inTime := this.GOROOTPkgTime
 
 	for _, pkg := range this.DepPkgs {
 
@@ -585,14 +589,18 @@ func (this *Package) Test() (err os.Error) {
 
 	fmt.Printf("(in %s) testing \"%s\"\n", this.Dir, this.Target)
 
-	var tests, benchmarks []string
+	var pkgtests, pkgbenchmarks map[string][]string
+	pkgtests = make(map[string][]string)
+	pkgbenchmarks = make(map[string][]string)
 
-	for _, f := range this.Funcs {
-		if strings.HasPrefix(f, "Test") {
-			tests = append(tests, f)
-		}
-		if strings.HasPrefix(f, "Benchmark") {
-			benchmarks = append(benchmarks, f)
+	for name, funcs := range this.TestFuncs {
+		for _, f := range funcs {
+			if strings.HasPrefix(f, "Test") {
+				pkgtests[name] = append(pkgtests[name], f)
+			}
+			if strings.HasPrefix(f, "Benchmark") {
+				pkgbenchmarks[name] = append(pkgbenchmarks[name], f)
+			}
 		}
 	}
 
@@ -607,19 +615,26 @@ func (this *Package) Test() (err os.Error) {
 
 	fmt.Fprintf(file, "package main\n\n")
 
-	fmt.Fprintf(file, "import \"%s\"\n", this.Target)
+	//fmt.Fprintf(file, "import \"%s\"\n", this.Target)
+	for name, _ := range this.TestSrc {
+		fmt.Fprintf(file, "import \"_test/%s\"\n", name)
+	}
 	fmt.Fprintf(file, "import \"testing\"\n")
 	fmt.Fprintf(file, "import __regexp__ \"regexp\"\n\n")
 
 	fmt.Fprintf(file, "var tests = []testing.InternalTest{\n")
-	for _, test := range tests {
-		fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", this.Name, test, this.Name, test)
+	for name, tests := range pkgtests {
+		for _, test := range tests {
+			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, name, test)
+		}
 	}
 	fmt.Fprintf(file, "}\n")
 
 	fmt.Fprintf(file, "var benchmarks = []testing.InternalBenchmark{\n")
-	for _, benchmark := range benchmarks {
-		fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", this.Name, benchmark, this.Name, benchmark)
+	for name, benchmarks := range pkgbenchmarks {
+		for _, benchmark := range benchmarks {
+			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, benchmark, name, benchmark)
+		}
 	}
 	fmt.Fprintf(file, "}\n\n")
 
