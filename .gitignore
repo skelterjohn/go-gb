@@ -2,6 +2,10 @@
 .hgignore
 gb.xcodeproj
 build
+gb/gb
+**/*.6
+**/_test/*
+**/_testmain
 gb/bin
 gb/push
 gb/add
