@@ -72,6 +72,8 @@ comment.
 If you are working on something in $GOROOT/src and something outside at the 
 same time, you can run gb -R to build dependencies in $GOROOT.
 
+To include extra files in a distribution, create a file 'dist.gb' that lists
+the additional files to copy.
 
 Options:
  -i		Install build pkgs and cmds to $GOROOT/pkg/$GOOS_$GOARCH and
