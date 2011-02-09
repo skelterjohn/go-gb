@@ -56,6 +56,8 @@ var ListedTargets int
 var ListedDirs map[string]bool
 var ListedPkgs []*Package
 
+var BrokenMsg []string
+
 var RunningInGOROOT bool
 
 var buildBlock chan bool
@@ -279,8 +281,6 @@ func TryClean() {
 
 func TryBuild() {
 
-	var brokenMsg []string
-
 	if Build {
 		if Concurrent {
 			for _, pkg := range ListedPkgs {
@@ -292,13 +292,13 @@ func TryBuild() {
 			pkg.CheckStatus()
 			err := pkg.Build()
 			if err != nil {
-				brokenMsg = append(brokenMsg, fmt.Sprintf("(in %s) could not build \"%s\"", pkg.Dir, pkg.Target))
+			
 			}
 		}
 	}
 
-	if len(brokenMsg) != 0 {
-		for _, msg := range brokenMsg {
+	if len(BrokenMsg) != 0 {
+		for _, msg := range BrokenMsg {
 			fmt.Printf("%s\n", msg)
 		}
 	}

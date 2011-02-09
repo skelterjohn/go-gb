@@ -195,13 +195,15 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		var fpkg, ftarget string
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
-		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
-
-		this.SrcDeps[src] = fdeps
 
 		if err != nil {
 			return
 		}
+		
+		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
+
+		this.SrcDeps[src] = fdeps
+
 		if ftarget != "" {
 			this.Target = ftarget
 		}
@@ -536,7 +538,7 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		if (Makefiles && this.HasMakefile) || this.IsCGo {
+		if (Makefiles && this.HasMakefile) || this.IsCGo || strings.HasPrefix(this.Target, "runtime") {
 			err = MakeBuild(this)
 		} else {
 			err = BuildPackage(this)
@@ -545,6 +547,7 @@ func (this *Package) Build() (err os.Error) {
 			PackagesBuilt++
 		} else {
 			BrokenPackages++
+			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) could not build \"%s\"", this.Dir, this.Target))
 		}
 
 	}
