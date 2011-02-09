@@ -13,5 +13,6 @@ GOFILES=\
 	util.go\
 	files.go\
 	usage.go\
+	cgo.go\
 
 include $(GOROOT)/src/Make.cmd
