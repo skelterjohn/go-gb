@@ -538,13 +538,15 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		if this.IsCGo && !strings.HasPrefix(this.Target, "runtime") {
-			err = BuildCgoPackage(this)
-		} else if (Makefiles && this.HasMakefile) || this.IsCGo {
+		
+		if Makefiles && this.HasMakefile {
 			err = MakeBuild(this)
+		} else if this.IsCGo {
+			err = BuildCgoPackage(this)
 		} else {
 			err = BuildPackage(this)
 		}
+		
 		if err == nil {
 			PackagesBuilt++
 		} else {

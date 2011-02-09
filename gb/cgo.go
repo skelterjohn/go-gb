@@ -18,8 +18,12 @@ package main
 
 import (
 	"os"
+	//"strings"
 )
 
 func BuildCgoPackage(pkg *Package) (err os.Error) {
+	if pkg.IsInGOROOT {//strings.HasPrefix(pkg.Target, "runtime") {
+		return MakeBuild(pkg)
+	}
 	return MakeBuild(pkg)
 }
