@@ -108,3 +108,22 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 	
 	return
 }
+
+
+func ReverseDir(dir string) (rev string) {
+	rev = "."
+	for dir != "." && dir != "" {
+		dir, _ = path.Split(path.Clean(dir))
+		rev = path.Join(rev, "..")
+	}
+	return
+}
+
+func ReverseDirForwardSlash(dir string) (rev string) {
+	rev = "."
+	for dir != "." && dir != "" {
+		dir, _ = path.Split(path.Clean(dir))
+		rev += "/.."
+	}
+	return
+}

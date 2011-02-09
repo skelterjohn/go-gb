@@ -538,7 +538,9 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		if (Makefiles && this.HasMakefile) || (this.IsCGo && strings.HasPrefix(this.Target, "runtime")) {
+		if this.IsCGo && !strings.HasPrefix(this.Target, "runtime") {
+			err = BuildCgoPackage(this)
+		} else if (Makefiles && this.HasMakefile) || this.IsCGo {
 			err = MakeBuild(this)
 		} else {
 			err = BuildPackage(this)

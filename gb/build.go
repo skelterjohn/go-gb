@@ -63,24 +63,6 @@ func GetIBName() (name string) {
 	return "_go_" + GetObjSuffix()
 }
 
-func ReverseDir(dir string) (rev string) {
-	rev = "."
-	for dir != "." && dir != "" {
-		dir, _ = path.Split(path.Clean(dir))
-		rev = path.Join(rev, "..")
-	}
-	return
-}
-
-func ReverseDirForwardSlash(dir string) (rev string) {
-	rev = "."
-	for dir != "." && dir != "" {
-		dir, _ = path.Split(path.Clean(dir))
-		rev += "/.."
-	}
-	return
-}
-
 func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
 	defer func() { <-buildBlock }()
