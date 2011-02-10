@@ -48,8 +48,8 @@ type Package struct {
 	AsmSrcs    []string
 
 	PkgSrc   map[string][]string
-	SrcDeps  map[string][]string
 	TestSrc  map[string][]string
+	SrcDeps  map[string][]string
 	BuildSrc []string
 
 	IsCGo bool
@@ -154,7 +154,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
-	this.IsCGo = len(this.CGoSources)+len(this.CSrcs)+len(this.AsmSrcs) > 0
+	this.IsCGo = this.IsCGo || len(this.CSrcs)/*+len(this.AsmSrcs)*/ > 0
 
 	return
 }

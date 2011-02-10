@@ -35,6 +35,18 @@ func GetCompilerName() (name string) {
 	return
 }
 
+func GetAssemblerName() (name string) {
+	switch GOARCH {
+	case "amd64":
+		return "6a"
+	case "386":
+		return "8a"
+	case "arm":
+		return "5a"
+	}
+	return
+}
+
 func GetLinkerName() (name string) {
 	switch GOARCH {
 	case "amd64":
@@ -95,6 +107,21 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		return os.NewError("compile error")
 	}
 
+	asmObjs := []string{}
+	for _, asm := range pkg.AsmSrcs {
+		base := asm[0:len(asm)-2] // definitely ends with '.s', so this is safe
+		asmObj := base+GetObjSuffix()
+		asmObjs = append(asmObjs, asmObj)
+		sargv := []string{GetAssemblerName(), asm}
+		if Verbose {
+			fmt.Printf("%v\n", sargv)
+		}
+		err = RunExternal(AsmCMD, pkg.Dir, sargv)
+		if err != nil {
+			return
+		}
+	}
+
 	dst := path.Join(reverseDots, pkg.result)
 
 	if pkg.IsCmd {
@@ -117,6 +144,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, GetIBName()}
+		argv = append(argv, asmObjs...)
 		if Verbose {
 			fmt.Printf("%v\n", argv)
 		}
@@ -195,7 +223,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 		return
 	}
 
-	testBinary := "_testmain"
+	testBinary := path.Join("_test", "_testmain")
 	if GOOS == "windows" {
 		testBinary += ".exe"
 	}

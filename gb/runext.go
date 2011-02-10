@@ -21,7 +21,7 @@ import (
 	"fmt"
 )
 
-var MakeCMD, CompileCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
+var MakeCMD, CompileCMD, AsmCMD, LinkCMD, PackCMD, CopyCMD, GoInstallCMD, GoFMTCMD string
 
 func FindExternals() (err os.Error) {
 	var err2 os.Error
@@ -33,6 +33,12 @@ func FindExternals() (err os.Error) {
 	CompileCMD, err = exec.LookPath(GetCompilerName())
 	if err != nil {
 		fmt.Printf("Could not find '%s' in path\n", GetCompilerName())
+		return
+	}
+
+	AsmCMD, err = exec.LookPath(GetAssemblerName())
+	if err != nil {
+		fmt.Printf("Could not find '%s' in path\n", GetAssemblerName())
 		return
 	}
 
