@@ -238,8 +238,9 @@ func BuildTest(pkg *Package) (err os.Error) {
 	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
-
-	if err = RunExternal(testBinary, pkg.Dir, []string{testBinary}); err != nil {
+	var testBinaryAbs string
+	testBinaryAbs, err = GetAbs(path.Join(pkg.Dir, testBinary))
+	if err = RunExternal(testBinaryAbs, pkg.Dir, []string{testBinary}); err != nil {
 		return
 	}
 
