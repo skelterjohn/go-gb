@@ -11,6 +11,8 @@ gb/push
 gb/add
 gb/commit
 gb/_dist_
+example/_obj
+example/bin
 example/a/Makefile
 example/a/b/Makefile
 example/c/Makefile
