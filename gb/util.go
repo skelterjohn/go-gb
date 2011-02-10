@@ -18,7 +18,7 @@ package main
 
 import (
 	"os"
-	"strings"
+	"runtime"
 	"path"
 )
 
@@ -53,6 +53,35 @@ func GetAbs(p string) (abspath string, err os.Error) {
 	return
 }
 
+func GetRoot(p string) (r string) {
+	if runtime.GOOS == "windows" && len(p) > 1 && p[1] == ':' {
+		return p[0:2]+path.DirSeps
+		return
+	} 
+	return "/"
+}
+
+func HasPathPrefix(p, pr string) bool {
+	if pr == GetRoot(p) {
+		return true
+	}
+	p = path.Clean(p)
+	pr = path.Clean(pr)
+	if len(pr) == 0 {
+		return false
+	}
+	if len(pr) > len(p) {
+		return false
+	}
+	if p == pr {
+		return true
+	}
+	if pr[len(pr)-1] == path.DirSeps[0] {
+		return p[0:len(pr)] == pr
+	}
+	return p[0:len(pr)+1] == pr+path.DirSeps
+}
+
 // GetRelative(start, finish) returns the path to finish, relative to start.
 func GetRelative(start, finish string) (relative string, err os.Error) {
 	if start, err = GetAbs(start); err != nil {
@@ -62,7 +91,7 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 		return
 	}
 	backtracking := "."
-	for !(strings.HasPrefix(finish, start+path.DirSeps) || start == "/") {
+	for !HasPathPrefix(finish, start) {
 		backtracking = path.Join(backtracking, "..")
 		start, _ = path.Split(start)
 		start = path.Clean(start)
