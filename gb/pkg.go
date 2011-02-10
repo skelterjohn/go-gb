@@ -263,6 +263,10 @@ func (this *Package) GetTarget() (err os.Error) {
 				if this.Target == "." {
 					this.Target = "main"
 				}
+			} else {
+				if this.Target == "." {
+					this.Target = "localpkg"
+				}
 			}
 		} else {
 			this.Base = this.Target
