@@ -62,8 +62,7 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 		return
 	}
 	backtracking := "."
-
-	for !strings.HasPrefix(finish, start+path.DirSeps) {
+	for !(strings.HasPrefix(finish, start+path.DirSeps) || start == "/") {
 		backtracking = path.Join(backtracking, "..")
 		start, _ = path.Split(start)
 		start = path.Clean(start)
