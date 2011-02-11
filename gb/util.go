@@ -57,7 +57,7 @@ func GetAbs(p, cwd string) (abspath string) {
 
 func GetRoot(p string) (r string) {
 	if (TestWindows || runtime.GOOS == "windows") && len(p) > 1 && p[1] == ':' {
-		return p[0:2]+path.DirSeps
+		return p[0:2]+"/"
 	} 
 	return "/"
 }
@@ -91,10 +91,10 @@ func HasPathPrefix(p, pr string) bool {
 	if len(p) == len(pr) {
 		return p == pr
 	}
-	if pr[len(pr)-1] == path.DirSeps[0] {
+	if pr[len(pr)-1] == '/' {
 		return p[0:len(pr)] == pr
 	}
-	return p[0:len(pr)+1] == pr+path.DirSeps
+	return p[0:len(pr)+1] == pr+"/"
 }
 
 // GetRelative(start, finish) returns the path to finish, relative to start.
