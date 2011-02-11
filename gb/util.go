@@ -87,8 +87,8 @@ func HasPathPrefix(p, pr string) bool {
 	if len(pr) > len(p) {
 		return false
 	}
-	if p == pr {
-		return true
+	if len(p) == len(pr) {
+		return p == pr
 	}
 	if pr[len(pr)-1] == path.DirSeps[0] {
 		return p[0:len(pr)] == pr
