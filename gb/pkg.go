@@ -222,6 +222,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			//this.SrcDeps[src] = fdeps
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
+				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
 				break
 			}
 			if ftarget != "" {
