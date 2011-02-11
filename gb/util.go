@@ -107,6 +107,15 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 		return
 	}
 	
+	if (TestWindows || runtime.GOOS == "windows") {
+		if len(start) >= 2 && len(finish) >= 2 {
+			if start[0] != finish[0] && start[1] == finish[1] {
+				relative = finish //absolute path is the only way
+				return
+			}
+		}
+	}
+	
 	backtracking := "."
 	for !HasPathPrefix(finish, start) {
 		backtracking = path.Join(backtracking, "..")
