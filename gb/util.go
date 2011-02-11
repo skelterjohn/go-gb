@@ -20,7 +20,10 @@ import (
 	"os"
 	"runtime"
 	"path"
+	"strings"
 )
+
+var TestWindows = false
 
 func StatTime(p string) (time int64, err os.Error) {
 	var info *os.FileInfo
@@ -34,9 +37,9 @@ func StatTime(p string) (time int64, err os.Error) {
 
 // GetAbs returns the absolute version of the path supplied.
 func GetAbs(p string) (abspath string, err os.Error) {
-	p = path.Clean(p)
+	p = pathClean(p)
 	// Work around IsAbs() not working on windows
-	if GOOS == "windows" {
+	if (TestWindows || runtime.GOOS == "windows") {
 		if len(p) > 1 && p[1] == ':' {
 			abspath = p
 			return
@@ -49,24 +52,35 @@ func GetAbs(p string) (abspath string, err os.Error) {
 	}
 	var wd string
 	wd, err = os.Getwd()
-	abspath = path.Clean(path.Join(wd, p))
+	abspath = path.Join(wd, p)
 	return
 }
 
 func GetRoot(p string) (r string) {
-	if runtime.GOOS == "windows" && len(p) > 1 && p[1] == ':' {
+	if (TestWindows || runtime.GOOS == "windows") && len(p) > 1 && p[1] == ':' {
 		return p[0:2]+path.DirSeps
 		return
 	} 
 	return "/"
 }
 
+func pathClean(p string) (r string) {
+	if (TestWindows || runtime.GOOS == "windows") {
+		p = strings.Replace(p, "\\", "/", -1)
+	}
+	r = path.Clean(p)
+	return
+}
+
 func HasPathPrefix(p, pr string) bool {
+	p = pathClean(p)
+	pr = pathClean(pr)
+	
 	if pr == GetRoot(p) {
 		return true
 	}
-	p = path.Clean(p)
-	pr = path.Clean(pr)
+	
+	
 	if len(pr) == 0 {
 		return false
 	}
@@ -97,12 +111,12 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 		start = path.Clean(start)
 	}
 	if start == finish {
-		return path.Clean(path.Join(backtracking, ".")), nil
+		return pathClean(path.Join(backtracking, ".")), nil
 	}
 	if start == "/" {
-		relative = path.Clean(path.Join(backtracking, finish))
+		relative = path.Join(backtracking, finish)
 	} else {
-		relative = path.Clean(path.Join(backtracking, finish[len(start)+1:len(finish)]))
+		relative = path.Join(backtracking, finish[len(start)+1:len(finish)])
 	}
 	return
 }
