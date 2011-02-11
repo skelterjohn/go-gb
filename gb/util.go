@@ -59,7 +59,6 @@ func GetAbs(p string) (abspath string, err os.Error) {
 func GetRoot(p string) (r string) {
 	if (TestWindows || runtime.GOOS == "windows") && len(p) > 1 && p[1] == ':' {
 		return p[0:2]+path.DirSeps
-		return
 	} 
 	return "/"
 }
