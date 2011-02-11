@@ -190,6 +190,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
 
 		if err != nil {
+			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
 			return
 		}
 		
