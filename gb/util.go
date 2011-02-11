@@ -38,6 +38,7 @@ func StatTime(p string) (time int64, err os.Error) {
 // GetAbs returns the absolute version of the path supplied.
 func GetAbs(p, cwd string) (abspath string) {
 	p = pathClean(p)
+	cwd = pathClean(cwd)
 	// Work around IsAbs() not working on windows
 	if (TestWindows || runtime.GOOS == "windows") {
 		if len(p) > 1 && p[1] == ':' {
@@ -98,8 +99,9 @@ func HasPathPrefix(p, pr string) bool {
 
 // GetRelative(start, finish) returns the path to finish, relative to start.
 func GetRelative(start, finish, cwd string) (relative string) {
-	start = GetAbs(start, cwd)
-	finish = GetAbs(finish, cwd)
+	start = GetAbs(pathClean(start), cwd)
+	finish = GetAbs(pathClean(finish), cwd)
+	cwd = pathClean(cwd)
 	
 	if (TestWindows || runtime.GOOS == "windows") {
 		if len(start) >= 2 && len(finish) >= 2 {

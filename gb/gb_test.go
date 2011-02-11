@@ -41,6 +41,7 @@ func TestGetRelative(t *testing.T) {
 		{"C:\\a\\b/c", "D:/e\\f/g", "E:/1/2/3", "D:/e/f/g"},
 		{"C:/a/b/c", "D:/e/f/g", "no_wd", "D:/e/f/g"},
 		{"D:\\e\\f\\g", "a/b/c", "D:/home", "../../../home/a/b/c"},
+		{"D:\\e\\f\\g", "a/b/c", "e:/home", "E:/home/a/b/c"},
 	}
 
 	for _, grt := range grTests {
