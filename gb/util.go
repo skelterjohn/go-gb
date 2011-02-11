@@ -36,7 +36,7 @@ func StatTime(p string) (time int64, err os.Error) {
 }
 
 // GetAbs returns the absolute version of the path supplied.
-func GetAbs(p string) (abspath string, err os.Error) {
+func GetAbs(p, cwd string) (abspath string) {
 	p = pathClean(p)
 	// Work around IsAbs() not working on windows
 	if (TestWindows || runtime.GOOS == "windows") {
@@ -50,9 +50,7 @@ func GetAbs(p string) (abspath string, err os.Error) {
 			return
 		}
 	}
-	var wd string
-	wd, err = os.Getwd()
-	abspath = path.Join(wd, p)
+	abspath = path.Join(cwd, p)
 	return
 }
 
@@ -99,13 +97,9 @@ func HasPathPrefix(p, pr string) bool {
 }
 
 // GetRelative(start, finish) returns the path to finish, relative to start.
-func GetRelative(start, finish string) (relative string, err os.Error) {
-	if start, err = GetAbs(start); err != nil {
-		return
-	}
-	if finish, err = GetAbs(finish); err != nil {
-		return
-	}
+func GetRelative(start, finish, cwd string) (relative string) {
+	start = GetAbs(start, cwd)
+	finish = GetAbs(finish, cwd)
 	
 	if (TestWindows || runtime.GOOS == "windows") {
 		if len(start) >= 2 && len(finish) >= 2 {
@@ -123,7 +117,7 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 		start = path.Clean(start)
 	}
 	if start == finish {
-		return pathClean(path.Join(backtracking, ".")), nil
+		return pathClean(path.Join(backtracking, "."))
 	}
 	if start == "/" {
 		relative = path.Join(backtracking, finish)

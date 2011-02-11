@@ -88,7 +88,8 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	//global, _ := GetAbsolutePath(dir)
 	//if strings.HasPrefix(global, GOROOT) {
 	//println("rp: ", GOROOT, dir)
-	if rel, _ := GetRelative(GOROOT, dir); !strings.HasPrefix(rel, "..") {
+	cwd, _ := os.Getwd()
+	if rel := GetRelative(GOROOT, dir, cwd); !strings.HasPrefix(rel, "..") {
 		this.IsInGOROOT = true
 	}
 
@@ -116,14 +117,6 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	}
 
 	for _, src := range this.Sources {
-		/*
-			var srcInfo *os.FileInfo
-			srcInfo, err = os.Stat(path.Join(this.Dir, src))
-			if err != nil {
-				return
-			}
-			t := srcInfo.Mtime_ns
-		*/
 		var t int64
 		t, err = StatTime(path.Join(this.Dir, src))
 		if err != nil {
@@ -247,8 +240,9 @@ func (this *Package) GetTarget() (err os.Error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
 		//println("grp:", path.Join(GOROOT, "src", "pkg"), this.Dir)
-		this.Target, err = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir)
-		if err != nil {
+		cwd, _ := os.Getwd()
+		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, cwd)
+		if strings.HasPrefix(this.Target, "..") {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
 			return
 		}
