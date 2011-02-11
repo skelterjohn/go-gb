@@ -41,7 +41,7 @@ func GetAbs(p, cwd string) (abspath string) {
 	cwd = pathClean(cwd)
 	// Work around IsAbs() not working on windows
 	if (TestWindows || runtime.GOOS == "windows") {
-		if len(p) > 1 && p[1] == ':' {
+		if len(p) > 2 && p[1:3] == ":/" {
 			abspath = p
 			return
 		}
