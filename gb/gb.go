@@ -57,6 +57,7 @@ var ListedDirs map[string]bool
 var ListedPkgs []*Package
 
 var BrokenMsg []string
+var ReturnFailCode bool
 
 var RunningInGOROOT bool
 
@@ -518,5 +519,14 @@ func main() {
 	err = RunGB()
 	if err != nil {
 		fmt.Printf("%v\n", err)
+		ReturnFailCode = true
+	}
+	
+	if len(BrokenMsg) > 0 {
+		ReturnFailCode = true
+	}
+	
+	if ReturnFailCode {
+		os.Exit(1)
 	}
 }

@@ -242,6 +242,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 	cwd, _ := os.Getwd()
 	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), cwd)
 	if err = RunExternal(testBinaryAbs, pkg.Dir, []string{testBinary}); err != nil {
+		ReturnFailCode = true
 		return
 	}
 
