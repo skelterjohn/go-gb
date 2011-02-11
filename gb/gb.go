@@ -307,7 +307,8 @@ func TryBuild() {
 func TryTest() (err os.Error) {
 	if Test {
 		for _, pkg := range ListedPkgs {
-			if pkg.Name != "main" && len(pkg.TestSources) != 0 {
+			//if pkg.Name != "main" && len(pkg.TestSources) != 0 {
+			if len(pkg.TestSources) != 0 {
 				err = pkg.Test()
 				if err != nil {
 					return

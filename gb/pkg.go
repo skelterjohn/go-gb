@@ -628,7 +628,11 @@ func (this *Package) Test() (err os.Error) {
 
 	//fmt.Fprintf(file, "import \"%s\"\n", this.Target)
 	for name, _ := range this.TestSrc {
-		fmt.Fprintf(file, "import \"_test/%s\"\n", name)
+		if name == "main" {
+			fmt.Fprintf(file, "import __main__ \"_test/%s\"\n", name)
+		} else {
+			fmt.Fprintf(file, "import \"_test/%s\"\n", name)
+		}
 	}
 	fmt.Fprintf(file, "import \"testing\"\n")
 	fmt.Fprintf(file, "import __regexp__ \"regexp\"\n\n")
@@ -636,7 +640,11 @@ func (this *Package) Test() (err os.Error) {
 	fmt.Fprintf(file, "var tests = []testing.InternalTest{\n")
 	for name, tests := range pkgtests {
 		for _, test := range tests {
-			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, name, test)
+			callName := name
+			if name == "main" {
+				callName = "__main__"
+			}
+			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, callName, test)
 		}
 	}
 	fmt.Fprintf(file, "}\n")

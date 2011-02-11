@@ -176,7 +176,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 		argv = append(argv, "-I", pkgDest)
 		argv = append(argv, "-o", testIB)
 		if testName == pkg.Name {
-			argv = append(argv, pkg.Sources...)
+			argv = append(argv, pkg.PkgSrc[pkg.Name]...)
 		}
 		argv = append(argv, testSrcs...)
 
