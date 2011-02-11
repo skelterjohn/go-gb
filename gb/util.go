@@ -66,6 +66,9 @@ func GetRoot(p string) (r string) {
 func pathClean(p string) (r string) {
 	if (TestWindows || runtime.GOOS == "windows") {
 		p = strings.Replace(p, "\\", "/", -1)
+		if len(p)>=2 && p[1] == ':' {
+			p = strings.ToUpper(p[0:1])+p[1:len(p)]
+		}
 	}
 	r = path.Clean(p)
 	return
@@ -103,6 +106,7 @@ func GetRelative(start, finish string) (relative string, err os.Error) {
 	if finish, err = GetAbs(finish); err != nil {
 		return
 	}
+	
 	backtracking := "."
 	for !HasPathPrefix(finish, start) {
 		backtracking = path.Join(backtracking, "..")

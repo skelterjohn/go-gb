@@ -491,6 +491,11 @@ func CheckFlags() {
 }
 
 func main() {
+	/*
+	r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
+	println(r)
+	*/
+
 	LoadEnvs()
 
 	CheckFlags()
