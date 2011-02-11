@@ -29,7 +29,9 @@ type GRTest struct {
 
 func TestGetRelative(t *testing.T) {
 	grTests := []GRTest{
-	
+		{"/home/projects/goproject", "/home/go", "these_are_absolute", "../../go"},
+		{"/home/go", "/home/go/src/pkg/project", "these_are_absolute", "src/pkg/project"},
+		{"/home/go", "package2", "/home/user/workspace", "../user/workspace/package2"},
 	}
 	grTestsWindows := []GRTest{
 		{"C:/c/go/gc", "C:\\c\\go\\go-gb\\example", "wd_does_not_matter_here", "../go-gb/example"},
