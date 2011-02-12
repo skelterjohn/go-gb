@@ -723,6 +723,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 	
 	ib := false
 	res := false
+	test := false
 	for _, obj := range this.Objects {
 		if _, err2 := os.Stat(obj); err2 == nil {
 			ib = true
@@ -731,7 +732,11 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(this.result); err2 == nil {
 		res = true
 	}
-	if !ib && !res {
+	testdir := path.Join(this.Dir, "_test")
+	if _, err2 := os.Stat(testdir); err2 == nil {
+		test = true
+	}
+	if !ib && !res && !test {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
@@ -745,11 +750,6 @@ func (this *Package) CleanFiles() (err os.Error) {
 		fmt.Printf(" Removing %s\n", this.result)
 	}
 	err = os.Remove(this.result)
-	if Verbose {
-		fmt.Printf(" Removing %s\n", path.Join("_test", "_testmain"))
-	}
-	err = os.Remove(path.Join("_test", "_testmain"))
-	testdir := path.Join(this.Dir, "_test")
 	if Verbose {
 		fmt.Printf(" Removing %s\n", testdir)
 	}

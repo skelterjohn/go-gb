@@ -52,6 +52,9 @@ func MakeClean(pkg *Package) (err os.Error) {
 		return
 	}
 	margs := []string{"make", "clean"}
+	if Nuke {
+		margs = append(margs, "nuke")
+	}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
 	err = RunExternal(MakeCMD, pkg.Dir, margs)
