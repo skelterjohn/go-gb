@@ -356,6 +356,13 @@ func (this *Package) PrintScan() {
 
 func (this *Package) Stat() {
 	this.BinTime, _ = StatTime(this.result)
+	for _, as := range this.AsmSrcs {
+		aso := as[:len(as)-2]+GetObjSuffix()
+		asoTime, _ := StatTime(aso)
+		if asoTime > this.BinTime {
+			this.BinTime = asoTime
+		}
+	}
 	this.InstTime, _ = StatTime(this.installPath)
 	/*
 		resInfo, err := os.Stat(this.result)
@@ -702,6 +709,12 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(this.ib); err2 == nil {
 		ib = true
 	}
+	for _, as := range this.AsmSrcs {
+		aso := as[:len(as)-2]+GetObjSuffix()
+		if _, err2 := os.Stat(aso); err2 == nil {
+			ib = true
+		}
+	}
 	if _, err2 := os.Stat(this.result); err2 == nil {
 		res = true
 	}
@@ -716,11 +729,18 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if Verbose {
 		fmt.Printf(" Removing %s\n", this.result)
 	}
+	for _, as := range this.AsmSrcs {
+		aso := as[:len(as)-2]+GetObjSuffix()
+		err = os.Remove(aso)
+		if Verbose {
+			fmt.Printf(" Removing %s\n", aso)
+		}
+	}
 	err = os.Remove(this.result)
 	if Verbose {
-		fmt.Printf(" Removing %s\n", "_testmain")
+		fmt.Printf(" Removing %s\n", path.Join("_test", "_testmain"))
 	}
-	err = os.Remove("_testmai")
+	err = os.Remove(path.Join("_test", "_testmain"))
 	testdir := path.Join(this.Dir, "_test")
 	if Verbose {
 		fmt.Printf(" Removing %s\n", testdir)
