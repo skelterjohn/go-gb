@@ -20,6 +20,7 @@ import (
 	"path"
 	"os"
 	"strings"
+	"bufio"
 	"strconv"
 )
 
@@ -106,6 +107,33 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 
 	exists = err == nil
 
+	return
+}
+
+func LineChan(f string, ch chan<- string) (err os.Error) {
+	var fin *os.File
+	if fin, err = os.Open(f, os.O_RDONLY, 0); err == nil {
+		bfrd := bufio.NewReader(fin)
+		for {
+			var line string
+			if line, err = bfrd.ReadString('\n'); err != nil {
+				break
+			}
+			ch <- strings.TrimSpace(line)
+		}
+	}
+	return
+}
+
+func DirTargetGB(dir string) (target string, err os.Error) {
+	var fin *os.File
+	tpath := path.Join(dir, "target.gb")
+	fin, err = os.Open(tpath, os.O_RDONLY, 0)
+	if err == nil {
+		bfrd := bufio.NewReader(fin)
+		target, err = bfrd.ReadString('\n')
+		target = strings.TrimSpace(target)
+	}
 	return
 }
 

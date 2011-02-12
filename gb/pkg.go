@@ -66,16 +66,17 @@ type Package struct {
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
+	//to make sure that only one thread works on a given package at a time
 	block chan bool
 }
 
-func ReadPackage(base, dir string) (this *Package, err os.Error) {
-	//println("ReadPackage(",base,dir,")")
+func NewPackage(base, dir string) (this *Package, err os.Error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
 		err = os.NewError("not a directory")
 		return
 	}
+	
 	this = new(Package)
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
