@@ -102,11 +102,6 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		return
 	}
 
-	//see if it was created
-	if _, err = os.Stat(pkg.ib); err != nil {
-		return os.NewError("compile error")
-	}
-
 	asmObjs := []string{}
 	for _, asm := range pkg.AsmSrcs {
 		base := asm[0:len(asm)-2] // definitely ends with '.s', so this is safe

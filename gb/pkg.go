@@ -31,7 +31,6 @@ type Package struct {
 	Base        string
 	IsCmd       bool
 	Deps        []string
-	ib          string
 	result      string
 	installPath string
 	MyErr       os.Error
@@ -133,8 +132,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 		return
 	}
 	this.IsCmd = this.Name == "main"
-	this.ib = path.Join(this.Dir, GetIBName())
-	this.Objects = append(this.Objects, this.ib)
+	this.Objects = append(this.Objects, path.Join(this.Dir, GetIBName()))
 	err = this.GetTarget()
 
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
