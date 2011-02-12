@@ -885,7 +885,11 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "\n")
 	_, err = fmt.Fprintf(file, "include $(GOROOT)/src/Make.inc\n")
 	_, err = fmt.Fprintf(file, "\n")
-	_, err = fmt.Fprintf(file, "TARG=%s\n", this.Target)
+	makeTarget := this.Target
+	if GOOS == "windows" && strings.HasSuffix(makeTarget, ".exe") {
+		makeTarget = makeTarget[0:len(makeTarget)-len(".exe")]
+	}
+	_, err = fmt.Fprintf(file, "TARG=%s\n", makeTarget)
 	_, err = fmt.Fprintf(file, "GOFILES=\\\n")
 	for _, src := range this.PkgSrc[this.Name] {
 		_, err = fmt.Fprintf(file, "\t%s\\\n", src)

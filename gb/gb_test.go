@@ -29,20 +29,23 @@ type GRTest struct {
 
 func TestGetRelative(t *testing.T) {
 	grTests := []GRTest{
-		{"/home/projects/goproject", "/home/go", "these_are_absolute", "../../go"},
-		{"/home/go", "/home/go/src/pkg/project", "these_are_absolute", "src/pkg/project"},
-		{"/home/go", "package2", "/home/user/workspace", "../user/workspace/package2"},
-		{"../dir1", "../dir2", "/home/user/workspace", "../dir2"},
-		{"a/b/c", "a/b/cde", "/home", "../cde"},
+		{`/home/projects/goproject`, `/home/go`, `these_are_absolute`, `../../go`},
+		{`/home/go`, `/home/go/src/pkg/project`, `these_are_absolute`, `src/pkg/project`},
+		{`/home/go`, `package2`, `/home/user/workspace`, `../user/workspace/package2`},
+		{`../dir1`, `../dir2`, `/home/user/workspace`, `../dir2`},
+		{`a/b/c`, `a/b/cde`, `/home`, `../cde`},
 	}
 	grTestsWindows := []GRTest{
-		{"C:/c/go/gc", "C:\\c\\go\\go-gb\\example", "wd_does_not_matter_here", "../go-gb/example"},
-		{"C:/a/b/c", "D:/e/f/g", "E:/1/2/3", "D:/e/f/g"},
-		{"C:\\a\\b/c", "D:/e\\f/g", "E:/1/2/3", "D:/e/f/g"},
-		{"C:/a/b/c", "D:/e/f/g", "no_wd", "D:/e/f/g"},
-		{"D:\\e\\f\\g", "a/b/c", "D:/home", "../../../home/a/b/c"},
-		{"D:\\e\\f\\g", "a/b/c", "e:/home", "E:/home/a/b/c"},
+		{`C:/c/go/gc`, `C:\c\go\go-gb\example`, `wd_does_not_matter_here`, `../go-gb/example`},
+		{`C:/a/b/c`, `D:/e/f/g`, `E:/1/2/3`, `D:/e/f/g`},
+		{`C:\a\b/c`, `D:/e\f/g`, `E:/1/2/3`, `D:/e/f/g`},
+		{`C:/a/b/c`, `D:/e/f/g`, `no_wd`, `D:/e/f/g`},
+		{`D:\e\f\g`, `a/b/c`, `D:/home`, `../../../home/a/b/c`},
+		{`D:\e\f\g`, `a/b/c`, `e:\\home`, `E:/home/a/b/c`},
+		{`D:\e\f\g`, `a/b/c`, `e:/home`, `E:/home/a/b/c`},
+		{`e:\dnload\go-lang\go07\go`, `.`, `E:\prog\splitsound\repo01`, `../../../../prog/splitsound/repo01`},
 	}
+	
 
 	for _, grt := range grTests {
 		result := GetRelative(grt.start, grt.finish, grt.wd)
