@@ -116,7 +116,7 @@ func GetRelative(start, finish, cwd string) (relative string) {
 	for !HasPathPrefix(finish, start) {
 		backtracking = path.Join(backtracking, "..")
 		start, _ = path.Split(start)
-		start = path.Clean(start)
+		start = pathClean(start)
 	}
 	if start == finish {
 		return pathClean(path.Join(backtracking, "."))
