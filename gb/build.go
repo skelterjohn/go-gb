@@ -104,8 +104,8 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 	asmObjs := []string{}
 	for _, asm := range pkg.AsmSrcs {
-		base := asm[0:len(asm)-2] // definitely ends with '.s', so this is safe
-		asmObj := base+GetObjSuffix()
+		base := asm[0 : len(asm)-2] // definitely ends with '.s', so this is safe
+		asmObj := base + GetObjSuffix()
 		asmObjs = append(asmObjs, asmObj)
 		sargv := []string{GetAssemblerName(), asm}
 		if Verbose {
@@ -117,7 +117,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 	}
 
-	dst := path.Join(reverseDots, pkg.result)
+	dst := path.Join(reverseDots, pkg.ResultPath)
 
 	if pkg.IsCmd {
 		os.MkdirAll(GetBuildDirCmd(), 0755)
@@ -132,7 +132,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 	} else {
-		dstDir, _ := path.Split(pkg.result)
+		dstDir, _ := path.Split(pkg.ResultPath)
 		if Verbose {
 			fmt.Printf("Creating directory %s\n", dstDir)
 		}
@@ -149,7 +149,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	}
 
 	var resInfo *os.FileInfo
-	resInfo, err2 := os.Stat(pkg.result)
+	resInfo, err2 := os.Stat(pkg.ResultPath)
 	if err2 == nil {
 		pkg.BinTime = resInfo.Mtime_ns
 	}
@@ -164,9 +164,9 @@ func BuildTest(pkg *Package) (err os.Error) {
 	testIB := path.Join("_test", "_gotest_"+GetObjSuffix())
 
 	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
-	
+
 	for testName, testSrcs := range pkg.TestSrc {
-	
+
 		argv := []string{GetCompilerName()}
 		argv = append(argv, "-I", pkgDest)
 		argv = append(argv, "-o", testIB)
@@ -244,8 +244,8 @@ func BuildTest(pkg *Package) (err os.Error) {
 	return
 }
 func InstallPackage(pkg *Package) (err os.Error) {
-	dstDir, _ := path.Split(pkg.installPath)
-	_, dstName := path.Split(pkg.result)
+	dstDir, _ := path.Split(pkg.InstallPath)
+	_, dstName := path.Split(pkg.ResultPath)
 	dstFile := path.Join(dstDir, dstName)
 	err = os.MkdirAll(dstDir, 0755)
 	if err != nil {
@@ -258,7 +258,7 @@ func InstallPackage(pkg *Package) (err os.Error) {
 	}
 	fmt.Printf("Installing %s \"%s\"\n", which, pkg.Target)
 
-	Copy(".", pkg.result, dstFile)
+	Copy(".", pkg.ResultPath, dstFile)
 
 	return
 }

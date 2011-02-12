@@ -105,7 +105,7 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 	time, err := StatTime(pkgbin)
 
 	exists = err == nil
-	
+
 	return
 }
 

@@ -22,7 +22,7 @@ import (
 )
 
 func BuildCgoPackage(pkg *Package) (err os.Error) {
-	if pkg.IsInGOROOT {//strings.HasPrefix(pkg.Target, "runtime") {
+	if pkg.IsInGOROOT { //strings.HasPrefix(pkg.Target, "runtime") {
 		return MakeBuild(pkg)
 	}
 	return MakeBuild(pkg)

@@ -25,47 +25,44 @@ import (
 )
 
 type Package struct {
-	Dir         string
-	Name        string
-	Target      string
-	Base        string
+	Dir, Base         string
+	
+	Name, Target      string
+	
 	IsCmd       bool
-	Deps        []string
-	result      string
-	installPath string
-	MyErr       os.Error
 	Active      bool
+	
+	ResultPath, InstallPath string
 
+	IsCGo bool
+	
+	//these prevent multipath issues for tree following
 	built, cleaned, addedToBuild, gofmted, scanned bool
 
-	NeedsBuild, NeedsInstall bool
-	NeedsGoInstall           bool
+	NeedsBuild, NeedsInstall, NeedsGoInstall bool
 
 	Sources    []string
 	CGoSources []string
 	CSrcs      []string
 	AsmSrcs    []string
+
+	Objects []string
+
+	PkgSrc  map[string][]string
+	TestSrc map[string][]string
 	
-	Objects    []string
-
-	PkgSrc   map[string][]string
-	TestSrc  map[string][]string
-	SrcDeps  map[string][]string
-	BuildSrc []string
-
-	IsCGo bool
+	SrcDeps map[string][]string
+	Deps        []string
+	DepPkgs     []*Package
 
 	TestSources []string
 	TestDeps    []string
-
-	Funcs []string
 	TestFuncs map[string][]string
+	TestDepPkgs []*Package
 
 	HasMakefile bool
 	IsInGOROOT  bool
 
-	DepPkgs     []*Package
-	TestDepPkgs []*Package
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -148,7 +145,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
-	this.IsCGo = this.IsCGo || len(this.CSrcs)/*+len(this.AsmSrcs)*/ > 0
+	this.IsCGo = this.IsCGo || len(this.CSrcs) /*+len(this.AsmSrcs)*/ > 0
 
 	return
 }
@@ -168,7 +165,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	}
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
-		
+
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
 	}
 	if strings.HasSuffix(fpath, ".go") {
@@ -196,7 +193,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
 			return
 		}
-		
+
 		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
 
 		this.SrcDeps[src] = fdeps
@@ -233,7 +230,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			}
 			//this.Name = fpkg
 			this.TestDeps = append(this.TestDeps, fdeps...)
-			this.Funcs = append(this.Funcs, ffuncs...)
+			//this.Funcs = append(this.Funcs, ffuncs...)
 			this.TestFuncs[fpkg] = append(this.TestFuncs[fpkg], ffuncs...)
 		}
 		this.TestDeps = RemoveDups(this.TestDeps)
@@ -293,16 +290,16 @@ func (this *Package) GetTarget() (err os.Error) {
 		if GOOS == "windows" {
 			this.Target += ".exe"
 		}
-		this.installPath = path.Join(GetInstallDirCmd(), this.Target)
-		this.result = path.Join(GetBuildDirCmd(), this.Target)
+		this.InstallPath = path.Join(GetInstallDirCmd(), this.Target)
+		this.ResultPath = path.Join(GetBuildDirCmd(), this.Target)
 	} else {
 
-		this.installPath = path.Join(GetInstallDirPkg(), this.Target+".a")
-		this.result = path.Join(GetBuildDirPkg(), this.Target+".a")
+		this.InstallPath = path.Join(GetInstallDirPkg(), this.Target+".a")
+		this.ResultPath = path.Join(GetBuildDirPkg(), this.Target+".a")
 	}
 
 	if this.IsInGOROOT {
-		this.result = this.installPath
+		this.ResultPath = this.InstallPath
 	}
 
 	this.Stat()
@@ -358,16 +355,16 @@ func (this *Package) PrintScan() {
 }
 
 func (this *Package) Stat() {
-	this.BinTime, _ = StatTime(this.result)
-	this.InstTime, _ = StatTime(this.installPath)
+	this.BinTime, _ = StatTime(this.ResultPath)
+	this.InstTime, _ = StatTime(this.InstallPath)
 	/*
-		resInfo, err := os.Stat(this.result)
+		resInfo, err := os.Stat(this.ResultPath)
 		if resInfo != nil && err == nil {
 			this.BinTime = resInfo.Mtime_ns
 		} else {
 			this.BinTime = 0
 		}
-		resInfo, err = os.Stat(this.installPath)
+		resInfo, err = os.Stat(this.InstallPath)
 		if resInfo != nil && err == nil {
 			this.InstTime = resInfo.Mtime_ns
 		} else {
@@ -486,9 +483,7 @@ func (this *Package) Build() (err os.Error) {
 		return
 	}
 	this.built = true
-	if this.MyErr != nil {
-		return
-	}
+	
 	if !this.HasMakefile && this.IsCGo {
 		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
 		return
@@ -541,7 +536,7 @@ func (this *Package) Build() (err os.Error) {
 			which = "pkg"
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
-		
+
 		if Makefiles && this.HasMakefile {
 			err = MakeBuild(this)
 		} else if this.IsCGo {
@@ -549,7 +544,7 @@ func (this *Package) Build() (err os.Error) {
 		} else {
 			err = BuildPackage(this)
 		}
-		
+
 		if err == nil {
 			PackagesBuilt++
 		} else {
@@ -700,25 +695,25 @@ func (this *Package) CleanFiles() (err os.Error) {
 		PackagesBuilt++
 		return
 	}
-	
+
 	if Nuke {
-		if _, err2 := os.Stat(this.installPath); err2 == nil {
+		if _, err2 := os.Stat(this.InstallPath); err2 == nil {
 			reallyDoIt := true
 			if !Force {
-				fmt.Printf("Really nuke installed binary '%s'? (y/n) ", this.installPath)
+				fmt.Printf("Really nuke installed binary '%s'? (y/n) ", this.InstallPath)
 				var answer string
 				fmt.Scanf("%s", &answer)
 				reallyDoIt = answer == "y" || answer == "Y"
 			}
 			if reallyDoIt {
 				if Verbose {
-					fmt.Printf(" Removing %s\n", this.installPath)
+					fmt.Printf(" Removing %s\n", this.InstallPath)
 				}
-				err = os.Remove(this.installPath)
+				err = os.Remove(this.InstallPath)
 			}
 		}
 	}
-	
+
 	ib := false
 	res := false
 	test := false
@@ -727,7 +722,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 			ib = true
 		}
 	}
-	if _, err2 := os.Stat(this.result); err2 == nil {
+	if _, err2 := os.Stat(this.ResultPath); err2 == nil {
 		res = true
 	}
 	testdir := path.Join(this.Dir, "_test")
@@ -745,9 +740,9 @@ func (this *Package) CleanFiles() (err os.Error) {
 		err = os.Remove(obj)
 	}
 	if Verbose {
-		fmt.Printf(" Removing %s\n", this.result)
+		fmt.Printf(" Removing %s\n", this.ResultPath)
 	}
-	err = os.Remove(this.result)
+	err = os.Remove(this.ResultPath)
 	if Verbose {
 		fmt.Printf(" Removing %s\n", testdir)
 	}
@@ -913,7 +908,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "\n")
 	makeTarget := this.Target
 	if GOOS == "windows" && strings.HasSuffix(makeTarget, ".exe") {
-		makeTarget = makeTarget[0:len(makeTarget)-len(".exe")]
+		makeTarget = makeTarget[0 : len(makeTarget)-len(".exe")]
 	}
 	_, err = fmt.Fprintf(file, "TARG=%s\n", makeTarget)
 	_, err = fmt.Fprintf(file, "GOFILES=\\\n")

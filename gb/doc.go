@@ -98,7 +98,7 @@ Options:
 		$GOROOT/bin, respectively.
 
  -c		Remove all intermediate binaries.
- 
+
  -N     Remove all installed binaries.
 
  -b		Definitely try to build. Useful when used as "-cb", to tell gb to

@@ -40,7 +40,7 @@ func GetAbs(p, cwd string) (abspath string) {
 	p = pathClean(p)
 	cwd = pathClean(cwd)
 	// Work around IsAbs() not working on windows
-	if (TestWindows || runtime.GOOS == "windows") {
+	if TestWindows || runtime.GOOS == "windows" {
 		if len(p) > 2 && p[1:3] == ":/" {
 			abspath = p
 			return
@@ -57,16 +57,16 @@ func GetAbs(p, cwd string) (abspath string) {
 
 func GetRoot(p string) (r string) {
 	if (TestWindows || runtime.GOOS == "windows") && len(p) > 1 && p[1] == ':' {
-		return p[0:2]+"/"
-	} 
+		return p[0:2] + "/"
+	}
 	return "/"
 }
 
 func pathClean(p string) (r string) {
-	if (TestWindows || runtime.GOOS == "windows") {
+	if TestWindows || runtime.GOOS == "windows" {
 		p = strings.Replace(p, "\\", "/", -1)
-		if len(p)>=2 && p[1] == ':' {
-			p = strings.ToUpper(p[0:1])+p[1:len(p)]
+		if len(p) >= 2 && p[1] == ':' {
+			p = strings.ToUpper(p[0:1]) + p[1:len(p)]
 		}
 	}
 	r = path.Clean(p)
@@ -76,12 +76,11 @@ func pathClean(p string) (r string) {
 func HasPathPrefix(p, pr string) bool {
 	p = pathClean(p)
 	pr = pathClean(pr)
-	
+
 	if pr == GetRoot(p) {
 		return true
 	}
-	
-	
+
 	if len(pr) == 0 {
 		return false
 	}
@@ -102,8 +101,8 @@ func GetRelative(start, finish, cwd string) (relative string) {
 	start = GetAbs(pathClean(start), cwd)
 	finish = GetAbs(pathClean(finish), cwd)
 	cwd = pathClean(cwd)
-	
-	if (TestWindows || runtime.GOOS == "windows") {
+
+	if TestWindows || runtime.GOOS == "windows" {
 		if len(start) >= 2 && len(finish) >= 2 {
 			if start[0] != finish[0] && start[1] == finish[1] {
 				relative = finish //absolute path is the only way
@@ -111,7 +110,7 @@ func GetRelative(start, finish, cwd string) (relative string) {
 			}
 		}
 	}
-	
+
 	backtracking := "."
 	for !HasPathPrefix(finish, start) {
 		backtracking = path.Join(backtracking, "..")

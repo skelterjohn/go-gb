@@ -235,7 +235,7 @@ func TryDistribution() (err os.Error) {
 			}
 			tryFile("build")
 			tryFile("README")
-			
+
 			if dfile, derr := os.Open("dist.gb", os.O_RDONLY, 0); derr == nil {
 				bfrd := bufio.NewReader(dfile)
 				for {
@@ -249,7 +249,7 @@ func TryDistribution() (err os.Error) {
 					}
 				}
 			}
-			
+
 			for _, pkg := range ListedPkgs {
 				err = pkg.CollectDistributionFiles(ch)
 				if err != nil {
@@ -294,7 +294,7 @@ func TryBuild() {
 			pkg.CheckStatus()
 			err := pkg.Build()
 			if err != nil {
-			
+
 			}
 		}
 	}
@@ -377,7 +377,7 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.Stat()
 	}
-	
+
 	for _, pkg := range Packages {
 		pkg.ResolveDeps()
 	}
@@ -385,7 +385,7 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.CheckStatus()
 	}
-	
+
 	TryScan()
 
 	TryGoFMT()
@@ -498,8 +498,8 @@ func CheckFlags() {
 
 func main() {
 	/*
-	r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
-	println(r)
+		r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
+		println(r)
 	*/
 
 	LoadEnvs()
@@ -525,11 +525,11 @@ func main() {
 		fmt.Printf("%v\n", err)
 		ReturnFailCode = true
 	}
-	
+
 	if len(BrokenMsg) > 0 {
 		ReturnFailCode = true
 	}
-	
+
 	if ReturnFailCode {
 		os.Exit(1)
 	}
