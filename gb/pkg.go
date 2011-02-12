@@ -908,12 +908,16 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "\n")
 
 	if this.IsCmd {
+		_, err = fmt.Fprintf(file, "# gb: default target is in GBROOT this way\n")
+		_, err = fmt.Fprintf(file, "command:\n")
+		_, err = fmt.Fprintf(file, "\n")
+		_, err = fmt.Fprintf(file, "include $(GOROOT)/src/Make.cmd\n")
+		_, err = fmt.Fprintf(file, "\n")
 		relCmd := path.Join("$(GBROOT)", GetBuildDirCmd())
 		_, err = fmt.Fprintf(file, "# gb: copy to local install\n")
 		_, err = fmt.Fprintf(file, "%s/$(TARG): $(TARG)\n", relCmd)
 		_, err = fmt.Fprintf(file, "\tmkdir -p $(dir $@); cp -f $< $@\n")
 		_, err = fmt.Fprintf(file, "command: %s/$(TARG)\n\n", relCmd)
-		_, err = fmt.Fprintf(file, "include $(GOROOT)/src/Make.cmd\n")
 		_, err = fmt.Fprintf(file, "\n")
 		if len(this.DepPkgs) != 0 {
 			_, err = fmt.Fprintf(file, "# gb: local dependencies\n")
