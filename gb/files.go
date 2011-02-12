@@ -201,4 +201,3 @@ func Copy(cwd, src, dst string) (err os.Error) {
 
 	return
 }
-

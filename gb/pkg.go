@@ -25,17 +25,17 @@ import (
 )
 
 type Package struct {
-	Dir, Base         string
-	
-	Name, Target      string
-	
-	IsCmd       bool
-	Active      bool
-	
+	Dir, Base string
+
+	Name, Target string
+
+	IsCmd  bool
+	Active bool
+
 	ResultPath, InstallPath string
 
 	IsCGo bool
-	
+
 	//these prevent multipath issues for tree following
 	built, cleaned, addedToBuild, gofmted, scanned bool
 
@@ -50,19 +50,18 @@ type Package struct {
 
 	PkgSrc  map[string][]string
 	TestSrc map[string][]string
-	
+
 	SrcDeps map[string][]string
-	Deps        []string
-	DepPkgs     []*Package
+	Deps    []string
+	DepPkgs []*Package
 
 	TestSources []string
 	TestDeps    []string
-	TestFuncs map[string][]string
+	TestFuncs   map[string][]string
 	TestDepPkgs []*Package
 
 	HasMakefile bool
 	IsInGOROOT  bool
-
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -76,7 +75,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		err = os.NewError("not a directory")
 		return
 	}
-	
+
 	this = new(Package)
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
@@ -84,9 +83,6 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.TestSrc = make(map[string][]string)
 	this.TestFuncs = make(map[string][]string)
 
-	//global, _ := GetAbsolutePath(dir)
-	//if strings.HasPrefix(global, GOROOT) {
-	//println("rp: ", GOROOT, dir)
 	cwd, _ := os.Getwd()
 	if rel := GetRelative(GOROOT, dir, cwd); !strings.HasPrefix(rel, "..") {
 		this.IsInGOROOT = true
@@ -119,6 +115,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		var t int64
 		t, err = StatTime(path.Join(this.Dir, src))
 		if err != nil {
+			err = os.NewError(fmt.Sprintf("'%s' just disappeared.\n", path.Join(this.Dir, src)))
 			return
 		}
 		if t > this.SourceTime {
@@ -484,7 +481,7 @@ func (this *Package) Build() (err os.Error) {
 		return
 	}
 	this.built = true
-	
+
 	if !this.HasMakefile && this.IsCGo {
 		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
 		return

@@ -118,4 +118,3 @@ func GetObjSuffix() (suffix string) {
 func GetIBName() (name string) {
 	return "_go_" + GetObjSuffix()
 }
-

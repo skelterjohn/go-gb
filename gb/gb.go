@@ -229,7 +229,7 @@ func TryDistribution() (err os.Error) {
 			tryFile("README")
 
 			LineChan("dist.gb", ch)
-			
+
 			for _, pkg := range ListedPkgs {
 				err = pkg.CollectDistributionFiles(ch)
 				if err != nil {
