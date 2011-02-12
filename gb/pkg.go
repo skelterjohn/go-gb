@@ -702,6 +702,25 @@ func (this *Package) CleanFiles() (err os.Error) {
 		PackagesBuilt++
 		return
 	}
+	
+	if Nuke {
+		if _, err2 := os.Stat(this.installPath); err2 == nil {
+			reallyDoIt := true
+			if !Force {
+				fmt.Printf("Really nuke installed binary '%s'? (y/n) ", this.installPath)
+				var answer string
+				fmt.Scanf("%s", &answer)
+				reallyDoIt = answer == "y" || answer == "Y"
+			}
+			if reallyDoIt {
+				if Verbose {
+					fmt.Printf(" Removing %s\n", this.installPath)
+				}
+				err = os.Remove(this.installPath)
+			}
+		}
+	}
+	
 	ib := false
 	res := false
 	for _, obj := range this.Objects {

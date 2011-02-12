@@ -28,6 +28,7 @@ import (
 // command line flags
 var Install, //-i
 	Clean,            //-c
+	Nuke,             //-N
 	Scan,             //-sS
 	ScanList,         //-S
 	Test,             //-t
@@ -444,6 +445,9 @@ func CheckFlags() {
 					Install = true
 				case 'c':
 					Clean = true
+				case 'N':
+					Clean = true
+					Nuke = true
 				case 'b':
 					Build = true
 				case 's':

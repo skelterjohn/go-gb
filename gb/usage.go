@@ -26,6 +26,7 @@ func Usage() {
 	fmt.Printf(" ? print this usage text\n")
 	fmt.Printf(" i install\n")
 	fmt.Printf(" c clean\n")
+	fmt.Printf(" N nuke\n")
 	fmt.Printf(" b build after cleaning\n")
 	fmt.Printf(" g use goinstall when appropriate\n")
 	fmt.Printf(" G use goinstall -u when possible\n")
