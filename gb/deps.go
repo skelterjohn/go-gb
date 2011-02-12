@@ -24,31 +24,6 @@ import (
 	"go/ast"
 )
 
-func FilterFlag(src string) bool {
-	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
-	arch_flags := []string{"amd64", "386", "arm"}
-	for _, flag := range os_flags {
-		if strings.Contains(src, "_"+flag) && GOOS != flag {
-			return false
-		}
-	}
-	for _, flag := range arch_flags {
-		if strings.Contains(src, "_"+flag) && GOARCH != flag {
-			return false
-		}
-	}
-	if strings.Contains(src, "_unix") &&
-		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
-		return false
-	}
-	if strings.Contains(src, "_bsd") &&
-		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
-		return false
-	}
-
-	return true
-}
-
 func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
 	isTest := strings.HasSuffix(source, "_test.go") && Test
 	var file *ast.File

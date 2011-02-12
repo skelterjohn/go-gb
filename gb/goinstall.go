@@ -20,28 +20,21 @@ import (
 	"regexp"
 	"fmt"
 	"path"
+	"strings"
 )
 
 //taken from goinstall source
-var googlecode = regexp.MustCompile(`^([a-z0-9\-]+\.googlecode\.com/(svn|hg))(/[a-z0-9A-Z_.\-/]*)?$`)
-var github = regexp.MustCompile(`^(github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`)
-var bitbucket = regexp.MustCompile(`^(bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`)
-var launchpad = regexp.MustCompile(`^(launchpad\.net/([a-z0-9A-Z_.\-]+(/[a-z0-9A-Z_.\-]+)?|~[a-z0-9A-Z_.\-]+/(\+junk|[a-z0-9A-Z_.\-]+)/[a-z0-9A-Z_.\-]+))(/[a-z0-9A-Z_.\-/]+)?$`)
-
-var goinstallables = []*regexp.Regexp{googlecode, github, bitbucket, launchpad}
-
-//var goinstallBlock = make(chan bool, 1)
+var goinstallables = []*regexp.Regexp{
+	regexp.MustCompile(`^([a-z0-9\-]+\.googlecode\.com/(svn|hg))(/[a-z0-9A-Z_.\-/]*)?$`),
+	regexp.MustCompile(`^(github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`),
+	regexp.MustCompile(`^(bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`),
+	regexp.MustCompile(`^(launchpad\.net/([a-z0-9A-Z_.\-]+(/[a-z0-9A-Z_.\-]+)?|~[a-z0-9A-Z_.\-]+/(\+junk|[a-z0-9A-Z_.\-]+)/[a-z0-9A-Z_.\-]+))(/[a-z0-9A-Z_.\-/]+)?$`),
+}
 
 var goinstalledAlready = make(map[string]bool)
 
 func IsGoInstallable(target string) (matches bool) {
-	//trim quote marks
-	if target[0] == '"' {
-		target = target[1:len(target)]
-	}
-	if target[len(target)-1] == '"' {
-		target = target[0 : len(target)-1]
-	}
+	target = strings.Trim(target, "\"")
 
 	for _, re := range goinstallables {
 		if m := re.FindStringSubmatch(target); m != nil {
@@ -54,10 +47,6 @@ func IsGoInstallable(target string) (matches bool) {
 }
 
 func GoInstallPkg(target string) (touched int64) {
-	// 
-	//goinstallBlock <- true
-	//defer func() { <-goinstallBlock }()
-
 	if goinstalledAlready[target] {
 		return
 	}
@@ -67,13 +56,7 @@ func GoInstallPkg(target string) (touched int64) {
 		return
 	}
 
-	//trim quote marks
-	if target[0] == '"' {
-		target = target[1:len(target)]
-	}
-	if target[len(target)-1] == '"' {
-		target = target[0 : len(target)-1]
-	}
+	target = strings.Trim(target, "\"")
 
 	argv := []string{"goinstall", target}
 	if GoInstallUpdate {

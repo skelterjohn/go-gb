@@ -14,5 +14,6 @@ GOFILES=\
 	files.go\
 	usage.go\
 	cgo.go\
+	query.go\
 
 include $(GOROOT)/src/Make.cmd

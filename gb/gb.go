@@ -248,9 +248,9 @@ func TryDistribution() (err os.Error) {
 
 func TryClean() {
 	if Clean && ListedTargets == 0 {
-		println("Removing " + GetBuildDirPkg())
+		fmt.Println("Removing " + GetBuildDirPkg())
 		os.RemoveAll(GetBuildDirPkg())
-		println("Removing " + GetBuildDirCmd())
+		fmt.Println("Removing " + GetBuildDirCmd())
 		os.RemoveAll(GetBuildDirCmd())
 	}
 
@@ -289,7 +289,6 @@ func TryBuild() {
 func TryTest() (err os.Error) {
 	if Test {
 		for _, pkg := range ListedPkgs {
-			//if pkg.Name != "main" && len(pkg.TestSources) != 0 {
 			if len(pkg.TestSources) != 0 {
 				err = pkg.Test()
 				if err != nil {

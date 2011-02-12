@@ -22,59 +22,6 @@ import (
 	"path"
 )
 
-
-func GetCompilerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6g"
-	case "386":
-		return "8g"
-	case "arm":
-		return "5g"
-	}
-	return
-}
-
-func GetAssemblerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6a"
-	case "386":
-		return "8a"
-	case "arm":
-		return "5a"
-	}
-	return
-}
-
-func GetLinkerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6l"
-	case "386":
-		return "8l"
-	case "arm":
-		return "5l"
-	}
-	return
-}
-
-func GetObjSuffix() (suffix string) {
-	switch GOARCH {
-	case "amd64":
-		return ".6"
-	case "386":
-		return ".8"
-	case "arm":
-		return ".5"
-	}
-	return
-}
-
-func GetIBName() (name string) {
-	return "_go_" + GetObjSuffix()
-}
-
 func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
 	defer func() { <-buildBlock }()
@@ -259,68 +206,6 @@ func InstallPackage(pkg *Package) (err os.Error) {
 	fmt.Printf("Installing %s \"%s\"\n", which, pkg.Target)
 
 	Copy(".", pkg.ResultPath, dstFile)
-
-	return
-}
-
-func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
-	srcpath := path.Join(cwd, src)
-
-	if Verbose {
-		fmt.Printf("Copying %s to %s\n", src, dst)
-	}
-
-	dstpath := dst
-	if !path.IsAbs(dstpath) {
-		dstpath = path.Join(cwd, dst)
-	}
-
-	var srcFile *os.File
-	srcFile, err = os.Open(srcpath, os.O_RDONLY, 0)
-	if err != nil {
-		return
-	}
-
-	var dstFile *os.File
-	dstFile, err = os.Open(dstpath, os.O_CREATE|os.O_RDWR, 0755)
-	if err != nil {
-		return
-	}
-
-	buffer := make([]byte, 1024)
-	var cpErr os.Error
-	for {
-		var n int
-		n, cpErr = srcFile.Read(buffer)
-		if cpErr != nil {
-			break
-		}
-		_, cpErr = dstFile.Write(buffer[0:n])
-		if cpErr != nil {
-			break
-		}
-	}
-	if cpErr != os.EOF {
-		err = cpErr
-	}
-
-	dstFile.Close()
-
-	return
-}
-
-func Copy(cwd, src, dst string) (err os.Error) {
-	if CopyCMD == "" {
-		return CopyTheHardWay(cwd, src, dst)
-	}
-
-	argv := append([]string{"cp", "-f", src, dst})
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
-	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
-		return
-	}
 
 	return
 }

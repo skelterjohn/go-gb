@@ -21,58 +21,32 @@ import (
 	"os"
 	"strings"
 	"bufio"
-	"strconv"
+	"fmt"
 )
 
-var GOROOT, GOOS, GOARCH, GOBIN string
-var CWD string
-
-func LoadEnvs() {
-
-	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
-	if GOOS == "" {
-		println("Environental variable GOOS not set")
-		return
+func FilterFlag(src string) bool {
+	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
+	arch_flags := []string{"amd64", "386", "arm"}
+	for _, flag := range os_flags {
+		if strings.Contains(src, "_"+flag) && GOOS != flag {
+			return false
+		}
 	}
-	if GOARCH == "" {
-		println("Environental variable GOARCH not set")
-		return
+	for _, flag := range arch_flags {
+		if strings.Contains(src, "_"+flag) && GOARCH != flag {
+			return false
+		}
 	}
-	if GOROOT == "" {
-		println("Environental variable GOROOT not set")
-		return
+	if strings.Contains(src, "_unix") &&
+		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
+		return false
 	}
-	if GOBIN == "" {
-		GOBIN = path.Join(GOROOT, "bin")
+	if strings.Contains(src, "_bsd") &&
+		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+		return false
 	}
 
-	CWD, _ = os.Getwd()
-	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
-
-	GOMAXPROCS := os.Getenv("GOMAXPROCS")
-
-	n, nerr := strconv.Atoi(GOMAXPROCS)
-	if nerr != nil {
-		n = 1
-	}
-	n = 2
-	buildBlock = make(chan bool, n)
-}
-
-func GetBuildDirPkg() (dir string) {
-	return "_obj"
-}
-
-func GetInstallDirPkg() (dir string) {
-	return path.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
-}
-
-func GetBuildDirCmd() (dir string) {
-	return "bin"
-}
-
-func GetInstallDirCmd() (dir string) {
-	return path.Join(GOROOT, "bin")
+	return true
 }
 
 func GetSubDirs(dir string) (subdirs []string) {
@@ -155,3 +129,76 @@ func ReverseDirForwardSlash(dir string) (rev string) {
 	}
 	return
 }
+
+func StatTime(p string) (time int64, err os.Error) {
+	var info *os.FileInfo
+	info, err = os.Stat(p)
+	if err != nil {
+		return
+	}
+	time = info.Mtime_ns
+	return
+}
+
+func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
+	srcpath := path.Join(cwd, src)
+
+	if Verbose {
+		fmt.Printf("Copying %s to %s\n", src, dst)
+	}
+
+	dstpath := dst
+	if !path.IsAbs(dstpath) {
+		dstpath = path.Join(cwd, dst)
+	}
+
+	var srcFile *os.File
+	srcFile, err = os.Open(srcpath, os.O_RDONLY, 0)
+	if err != nil {
+		return
+	}
+
+	var dstFile *os.File
+	dstFile, err = os.Open(dstpath, os.O_CREATE|os.O_RDWR, 0755)
+	if err != nil {
+		return
+	}
+
+	buffer := make([]byte, 1024)
+	var cpErr os.Error
+	for {
+		var n int
+		n, cpErr = srcFile.Read(buffer)
+		if cpErr != nil {
+			break
+		}
+		_, cpErr = dstFile.Write(buffer[0:n])
+		if cpErr != nil {
+			break
+		}
+	}
+	if cpErr != os.EOF {
+		err = cpErr
+	}
+
+	dstFile.Close()
+
+	return
+}
+
+func Copy(cwd, src, dst string) (err os.Error) {
+	if CopyCMD == "" {
+		return CopyTheHardWay(cwd, src, dst)
+	}
+
+	argv := append([]string{"cp", "-f", src, dst})
+	if Verbose {
+		fmt.Printf("%v\n", argv)
+	}
+	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
+		return
+	}
+
+	return
+}
+
