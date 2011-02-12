@@ -46,6 +46,8 @@ type Package struct {
 	CGoSources []string
 	CSrcs      []string
 	AsmSrcs    []string
+	
+	Objects    []string
 
 	PkgSrc   map[string][]string
 	TestSrc  map[string][]string
@@ -132,6 +134,7 @@ func ReadPackage(base, dir string) (this *Package, err os.Error) {
 	}
 	this.IsCmd = this.Name == "main"
 	this.ib = path.Join(this.Dir, GetIBName())
+	this.Objects = append(this.Objects, this.ib)
 	err = this.GetTarget()
 
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
@@ -167,6 +170,8 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	}
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
+		
+		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
 	}
 	if strings.HasSuffix(fpath, ".go") {
 		if strings.HasSuffix(fpath, "_test.go") {
@@ -356,13 +361,6 @@ func (this *Package) PrintScan() {
 
 func (this *Package) Stat() {
 	this.BinTime, _ = StatTime(this.result)
-	for _, as := range this.AsmSrcs {
-		aso := as[:len(as)-2]+GetObjSuffix()
-		asoTime, _ := StatTime(aso)
-		if asoTime > this.BinTime {
-			this.BinTime = asoTime
-		}
-	}
 	this.InstTime, _ = StatTime(this.installPath)
 	/*
 		resInfo, err := os.Stat(this.result)
@@ -706,12 +704,8 @@ func (this *Package) CleanFiles() (err os.Error) {
 	}
 	ib := false
 	res := false
-	if _, err2 := os.Stat(this.ib); err2 == nil {
-		ib = true
-	}
-	for _, as := range this.AsmSrcs {
-		aso := as[:len(as)-2]+GetObjSuffix()
-		if _, err2 := os.Stat(aso); err2 == nil {
+	for _, obj := range this.Objects {
+		if _, err2 := os.Stat(obj); err2 == nil {
 			ib = true
 		}
 	}
@@ -722,19 +716,14 @@ func (this *Package) CleanFiles() (err os.Error) {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
-	if Verbose {
-		fmt.Printf(" Removing %s\n", this.ib)
+	for _, obj := range this.Objects {
+		if Verbose {
+			fmt.Printf(" Removing %s\n", obj)
+		}
+		err = os.Remove(obj)
 	}
-	err = os.Remove(this.ib)
 	if Verbose {
 		fmt.Printf(" Removing %s\n", this.result)
-	}
-	for _, as := range this.AsmSrcs {
-		aso := as[:len(as)-2]+GetObjSuffix()
-		err = os.Remove(aso)
-		if Verbose {
-			fmt.Printf(" Removing %s\n", aso)
-		}
 	}
 	err = os.Remove(this.result)
 	if Verbose {
