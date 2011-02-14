@@ -41,10 +41,11 @@ type Package struct {
 
 	NeedsBuild, NeedsInstall, NeedsGoInstall bool
 
-	Sources    []string
+	GoSources  []string
 	CGoSources []string
 	CSrcs      []string
 	AsmSrcs    []string
+	Sources    []string // the list of all .go, .c, .s source in the target
 
 	Objects []string
 
@@ -111,6 +112,11 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		this.HasMakefile = true
 	}
 
+	if len(this.Sources) == 0 {
+		err = os.NewError("no source")
+		return
+	}
+
 	for _, src := range this.Sources {
 		var t int64
 		t, err = StatTime(path.Join(this.Dir, src))
@@ -139,7 +145,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	path.Walk(this.Dir, this, errch)
 
-	if len(this.Sources)+len(this.TestSources) == 0 {
+	if len(this.Sources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
@@ -151,38 +157,59 @@ func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
 	return dpath == this.Dir || strings.HasPrefix(dpath, path.Join(this.Dir, "src"))
 }
 func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
+	//skip files generates by the cgo process
+	if strings.HasSuffix(fpath, ".cgo1.go") {
+		return
+	}
+	if strings.HasSuffix(fpath, ".cgo2.c") {
+		return
+	}
+	if path.Base(fpath) == "_cgo_gotypes.go" {
+		return
+	}
+
+	//skip files flagged for different OS/ARCH
 	if !FilterFlag(fpath) {
 		return
 	}
+
+	/* //no longer necessary since this goes into the _test dir
 	if strings.HasSuffix(fpath, "_testmain.go") {
 		return
 	}
+	*/
 	rootl := len(this.Dir) + 1
 	if this.Dir != "." {
 		fpath = fpath[rootl:len(fpath)]
 	}
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
-
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
+		this.Sources = append(this.Sources, fpath)
 	}
 	if strings.HasSuffix(fpath, ".go") {
 		if strings.HasSuffix(fpath, "_test.go") {
 			this.TestSources = append(this.TestSources, fpath)
-		} else if strings.HasPrefix(fpath, "cgo_") {
-			this.CGoSources = append(this.CGoSources, fpath)
+			//} else if strings.HasPrefix(fpath, "cgo_") {
+			//	this.CGoSources = append(this.CGoSources, fpath)
 		} else {
-			this.Sources = append(this.Sources, fpath)
+			this.GoSources = append(this.GoSources, fpath)
 		}
+		this.Sources = append(this.Sources, fpath)
 	}
 	if strings.HasSuffix(fpath, ".c") {
 		this.CSrcs = append(this.CSrcs, fpath)
+		this.Sources = append(this.Sources, fpath)
 	}
+
 }
 
 func (this *Package) GetSourceDeps() (err os.Error) {
 	this.SrcDeps = make(map[string][]string)
-	for _, src := range this.Sources {
+
+	var nonCGoSrc []string
+
+	for _, src := range this.GoSources {
 		var fpkg, ftarget string
 		var fdeps []string
 		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
@@ -204,8 +231,20 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 				this.Name = fpkg
 			}
 		}
-		//this.Deps = append(this.Deps, fdeps...)
+		isCGoSrc := false
+		for _, dep := range fdeps {
+			if dep == "\"C\"" {
+				isCGoSrc = true
+			}
+		}
+		if isCGoSrc {
+			this.CGoSources = append(this.CGoSources, src)
+		} else {
+			nonCGoSrc = append(nonCGoSrc, src)
+		}	
 	}
+
+	this.GoSources = nonCGoSrc
 
 	for _, buildSrc := range this.PkgSrc[this.Name] {
 		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
@@ -217,7 +256,6 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			var fpkg, ftarget string
 			var fdeps, ffuncs []string
 			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
-			//this.SrcDeps[src] = fdeps
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -815,7 +853,7 @@ func (this *Package) CollectDistributionFiles(ch chan string) (err os.Error) {
 	if _, err2 := os.Stat(f); err2 == nil {
 		ch <- f
 	}
-	for _, src := range this.Sources {
+	for _, src := range this.GoSources {
 		ch <- path.Join(this.Dir, src)
 	}
 	for _, src := range this.CSrcs {
@@ -1007,7 +1045,13 @@ func (this *Package) GoFMT() (err os.Error) {
 	}
 
 	fmt.Printf("(in %s) running gofmt\n", this.Dir)
-	for _, src := range this.Sources {
+	for _, src := range append(this.GoSources) {
+		err = RunGoFMT(this.Dir, src)
+		if err != nil {
+			return
+		}
+	}
+	for _, src := range append(this.CGoSources) {
 		err = RunGoFMT(this.Dir, src)
 		if err != nil {
 			return

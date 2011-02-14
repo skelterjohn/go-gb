@@ -64,7 +64,7 @@ func GetBuildDirCmd() (dir string) {
 }
 
 func GetInstallDirCmd() (dir string) {
-	return path.Join(GOROOT, "bin")
+	return GOBIN
 }
 
 func GetCompilerName() (name string) {

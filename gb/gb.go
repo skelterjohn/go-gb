@@ -69,6 +69,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||
 		basedir == "_test" ||
+		basedir == "_cgo" ||
 		basedir == "_dist_" ||
 		basedir == "bin" ||
 		(basedir != "." && strings.HasPrefix(basedir, ".")) {
