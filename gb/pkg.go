@@ -1002,6 +1002,14 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	return
 }
 
+func (this *Package) CollectGoInstall(gm map[string]bool) {
+	for _, dep := range this.Deps {
+		if IsGoInstallable(dep) {
+			gm[dep] = true
+		}
+	}
+}
+
 func (this *Package) AddToBuild(bfile *os.File) {
 	if this.addedToBuild {
 		return
