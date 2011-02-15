@@ -12,6 +12,7 @@ gb/add
 gb/commit
 gb/_dist_
 _obj
+_cgo
 bin
 example/a/Makefile
 example/a/b/Makefile

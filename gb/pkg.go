@@ -172,7 +172,12 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	if strings.HasSuffix(fpath, ".cgo2.c") {
 		return
 	}
-	if path.Base(fpath) == "_cgo_gotypes.go" {
+	pb := path.Base(fpath)
+	if pb == "_cgo_gotypes.go" ||
+		pb == "_cgo_import.c" ||
+		pb == "__cgo_import.c" ||
+		pb == "_cgo_main.c" ||
+		pb == "_cgo_defun.c" {
 		return
 	}
 
@@ -928,10 +933,12 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		return
 	}
 
+	/*
 	if this.IsCGo {
 		fmt.Printf("(in %s) this is a cgo project; skipping makefile generation\n", this.Dir)
 		return
 	}
+	*/
 
 	mpath := path.Join(this.Dir, "Makefile")
 
@@ -977,11 +984,22 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		_, err = fmt.Fprintf(file, "\t%s\\\n", src)
 	}
 	_, err = fmt.Fprintf(file, "\n")
-	_, err = fmt.Fprintf(file, "CGOFILES=\\\n")
-	for _, src := range this.PkgCGoSrc[this.Name] {
-		_, err = fmt.Fprintf(file, "\t%s\\\n", src)
+	
+	if this.IsCGo {
+		_, err = fmt.Fprintf(file, "CGOFILES=\\\n")
+		for _, src := range this.PkgCGoSrc[this.Name] {
+			_, err = fmt.Fprintf(file, "\t%s\\\n", src)
+		}
+		_, err = fmt.Fprintf(file, "\n")
 	}
-	_, err = fmt.Fprintf(file, "\n")
+	if this.IsCGo && len(this.CSrcs) != 0 {
+		_, err = fmt.Fprintf(file, "CGO_OFILES=\\\n")
+		for _, src := range this.CSrcs {
+			obj := src[:len(src)-2]+".o"
+			_, err = fmt.Fprintf(file, "\t%s\\\n", obj)
+		}
+		_, err = fmt.Fprintf(file, "\n")
+	}
 
 	reverseDots := ReverseDir(this.Dir)
 

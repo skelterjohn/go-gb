@@ -65,7 +65,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 
 	//first run cgo
 	//CGOPKGPATH= cgo --  e1.go e2.go 
-	cgo_argv := []string{"cgo", "--"}
+	cgo_argv := []string{"cgo", "--", "-I.."}
 	for _, cgosrc := range pkg.CGoSources {
 		cgb := path.Base(cgosrc)
 		cgobases = append(cgobases, cgb)
@@ -116,7 +116,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
 	*/
 	gccCompile := func(src, obj string) (err os.Error) {
-		gccargv := []string{"gcc"}
+		gccargv := []string{"gcc", "-I.."}
 		gccargv = append(gccargv, []string{"-m64", "-g", "-fPIC", "-02", "-o", obj, "-c"}...)
 		gccargv = append(gccargv, pkg.CGoCFlags[pkg.Name]...)
 		gccargv = append(gccargv, src)
@@ -137,6 +137,17 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
+	
+	for _, csrc := range pkg.CSrcs {
+		cobj := csrc[:len(csrc)-2]+".o"
+		cobjs = append(cobjs, cobj)
+		relsrc := GetRelative("_cgo", csrc, pkg.Dir)
+		err = gccCompile(relsrc, cobj)
+		if err != nil {
+			return
+		}
+	}
+	
 	if err = gccCompile("_cgo_export.c", "_cgo_export.o"); err != nil {
 		return
 	}

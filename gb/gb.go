@@ -431,7 +431,7 @@ func RunGB() (err os.Error) {
 	return
 }
 
-func CheckFlags() {
+func CheckFlags() bool {
 	for _, arg := range os.Args[1:len(os.Args)] {
 		if len(arg) > 0 && arg[0] == '-' {
 			for _, flag := range arg[1:len(arg)] {
@@ -481,7 +481,7 @@ func CheckFlags() {
 					BuildGOROOT = true
 				default:
 					Usage()
-					return
+					return false
 
 				}
 			}
@@ -489,6 +489,7 @@ func CheckFlags() {
 			ListedTargets++
 		}
 	}
+	return true
 }
 
 func main() {
@@ -499,7 +500,9 @@ func main() {
 
 	LoadEnvs()
 
-	CheckFlags()
+	if !CheckFlags() {
+		return
+	}
 
 	err := FindExternals()
 	if err != nil {

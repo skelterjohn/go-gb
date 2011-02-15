@@ -11,6 +11,9 @@ CGOFILES=\
 	e1.go\
 	e2.go\
 
+CGO_OFILES=\
+	e4.o\
+
 # gb: this is the local install
 GBROOT=..
 

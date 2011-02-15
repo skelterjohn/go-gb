@@ -10,4 +10,5 @@ func main() {
      a.AFoo()
 	 b.BFoo()
 	 println(e.CSin(2.4))
+	 println(e.Atoi("5"))
 }
