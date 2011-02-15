@@ -38,7 +38,7 @@ gopack grc _obj/e.a _go_.6  _cgo_defun.6 _cgo_import.6 e1.cgo2.o e2.cgo2.o _cgo_
 mkdir -p ../_obj/; cp -f _obj/e.a ../_obj/e.a
 */
 
-var TestCGO = false
+var TestCGO = true
 
 func BuildCgoPackage(pkg *Package) (err os.Error) {
 	//defer fmt.Println(err)
@@ -140,8 +140,9 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	
 	for _, csrc := range pkg.CSrcs {
 		cobj := csrc[:len(csrc)-2]+".o"
+		cobj = path.Base(cobj)
 		cobjs = append(cobjs, cobj)
-		relsrc := GetRelative("_cgo", csrc, pkg.Dir)
+		relsrc := GetRelative("_cgo", csrc, path.Join(CWD, pkg.Dir))
 		err = gccCompile(relsrc, cobj)
 		if err != nil {
 			return

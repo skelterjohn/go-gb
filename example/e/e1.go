@@ -6,6 +6,6 @@ import "C"
 
 func Atoi(s string) (i int) {
 	cs := C.CString(s)
-	i = int(C.foo(C.atoi(cs)))
+	i = int(C.bar(C.atoi(cs)))
 	return
 }
