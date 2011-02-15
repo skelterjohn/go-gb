@@ -726,11 +726,12 @@ func (this *Package) CleanFiles() (err os.Error) {
 		this.NeedsInstall = true
 	}()
 
-	if (Makefiles && this.HasMakefile) || this.IsCGo {
+	if (Makefiles && this.HasMakefile) {
 		MakeClean(this)
 		PackagesBuilt++
 		return
 	}
+	
 
 	if Nuke {
 		if _, err2 := os.Stat(this.InstallPath); err2 == nil {
@@ -750,8 +751,10 @@ func (this *Package) CleanFiles() (err os.Error) {
 		}
 	}
 
+	
 	ib := false
 	res := false
+	cgo := false
 	test := false
 	for _, obj := range this.Objects {
 		if _, err2 := os.Stat(obj); err2 == nil {
@@ -761,11 +764,14 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(this.ResultPath); err2 == nil {
 		res = true
 	}
+	if _, err2 := os.Stat(path.Join(this.Dir, "_cgo")); err2 == nil {
+		cgo = true
+	}
 	testdir := path.Join(this.Dir, "_test")
 	if _, err2 := os.Stat(testdir); err2 == nil {
 		test = true
 	}
-	if !ib && !res && !test {
+	if !ib && !res && !test && !cgo{
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
@@ -783,6 +789,8 @@ func (this *Package) CleanFiles() (err os.Error) {
 		fmt.Printf(" Removing %s\n", testdir)
 	}
 	err = os.RemoveAll(testdir)
+
+	err = CleanCGoPackage(this)
 
 	return
 }

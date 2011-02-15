@@ -79,6 +79,18 @@ func GetCompilerName() (name string) {
 	return
 }
 
+func GetCCompilerName() (name string) {
+	switch GOARCH {
+	case "amd64":
+		return "6c"
+	case "386":
+		return "8c"
+	case "arm":
+		return "5c"
+	}
+	return
+}
+
 func GetAssemblerName() (name string) {
 	switch GOARCH {
 	case "amd64":

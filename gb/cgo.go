@@ -38,20 +38,23 @@ gopack grc _obj/e.a _go_.6  _cgo_defun.6 _cgo_import.6 e1.cgo2.o e2.cgo2.o _cgo_
 mkdir -p ../_obj/; cp -f _obj/e.a ../_obj/e.a
 */
 
+var TestCGO = false
+
 func BuildCgoPackage(pkg *Package) (err os.Error) {
-	defer fmt.Println(err)
+	//defer fmt.Println(err)
 	
 	if pkg.IsInGOROOT {
 		return MakeBuild(pkg)
 	}
 
-	if true {
+	if !TestCGO {
 		return MakeBuild(pkg)
 	}
 
 	cgodir := path.Join(pkg.Dir, "_cgo")
 
 	os.Mkdir(cgodir, 0755)
+	fmt.Printf("(in %s)\n", cgodir)
 	
 	var cgobases []string
 	
@@ -66,7 +69,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		cgo_argv = append(cgo_argv, cgb)
 	}
 	if Verbose {
-		fmt.Printf("(in %s)\n", path.Join(pkg.Dir, "_cgo"))
 		fmt.Printf("%v\n", cgo_argv)
 	}
 	
@@ -91,6 +93,16 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		return
 	}
 	
+	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
+	cdefargv := []string{GetCCompilerName(), "-FVw", "-I"+GetInstallDirPkg(), "_cgo_defun.c"}
+	if Verbose {
+		fmt.Printf("%v\n", cdefargv)
+	}
+	err = RunExternal(CCMD, cgodir, cdefargv)
+	if err != nil {
+		return
+	}
+	
 	// compile all the new C source
 	/*
 	gcc -m64 -g -fPIC -O2 -o _cgo_main.o -c   _cgo_main.c
@@ -98,7 +110,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	gcc -m64 -g -fPIC -O2 -o e2.cgo2.o -c   e2.cgo2.c
 	gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
 	*/
-	
 	gccCompile := func(src, obj string) (err os.Error) {
 		gccargv := []string{"gcc", "-m64", "-g", "-fPIC", "-02", "-o", obj, "-c", src}
 		if Verbose {
@@ -107,7 +118,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		err = RunExternal(GCCCMD, cgodir, gccargv)
 		return
 	}
-	
 	var cobjs []string
 	for _, cgb := range cgobases {
 		cgc := cgb[:len(cgb)-3]+".cgo2.c"
@@ -119,7 +129,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-	
 	if err = gccCompile("_cgo_export.c", "_cgo_export.o"); err != nil {
 		return
 	}
@@ -127,13 +136,12 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	if err = gccCompile("_cgo_main.c", "_cgo_main.o"); err != nil {
 		return
 	}
-	cobjs = append(cobjs, "_cgo_main.o")
 	
 	/* and link them
 	gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o  
 	*/
-	
 	gcclargv := []string{"gcc", "-m64", "-g", "-fPIC", "-02", "-o", "_cgo1_.o"}
+	gcclargv = append(gcclargv, "_cgo_main.o")
 	gcclargv = append(gcclargv, cobjs...)
 	if Verbose {
 		fmt.Printf("%v\n", gcclargv)
@@ -145,8 +153,9 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	if Verbose {
 		fmt.Printf("%v > %s\n", dynargv, "__cgo_import.c")
 	}
+	
 	var dump *os.File
-	dump, err = os.Open(path.Join("_cgo", "__cgo_import.c"), os.O_CREATE|os.O_RDWR, 0755)
+	dump, err = os.Open(path.Join(cgodir, "__cgo_import.c"), os.O_CREATE|os.O_RDWR, 0755)
 	if err != nil {
 		return
 	}
@@ -154,6 +163,72 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	if err != nil {
 		return
 	}
+	dump.Close()
+	
+	//mv __cgo_import.c _cgo_import.c
+	if Verbose {
+		fmt.Printf("Moving __cgo_import.c to _cgo_import.c\n")
+	}
+	err = os.Rename(path.Join(cgodir, "__cgo_import.c"), path.Join(cgodir, "_cgo_import.c"))
+	if err != nil {
+		return
+	}
+
+	/* compile the C bits
+	6c -FVw _cgo_import.c
+	*/
+	ccargv := []string{GetCCompilerName(), "-FVw", "_cgo_import.c"}
+	if Verbose {
+		fmt.Printf("%v\n", ccargv)
+	}
+	err = RunExternal(CCMD, cgodir, ccargv)
+	if err != nil {
+		return
+	}
+
+	/*clean/link
+	rm -f _obj/e.a
+	gopack grc _obj/e.a _go_.6  _cgo_defun.6 _cgo_import.6 e1.cgo2.o e2.cgo2.o _cgo_export.o
+	*/
+	dst := GetRelative(".", pkg.ResultPath, CWD)
+	dstDir, _ := path.Split(dst)
+	if Verbose {
+		fmt.Printf("Creating directory %s\n", dstDir)
+	}
+	err = os.MkdirAll(dstDir, 0755)
+	if err != nil {
+		return
+	}
+	if Verbose {
+		fmt.Printf("Removing %s\n", dst)
+	}	
+	os.Remove(dst)
+
+	relobjs := []string{}
+	for _, cobj := range cobjs {
+		relobjs = append(relobjs, path.Join(cgodir, cobj))
+	}	
+	packargv := []string{"gopack", "grc", dst, GetIBName(),
+						 path.Join(cgodir, "_cgo_defun"+GetObjSuffix()),
+						 path.Join(cgodir, "_cgo_import"+GetObjSuffix())}
+	packargv = append(packargv, relobjs...)
+	if Verbose {
+		fmt.Printf("%v\n", packargv)
+	}
+	err = RunExternal(PackCMD, pkg.Dir, packargv)
+	return
+}
+
+func CleanCGoPackage(pkg *Package) (err os.Error) {
+	if !TestCGO {
+		err = MakeClean(pkg)
+		return
+	}
+
+	if Verbose {
+		fmt.Printf(" Removing %s\n", path.Join(pkg.Dir, "_cgo"))
+	}
+	os.RemoveAll(path.Join(pkg.Dir, "_cgo"))
 	
 	return
 }

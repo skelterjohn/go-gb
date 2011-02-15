@@ -23,6 +23,7 @@ import (
 
 var MakeCMD,
 	CompileCMD,
+	CCMD,
 	AsmCMD,
 	LinkCMD,
 	PackCMD,
@@ -77,6 +78,10 @@ func FindExternals() (err os.Error) {
 	if err2 != nil {
 		fmt.Printf("Could not find 'gcc' in path\n")
 	}
+	CCMD, err2 = exec.LookPath(GetCCompilerName())
+	if err2 != nil {
+		fmt.Printf("Could not find '%' in path\n", GetCCompilerName())
+	}
 
 	CopyCMD, _ = exec.LookPath("cp")
 	
@@ -90,20 +95,18 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 		return
 	}
 	if p != nil {
-		go func(c *exec.Cmd, dst *os.File) {		
-			src := c.Stdout
-			buffer := make([]byte, 1024)
-			for {
-				n, cpErr := src.Read(buffer)
-				if cpErr != nil {
-					break
-				}
-				_, cpErr = dst.Write(buffer[0:n])
-				if cpErr != nil {
-					break
-				}
+		src := p.Stdout
+		buffer := make([]byte, 1024)
+		for {
+			n, cpErr := src.Read(buffer)
+			if cpErr != nil {
+				break
 			}
-		}(p, dump)
+			_, cpErr = dump.Write(buffer[0:n])
+			if cpErr != nil {
+				break
+			}
+		}
 	
 		var wmsg *os.Waitmsg
 		wmsg, err = p.Wait(0)
