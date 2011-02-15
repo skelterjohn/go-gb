@@ -544,8 +544,8 @@ func (this *Package) Build() (err os.Error) {
 	}
 	this.built = true
 
-	if !this.HasMakefile && this.IsCGo {
-		fmt.Printf("(in %s) this is a cgo project; please create a makefile", this.Dir)
+	if !TestCGO && (!this.HasMakefile && this.IsCGo) {
+		fmt.Printf("(in %s) this is a cgo project; please create a makefile\n", this.Dir)
 		return
 	}
 
