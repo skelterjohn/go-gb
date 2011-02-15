@@ -24,7 +24,7 @@ import (
 	"go/ast"
 )
 
-func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Error) {
+func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err os.Error) {
 	isTest := strings.HasSuffix(source, "_test.go") && Test
 	var file *ast.File
 	flag := parser.ParseComments
@@ -36,7 +36,7 @@ func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Er
 		return
 	}
 
-	w := &Walker{"", "", 0, []string{}, []string{}, isTest}
+	w := &Walker{"", "", 0, []string{}, []string{}, []string{}, []string{}, isTest}
 
 	ast.Walk(w, file)
 
@@ -44,6 +44,8 @@ func GetDeps(source string) (pkg, target string, deps, funcs []string, err os.Er
 	pkg = w.Name
 	target = w.Target
 	funcs = w.Funcs
+	cflags = RemoveDups(w.CGoCFlags)
+	ldflags = RemoveDups(w.CGoLDFlags)
 
 	return
 }
@@ -66,6 +68,8 @@ type Walker struct {
 	pkgPos    token.Pos
 	Deps      []string
 	Funcs     []string
+	CGoLDFlags []string
+	CGoCFlags []string
 	ScanFuncs bool
 }
 
@@ -81,8 +85,40 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 	case *ast.Comment:
 		if n.Pos() < w.pkgPos {
 			text := string(n.Text)
-			if strings.HasPrefix(text, "//target:") {
-				w.Target = text[len("//target:"):len(text)]
+			if !strings.HasPrefix(text, "//") {
+				return nil
+			}
+			text = strings.TrimSpace(text[2:])
+			
+			if strings.HasPrefix(text, "target:") {
+				w.Target = text[len("target:"):len(text)]
+			}
+		} else {
+		
+			text := string(n.Text)
+			if !strings.HasPrefix(text, "//") {
+				return nil
+			}
+			text = strings.TrimSpace(text[2:])
+			
+			if strings.HasPrefix(text, "#cgo") {
+				cgoMsg := strings.TrimSpace(text[len("#cgo"):])
+
+				cflags := false
+				lflags := false
+				if strings.HasPrefix(cgoMsg, "CFLAGS:") {
+					cflags = true
+					cgoMsg = strings.TrimSpace(cgoMsg[len("CFLAGS:"):])
+				} else if strings.HasPrefix(cgoMsg, "LDFLAGS:") {
+					lflags = true
+					cgoMsg = strings.TrimSpace(cgoMsg[len("LDFLAGS:"):])
+				}
+				if cflags {
+					w.CGoCFlags = append(w.CGoCFlags, cgoMsg)
+				}
+				if lflags {
+					w.CGoLDFlags = append(w.CGoLDFlags, cgoMsg)
+				}
 			}
 		}
 		return nil

@@ -1,10 +1,9 @@
 package e
-
-// #include <stdlib.h>
+// #cgo LDFLAGS: -lm
+// #include <math.h>
 import "C"
 
-func Atof(s string) (i float64) {
-	cs := C.CString(s)
-	i = float64(C.atoi(cs))
+func CSin(x float64) (y float64) {
+	y = float64(C.sin(_Ctype_double(x)))
 	return
 }

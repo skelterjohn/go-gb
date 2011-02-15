@@ -51,6 +51,7 @@ type Package struct {
 
 	PkgSrc  map[string][]string
 	TestSrc map[string][]string
+	PkgCGoSrc map[string][]string
 
 	SrcDeps map[string][]string
 	Deps    []string
@@ -60,6 +61,9 @@ type Package struct {
 	TestDeps    []string
 	TestFuncs   map[string][]string
 	TestDepPkgs []*Package
+	
+	CGoCFlags map[string][]string
+	CGoLDFlags map[string][]string
 
 	HasMakefile bool
 	IsInGOROOT  bool
@@ -81,8 +85,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
 	this.PkgSrc = make(map[string][]string)
+	this.PkgCGoSrc = make(map[string][]string)
 	this.TestSrc = make(map[string][]string)
 	this.TestFuncs = make(map[string][]string)
+	
+	this.CGoCFlags = make(map[string][]string)
+	this.CGoLDFlags = make(map[string][]string)
 
 	cwd, _ := os.Getwd()
 	if rel := GetRelative(GOROOT, dir, cwd); !strings.HasPrefix(rel, "..") {
@@ -212,14 +220,14 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 	for _, src := range this.GoSources {
 		var fpkg, ftarget string
 		var fdeps []string
-		fpkg, ftarget, fdeps, _, err = GetDeps(path.Join(this.Dir, src))
+		var cflags, ldflags []string
+		fpkg, ftarget, fdeps, _, cflags, ldflags, err = GetDeps(path.Join(this.Dir, src))
 
 		if err != nil {
 			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
 			return
 		}
 
-		this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
 
 		this.SrcDeps[src] = fdeps
 
@@ -235,13 +243,17 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		for _, dep := range fdeps {
 			if dep == "\"C\"" {
 				isCGoSrc = true
+				this.CGoCFlags[fpkg] = append(this.CGoCFlags[fpkg], cflags...)
+				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
 		}
 		if isCGoSrc {
 			this.CGoSources = append(this.CGoSources, src)
+			this.PkgCGoSrc[fpkg] = append(this.PkgCGoSrc[fpkg], src)
 		} else {
 			nonCGoSrc = append(nonCGoSrc, src)
-		}	
+			this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
+		}
 	}
 
 	this.GoSources = nonCGoSrc
@@ -255,7 +267,13 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		for _, src := range this.TestSources {
 			var fpkg, ftarget string
 			var fdeps, ffuncs []string
-			fpkg, ftarget, fdeps, ffuncs, err = GetDeps(path.Join(this.Dir, src))
+			fpkg, ftarget, fdeps, ffuncs, _, _, err = GetDeps(path.Join(this.Dir, src))
+			for _, dep := range fdeps {
+				if dep == "\"C\"" {
+					fmt.Printf("Test src %s wants to use cgo... too much effort.\n", src)
+					continue
+				}
+			}
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -726,12 +744,11 @@ func (this *Package) CleanFiles() (err os.Error) {
 		this.NeedsInstall = true
 	}()
 
-	if (Makefiles && this.HasMakefile) {
+	if Makefiles && this.HasMakefile {
 		MakeClean(this)
 		PackagesBuilt++
 		return
 	}
-	
 
 	if Nuke {
 		if _, err2 := os.Stat(this.InstallPath); err2 == nil {
@@ -751,7 +768,6 @@ func (this *Package) CleanFiles() (err os.Error) {
 		}
 	}
 
-	
 	ib := false
 	res := false
 	cgo := false
@@ -771,7 +787,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(testdir); err2 == nil {
 		test = true
 	}
-	if !ib && !res && !test && !cgo{
+	if !ib && !res && !test && !cgo {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
@@ -957,6 +973,11 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	_, err = fmt.Fprintf(file, "TARG=%s\n", makeTarget)
 	_, err = fmt.Fprintf(file, "GOFILES=\\\n")
 	for _, src := range this.PkgSrc[this.Name] {
+		_, err = fmt.Fprintf(file, "\t%s\\\n", src)
+	}
+	_, err = fmt.Fprintf(file, "\n")
+	_, err = fmt.Fprintf(file, "CGOFILES=\\\n")
+	for _, src := range this.PkgCGoSrc[this.Name] {
 		_, err = fmt.Fprintf(file, "\t%s\\\n", src)
 	}
 	_, err = fmt.Fprintf(file, "\n")

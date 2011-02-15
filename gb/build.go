@@ -24,7 +24,6 @@ import (
 
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Error) {
 
-
 	argv := []string{GetCompilerName()}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
@@ -43,29 +42,29 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
 	defer func() { <-buildBlock }()
 	/*
-	reverseDots := ""
-	if !pkg.IsInGOROOT {
-		reverseDots = ReverseDir(pkg.Dir)
-	}
-	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
-	//cmdDest := path.Join(reverseDots, GetBuildDirCmd())
-*/
+		reverseDots := ""
+		if !pkg.IsInGOROOT {
+			reverseDots = ReverseDir(pkg.Dir)
+		}
+		pkgDest := path.Join(reverseDots, GetBuildDirPkg())
+		//cmdDest := path.Join(reverseDots, GetBuildDirCmd())
+	*/
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
-	
-	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
-/*
-	srcs := pkg.PkgSrc[pkg.Name]
 
-	argv := []string{GetCompilerName()}
-	if !pkg.IsInGOROOT {
-		argv = append(argv, "-I", pkgDest)
-	}
-	argv = append(argv, "-o", GetIBName())
-	argv = append(argv, srcs...)
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
-	err = RunExternal(CompileCMD, pkg.Dir, argv)
+	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
+	/*
+		srcs := pkg.PkgSrc[pkg.Name]
+
+		argv := []string{GetCompilerName()}
+		if !pkg.IsInGOROOT {
+			argv = append(argv, "-I", pkgDest)
+		}
+		argv = append(argv, "-o", GetIBName())
+		argv = append(argv, srcs...)
+		if Verbose {
+			fmt.Printf("%v\n", argv)
+		}
+		err = RunExternal(CompileCMD, pkg.Dir, argv)
 	*/
 	if err != nil {
 		return

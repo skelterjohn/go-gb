@@ -60,7 +60,7 @@ func FindExternals() (err os.Error) {
 		fmt.Printf("Could not find 'cgo' in path\n")
 		return
 	}
-	
+
 	var err2 os.Error
 	MakeCMD, err2 = exec.LookPath("make")
 	if err2 != nil {
@@ -84,7 +84,7 @@ func FindExternals() (err os.Error) {
 	}
 
 	CopyCMD, _ = exec.LookPath("cp")
-	
+
 	return
 }
 
@@ -107,7 +107,7 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 				break
 			}
 		}
-	
+
 		var wmsg *os.Waitmsg
 		wmsg, err = p.Wait(0)
 		if wmsg.ExitStatus() != 0 {

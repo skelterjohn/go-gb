@@ -4,10 +4,9 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=e
-
 GOFILES=\
-	e3.go
-	
+	e3.go\
+
 CGOFILES=\
 	e1.go\
 	e2.go\
