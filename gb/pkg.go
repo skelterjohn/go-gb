@@ -243,6 +243,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		for _, dep := range fdeps {
 			if dep == "\"C\"" {
 				isCGoSrc = true
+				this.IsCGo = true
 				this.CGoCFlags[fpkg] = append(this.CGoCFlags[fpkg], cflags...)
 				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
