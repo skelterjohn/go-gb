@@ -14,6 +14,8 @@ gb/_dist_
 _obj
 _cgo
 bin
+*.cgo1.go
+*.cgo2.c
 example/a/Makefile
 example/a/b/Makefile
 example/c/Makefile

@@ -812,7 +812,9 @@ func (this *Package) CleanFiles() (err os.Error) {
 	}
 	err = os.RemoveAll(testdir)
 
-	err = CleanCGoPackage(this)
+	if this.IsCGo {
+		err = CleanCGoPackage(this)
+	}
 
 	return
 }
