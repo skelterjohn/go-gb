@@ -20,4 +20,7 @@ example/a/Makefile
 example/a/b/Makefile
 example/c/Makefile
 example/d/Makefile
+example/e/Makefile
+example/build
+
 
