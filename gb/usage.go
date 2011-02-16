@@ -44,5 +44,6 @@ func Usage() {
 	fmt.Printf(" P build/clean/install only packages\n")
 	fmt.Printf(" C build/clean/install only cmds\n")
 	fmt.Printf(" D create distribution\n")
+	fmt.Printf(" W create workspace.gb files in all directories\n")
 	fmt.Printf(" R update dependencies in $GOROOT/src\n")
 }

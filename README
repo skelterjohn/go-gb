@@ -144,6 +144,11 @@ Options:
 		"*.s", and build files, including "makefile" and a top level
 		"build" script, will be copied to this directory.
 		
+ -W     Create workspace.gb files in all directories in the workspace. A
+        workspace.gb file allows one to run gb from within a workspace
+		subdirectory as if one was running gb from the workspace root
+		directory, listing the subdirectory as a command line parameter.
+		
  -R		Add targets in $GOROOT/src to those that gb can build. They will
 		not be built automatically, but if a local target has an import
 		dependence on a target in $GOROOT/src, it will be brought up to
