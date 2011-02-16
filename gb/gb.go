@@ -498,7 +498,9 @@ func main() {
 		println(r)
 	*/
 
-	LoadEnvs()
+	if !LoadEnvs() {
+		return
+	}
 
 	if !CheckFlags() {
 		return

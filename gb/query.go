@@ -26,20 +26,20 @@ import (
 var GOROOT, GOOS, GOARCH, GOBIN string
 var CWD string
 
-func LoadEnvs() {
+func LoadEnvs() bool {
 
 	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
 	if GOOS == "" {
 		println("Environental variable GOOS not set")
-		return
+		return false
 	}
 	if GOARCH == "" {
 		println("Environental variable GOARCH not set")
-		return
+		return false
 	}
 	if GOROOT == "" {
 		println("Environental variable GOROOT not set")
-		return
+		return false
 	}
 	if GOBIN == "" {
 		GOBIN = path.Join(GOROOT, "bin")
@@ -49,6 +49,8 @@ func LoadEnvs() {
 	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
+	
+	return true
 }
 
 func GetBuildDirPkg() (dir string) {
