@@ -90,7 +90,7 @@ func FindExternals() (err os.Error) {
 
 func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error) {
 	var p *exec.Cmd
-	p, err = exec.Run(cmd, argv, os.Envs, wd, exec.PassThrough, exec.Pipe, exec.PassThrough)
+	p, err = exec.Run(cmd, argv, nil, wd, exec.PassThrough, exec.Pipe, exec.PassThrough)
 	if err != nil {
 		return
 	}
@@ -122,7 +122,7 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 }
 func RunExternal(cmd, wd string, argv []string) (err os.Error) {
 	var p *exec.Cmd
-	p, err = exec.Run(cmd, argv, os.Envs, wd, exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	p, err = exec.Run(cmd, argv, nil, wd, exec.PassThrough, exec.PassThrough, exec.PassThrough)
 	if err != nil {
 		return
 	}

@@ -261,6 +261,13 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			this.PkgSrc[fpkg] = append(this.PkgSrc[fpkg], src)
 		}
 	}
+	
+	for fpkg, flags := range this.CGoCFlags {
+		this.CGoCFlags[fpkg] = RemoveDups(flags)
+	}
+	for fpkg, flags := range this.CGoLDFlags {
+		this.CGoLDFlags[fpkg] = RemoveDups(flags)
+	}
 
 	this.GoSources = nonCGoSrc
 
@@ -322,6 +329,9 @@ func (this *Package) GetTarget() (err os.Error) {
 			} else {
 				if this.Target == "." {
 					this.Target = "localpkg"
+				}
+				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
+					this.Target = this.Dir[4:]
 				}
 			}
 		} else {
@@ -614,7 +624,7 @@ func (this *Package) Build() (err os.Error) {
 
 	}
 	if err != nil {
-		this.CleanFiles()
+		//this.CleanFiles()
 	}
 
 	if this.IsInGOROOT && this.HasMakefile {
