@@ -51,6 +51,10 @@ $GOROOT/pkg/$GOOS_$GOOARCH and $GOROOT/bin.
 
 Tips
 
+If you want to run gb from within a target's directory, but still have it
+know about a larger workspace, create a file workspace.gb containing the
+path to the workspace directory.
+
 If your root contains a few packages and a few commands, but you only want 
 to install the packages, run gb -Pi.
 

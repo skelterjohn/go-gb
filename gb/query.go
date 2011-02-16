@@ -17,6 +17,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -24,7 +25,21 @@ import (
 )
 
 var GOROOT, GOOS, GOARCH, GOBIN string
-var CWD string
+var OSWD, CWD string
+
+func LoadCWD() (err os.Error) {
+	var oserr os.Error
+	OSWD, oserr = os.Getwd()
+	rel, relerr := ReadOneLine("workspace.gb")
+	if relerr != nil {
+		CWD, err = OSWD, oserr
+	} else {
+		CWD = GetAbs(path.Join(OSWD, rel), OSWD)
+		fmt.Printf("Running gb in %s\n", CWD)
+	}
+	os.Chdir(CWD)
+	return
+}
 
 func LoadEnvs() bool {
 
@@ -45,7 +60,6 @@ func LoadEnvs() bool {
 		GOBIN = path.Join(GOROOT, "bin")
 	}
 
-	CWD, _ = os.Getwd()
 	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns

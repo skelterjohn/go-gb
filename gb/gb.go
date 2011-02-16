@@ -353,8 +353,16 @@ func RunGB() (err os.Error) {
 
 	for _, arg := range args {
 		if arg[0] != '-' {
-			ListedDirs[path.Clean(arg)] = true
+			carg := path.Clean(arg)
+			rel := GetRelative(CWD, carg, OSWD)
+			ListedDirs[rel] = true
+			ListedTargets++
 		}
+	}
+
+	if ListedTargets == 0 {
+		ListedDirs[GetRelative(CWD, OSWD, OSWD)] = true
+		ListedTargets++
 	}
 
 	ListedPkgs = []*Package{}
@@ -485,8 +493,6 @@ func CheckFlags() bool {
 
 				}
 			}
-		} else {
-			ListedTargets++
 		}
 	}
 	return true
@@ -499,6 +505,11 @@ func main() {
 	*/
 
 	if !LoadEnvs() {
+		return
+	}
+	
+	if err := LoadCWD(); err != nil {
+		fmt.Printf("%v\n", err)
 		return
 	}
 

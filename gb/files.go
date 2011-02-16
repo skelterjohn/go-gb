@@ -99,15 +99,19 @@ func LineChan(f string, ch chan<- string) (err os.Error) {
 	return
 }
 
-func DirTargetGB(dir string) (target string, err os.Error) {
+func ReadOneLine(file string) (line string, err os.Error) {
 	var fin *os.File
-	tpath := path.Join(dir, "target.gb")
-	fin, err = os.Open(tpath, os.O_RDONLY, 0)
+	fin, err = os.Open(file, os.O_RDONLY, 0)
 	if err == nil {
 		bfrd := bufio.NewReader(fin)
-		target, err = bfrd.ReadString('\n')
-		target = strings.TrimSpace(target)
+		line, err = bfrd.ReadString('\n')
+		line = strings.TrimSpace(line)
 	}
+	return
+}
+
+func DirTargetGB(dir string) (target string, err os.Error) {
+	target, err = ReadOneLine(path.Join(dir, "target.gb"))
 	return
 }
 
