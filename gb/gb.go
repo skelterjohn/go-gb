@@ -44,7 +44,8 @@ var Install, //-i
 	GoFMT,            //-F
 	DoPkgs,           //-P
 	DoCmds,           //-C
-	Distribution bool //-D
+	Distribution,     //-D
+	Workspace bool    //-W
 
 var IncludeDir string
 var GCArgs []string
@@ -77,6 +78,16 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	}
 
 	var err os.Error
+
+	if Workspace {
+		absdir := GetAbs(dir, CWD)
+		relworkspace := GetRelative(absdir, CWD, CWD)
+		
+		var wfile *os.File
+		wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR, 0755)
+		wfile.WriteString(relworkspace+"\n")
+		wfile.Close()
+	}
 
 	var pkg *Package
 	pkg, err = NewPackage(base, dir)
@@ -361,8 +372,11 @@ func RunGB() (err os.Error) {
 	}
 
 	if ListedTargets == 0 {
-		ListedDirs[GetRelative(CWD, OSWD, OSWD)] = true
-		ListedTargets++
+		rel := GetRelative(CWD, OSWD, OSWD)
+		if rel != "." {
+			ListedDirs[GetRelative(CWD, OSWD, OSWD)] = true
+			ListedTargets++
+		}
 	}
 
 	ListedPkgs = []*Package{}
@@ -485,6 +499,8 @@ func CheckFlags() bool {
 					DoCmds = true
 				case 'D':
 					Distribution = true
+				case 'W':
+					Workspace = true
 				case 'R':
 					BuildGOROOT = true
 				default:
