@@ -123,9 +123,15 @@ func IsListed(name string) bool {
 	}
 
 	for lt := range ListedDirs {
+		rel := GetRelative(lt, name, CWD)
+		if !HasPathPrefix(rel, "..") {
+			return true
+		}
+		/*
 		if HasPathPrefix(name, lt) {
 			return true
 		}
+		*/
 	}
 	return false
 }
