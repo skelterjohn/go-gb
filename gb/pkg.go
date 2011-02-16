@@ -306,10 +306,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 }
 
 func (this *Package) GetTarget() (err os.Error) {
+	cwd, _ := os.Getwd()
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
 		//println("grp:", path.Join(GOROOT, "src", "pkg"), this.Dir)
-		cwd, _ := os.Getwd()
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, cwd)
 		if strings.HasPrefix(this.Target, "..") {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
@@ -331,7 +331,7 @@ func (this *Package) GetTarget() (err os.Error) {
 					this.Target = "localpkg"
 				}
 				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
-					this.Target = this.Dir[4:]
+					this.Target = GetRelative("pkg", this.Dir, cwd)
 				}
 			}
 		} else {
