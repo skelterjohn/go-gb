@@ -418,7 +418,9 @@ func (this *Package) PrintScan() {
 	fmt.Printf("%s%s \"%s\"%s\n", prefix, label, this.Target, bis)
 	if ScanList {
 		fmt.Printf(" %s Deps: %v\n", this.Target, this.Deps)
-		fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)
+		if Test {
+			fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)
+		}
 	}
 }
 
