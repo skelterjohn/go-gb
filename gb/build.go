@@ -89,17 +89,20 @@ func BuildPackage(pkg *Package) (err os.Error) {
 	dst := GetRelative(pkg.Dir, pkg.ResultPath, CWD)
 
 	if pkg.IsCmd {
-		os.MkdirAll(GetBuildDirCmd(), 0755)
 
 		largs := []string{GetLinkerName()}
 		if !pkg.IsInGOROOT {
 			largs = append(largs, "-L", pkgDest)
 		}
-		largs = append(largs, "-o", dst, GetIBName())
+		//largs = append(largs, "-o", dst, GetIBName())
+		largs = append(largs, "-o", pkg.Target, GetIBName())
 		if Verbose {
 			fmt.Printf("%v\n", largs)
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
+		
+		os.MkdirAll(GetBuildDirCmd(), 0755)
+		Copy(pkg.Dir, pkg.Target, dst)
 	} else {
 		dstDir, _ := path.Split(pkg.ResultPath)
 		if Verbose {
