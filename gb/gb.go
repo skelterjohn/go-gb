@@ -316,12 +316,6 @@ func TryBuild() {
 			}
 		}
 	}
-
-	if len(BrokenMsg) != 0 {
-		for _, msg := range BrokenMsg {
-			fmt.Printf("%s\n", msg)
-		}
-	}
 }
 
 func TryTest() (err os.Error) {
@@ -447,15 +441,20 @@ func RunGB() (err os.Error) {
 		if PackagesInstalled > 1 {
 			fmt.Printf("Installed %d targets\n", PackagesInstalled)
 		} else if PackagesInstalled == 1 {
-			println("Installed 1 target")
+			fmt.Println("Installed 1 target")
 		}
 		if Build && PackagesBuilt == 0 && PackagesInstalled == 0 && BrokenPackages == 0 {
-			println("Up to date")
+			fmt.Println("Up to date")
 		}
 		if BrokenPackages > 1 {
 			fmt.Printf("%d broken targets\n", BrokenPackages)
 		} else if BrokenPackages == 1 {
-			println("1 broken target")
+			fmt.Println("1 broken target")
+		}
+		if len(BrokenMsg) != 0 {
+			for _, msg := range BrokenMsg {
+				fmt.Printf("%s\n", msg)
+			}
 		}
 	} else {
 		if PackagesBuilt == 0 {
