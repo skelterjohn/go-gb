@@ -796,6 +796,14 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(this.ResultPath); err2 == nil {
 		res = true
 	}
+	if this.IsCmd {
+		_, bres := path.Split(this.ResultPath)
+		if bres != this.ResultPath {
+			if _, err2 := os.Stat(path.Join(this.Dir, bres)); err2 == nil {
+				res = true
+			}
+		}
+	}
 	if _, err2 := os.Stat(path.Join(this.Dir, "_cgo")); err2 == nil {
 		cgo = true
 	}
@@ -817,6 +825,16 @@ func (this *Package) CleanFiles() (err os.Error) {
 		fmt.Printf(" Removing %s\n", this.ResultPath)
 	}
 	err = os.Remove(this.ResultPath)
+	if this.IsCmd {
+		_, bres := path.Split(this.ResultPath)
+		bres = path.Join(this.Dir, bres)
+		if bres != this.ResultPath {
+			if Verbose {
+				fmt.Printf(" Removing %s\n", bres)
+			}
+			err = os.Remove(bres)
+		}
+	}
 	if Verbose {
 		fmt.Printf(" Removing %s\n", testdir)
 	}
