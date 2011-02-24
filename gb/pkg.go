@@ -1133,13 +1133,19 @@ func (this *Package) GoFMT() (err os.Error) {
 	}
 
 	fmt.Printf("(in %s) running gofmt\n", this.Dir)
-	for _, src := range append(this.GoSources) {
+	for _, src := range this.GoSources {
 		err = RunGoFMT(this.Dir, src)
 		if err != nil {
 			return
 		}
 	}
-	for _, src := range append(this.CGoSources) {
+	for _, src := range this.TestSources {
+		err = RunGoFMT(this.Dir, src)
+		if err != nil {
+			return
+		}
+	}
+	for _, src := range this.CGoSources {
 		err = RunGoFMT(this.Dir, src)
 		if err != nil {
 			return
