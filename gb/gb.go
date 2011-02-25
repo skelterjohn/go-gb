@@ -535,13 +535,13 @@ func main() {
 		r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
 		println(r)
 	*/
-
-	if !LoadEnvs() {
-		return
-	}
 	
 	if err := LoadCWD(); err != nil {
 		fmt.Printf("%v\n", err)
+		return
+	}
+
+	if !LoadEnvs() {
 		return
 	}
 
