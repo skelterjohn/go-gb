@@ -23,7 +23,7 @@ import (
 
 type GRTest struct {
 	start, finish, wd string
-	truth string
+	truth             string
 }
 
 
@@ -45,7 +45,6 @@ func TestGetRelative(t *testing.T) {
 		{`D:\e\f\g`, `a/b/c`, `e:/home`, `E:/home/a/b/c`},
 		{`e:\dnload\go-lang\go07\go`, `.`, `E:\prog\splitsound\repo01`, `../../../../prog/splitsound/repo01`},
 	}
-	
 
 	for _, grt := range grTests {
 		result := GetRelative(grt.start, grt.finish, grt.wd)

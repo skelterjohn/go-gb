@@ -138,9 +138,9 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-	
+
 	for _, csrc := range pkg.CSrcs {
-		cobj := csrc[:len(csrc)-2]+".o"
+		cobj := csrc[:len(csrc)-2] + ".o"
 		cobj = path.Base(cobj)
 		cobjs = append(cobjs, cobj)
 		relsrc := GetRelative("_cgo", csrc, path.Join(CWD, pkg.Dir))
@@ -149,7 +149,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-	
+
 	if err = gccCompile("_cgo_export.c", "_cgo_export.o"); err != nil {
 		return
 	}
@@ -174,7 +174,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	if err != nil {
 		return
 	}
-	
+
 	//cgo -dynimport _cgo1_.o >__cgo_import.c && mv -f __cgo_import.c _cgo_import.c
 	dynargv := []string{"cgo", "-dynimport", "_cgo1_.o"}
 	if Verbose {

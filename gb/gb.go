@@ -26,26 +26,26 @@ import (
 
 // command line flags
 var Install, //-i
-	Clean,            //-c
-	Nuke,             //-N
-	Scan,             //-sS
-	ScanList,         //-S
-	Test,             //-t
-	Exclusive,        //-e
-	BuildGOROOT,      //-R
-	GoInstall,        //-gG
-	GoInstallUpdate,  //-G
-	Concurrent,       //-p
-	Verbose,          //-v
-	GenMake,          //-M
-	Build,            //-b
-	Force,            //-f
-	Makefiles,        //-m
-	GoFMT,            //-F
-	DoPkgs,           //-P
-	DoCmds,           //-C
-	Distribution,     //-D
-	Workspace bool    //-W
+	Clean,           //-c
+	Nuke,            //-N
+	Scan,            //-sS
+	ScanList,        //-S
+	Test,            //-t
+	Exclusive,       //-e
+	BuildGOROOT,     //-R
+	GoInstall,       //-gG
+	GoInstallUpdate, //-G
+	Concurrent,      //-p
+	Verbose,         //-v
+	GenMake,         //-M
+	Build,           //-b
+	Force,           //-f
+	Makefiles,       //-m
+	GoFMT,           //-F
+	DoPkgs,          //-P
+	DoCmds,          //-C
+	Distribution,    //-D
+	Workspace bool   //-W
 
 var IncludeDir string
 var GCArgs []string
@@ -82,10 +82,10 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	if Workspace {
 		absdir := GetAbs(dir, CWD)
 		relworkspace := GetRelative(absdir, CWD, CWD)
-		
+
 		var wfile *os.File
 		wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR, 0755)
-		wfile.WriteString(relworkspace+"\n")
+		wfile.WriteString(relworkspace + "\n")
 		wfile.Close()
 	}
 
@@ -132,9 +132,9 @@ func IsListed(name string) bool {
 			return true
 		}
 		/*
-		if HasPathPrefix(name, lt) {
-			return true
-		}
+			if HasPathPrefix(name, lt) {
+				return true
+			}
 		*/
 	}
 	return false
@@ -214,7 +214,7 @@ func TryGenMake() (err os.Error) {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
 			buildFile, err = os.Open("build", os.O_CREATE|os.O_RDWR, 0755)
-			bwrite := func(format string, args... interface{}) {
+			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return
 				}
@@ -248,11 +248,11 @@ func TryGenMake() (err os.Error) {
 			bwrite("\n")
 			bwrite("fi\n")
 			bwrite("\n# The makefiles above are invoked in topological dependence order\n")
-			
+
 			if err != nil {
 				return
 			}
-			
+
 			err = buildFile.Close()
 			if err != nil {
 				return
@@ -549,7 +549,7 @@ func main() {
 		r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
 		println(r)
 	*/
-	
+
 	if err := LoadCWD(); err != nil {
 		fmt.Printf("%v\n", err)
 		return

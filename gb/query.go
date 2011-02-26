@@ -63,7 +63,7 @@ func LoadEnvs() bool {
 	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
-	
+
 	return true
 }
 

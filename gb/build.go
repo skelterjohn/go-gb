@@ -100,7 +100,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			fmt.Printf("%v\n", largs)
 		}
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
-		
+
 		os.MkdirAll(GetBuildDirCmd(), 0755)
 		Copy(pkg.Dir, pkg.Target, dst)
 	} else {

@@ -63,14 +63,14 @@ func RemoveDups(list []string) (newlist []string) {
 }
 
 type Walker struct {
-	Name      string
-	Target    string
-	pkgPos    token.Pos
-	Deps      []string
-	Funcs     []string
+	Name       string
+	Target     string
+	pkgPos     token.Pos
+	Deps       []string
+	Funcs      []string
 	CGoLDFlags []string
-	CGoCFlags []string
-	ScanFuncs bool
+	CGoCFlags  []string
+	ScanFuncs  bool
 }
 
 func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
@@ -89,18 +89,18 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 				return nil
 			}
 			text = strings.TrimSpace(text[2:])
-			
+
 			if strings.HasPrefix(text, "target:") {
 				w.Target = text[len("target:"):len(text)]
 			}
 		} else {
-		
+
 			text := string(n.Text)
 			if !strings.HasPrefix(text, "//") {
 				return nil
 			}
 			text = strings.TrimSpace(text[2:])
-			
+
 			if strings.HasPrefix(text, "#cgo") {
 				cgoMsg := strings.TrimSpace(text[len("#cgo"):])
 

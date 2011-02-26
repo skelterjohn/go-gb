@@ -1,4 +1,3 @@
-//target:different/a
 package b
 
 import . "c"
