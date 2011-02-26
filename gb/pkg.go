@@ -1005,22 +1005,27 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 			_, err = fmt.Fprintf(file, format, args...)
 		}
 	*/
-	if !this.IsCmd {
-		reverseDots := ReverseDir(this.Dir)
+	
+	reverseDots := ReverseDir(this.Dir)
 
-		data := MakeData{
-			Target:      this.Target,
-			GBROOT:      reverseDots,
-			GoFiles:     this.PkgSrc[this.Name],
-			CopyLocal:   reverseDots != ".",
-			BuildDirPkg: GetBuildDirPkg(),
-		}
-		if GOOS == "windows" && strings.HasSuffix(data.Target, ".exe") {
-			data.Target = data.Target[0 : len(data.Target)-len(".exe")]
-		}
-		for _, dep := range this.DepPkgs {
-			data.LocalDeps = append(data.LocalDeps, dep.Target)
-		}
+	data := MakeData{
+		Target:      this.Target,
+		GBROOT:      reverseDots,
+		GoFiles:     this.PkgSrc[this.Name],
+		CopyLocal:   reverseDots != ".",
+		BuildDirPkg: GetBuildDirPkg(),
+		BuildDirCmd: GetBuildDirCmd(),
+	}
+	for _, dep := range this.DepPkgs {
+		data.LocalDeps = append(data.LocalDeps, dep.Target)
+	}
+	for _, asm := range this.AsmSrcs {
+		base := asm[0 : len(asm)-2] // definitely ends with '.s', so this is safe
+		asmObj := base + GetObjSuffix()
+		data.AsmObjs = append(data.AsmObjs, asmObj)
+	}
+	
+	if !this.IsCmd {
 		if this.IsCGo {
 			data.CGoFiles = this.PkgCGoSrc[this.Name]
 			if len(this.CSrcs) != 0 {
@@ -1030,27 +1035,11 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 				}
 			}
 		}
-
 		err = MakePkgTemplate.Execute(file, data)
-
 	} else {
-		reverseDots := ReverseDir(this.Dir)
-
-		data := MakeData{
-			Target:      this.Target,
-			GBROOT:      reverseDots,
-			GoFiles:     this.PkgSrc[this.Name],
-			CopyLocal:   reverseDots != ".",
-			BuildDirPkg: GetBuildDirPkg(),
-			BuildDirCmd: GetBuildDirCmd(),
-		}
 		if GOOS == "windows" && strings.HasSuffix(data.Target, ".exe") {
 			data.Target = data.Target[0 : len(data.Target)-len(".exe")]
 		}
-		for _, dep := range this.DepPkgs {
-			data.LocalDeps = append(data.LocalDeps, dep.Target)
-		}
-
 		err = MakeCmdTemplate.Execute(file, data)
 	}
 	/*
