@@ -92,10 +92,14 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	var pkg *Package
 	pkg, err = NewPackage(base, dir)
 	if err == nil {
-		if dup, exists := Packages["\""+pkg.Target+"\""]; exists {
+		key := "\""+pkg.Target+"\""
+		if pkg.IsCmd {
+			key += "-cmd"
+		}
+		if dup, exists := Packages[key]; exists {
 			fmt.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
 		} else {
-			Packages["\""+pkg.Target+"\""] = pkg
+			Packages[key] = pkg
 		}
 		base = pkg.Base
 	} else {
