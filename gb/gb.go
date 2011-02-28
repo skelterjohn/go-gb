@@ -30,6 +30,7 @@ var Install, //-i
 	Nuke,            //-N
 	Scan,            //-sS
 	ScanList,        //-S
+	ScanListFiles,   //-L
 	Test,            //-t
 	Exclusive,       //-e
 	BuildGOROOT,     //-R
@@ -506,6 +507,9 @@ func CheckFlags() bool {
 				case 'S':
 					Scan = true
 					ScanList = true
+				case 'L':
+					Scan = true
+					ScanListFiles = true
 				case 't':
 					Test = true
 				case 'e':

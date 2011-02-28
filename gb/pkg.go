@@ -17,6 +17,7 @@
 package main
 
 import (
+	"sort"
 	"fmt"
 	"os"
 	"bufio"
@@ -420,6 +421,9 @@ func (this *Package) PrintScan() {
 		if Test {
 			fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)
 		}
+	}
+	if ScanListFiles {
+		this.ListSource()
 	}
 }
 
@@ -892,6 +896,34 @@ func (this *Package) Install() (err os.Error) {
 
 		PackagesInstalled++
 	}
+	return
+}
+
+func (this *Package) ListSource() (err os.Error) {
+	listFiles := func(files []string) {
+		sortedFiles := sort.StringArray(files)
+		sortedFiles.Sort()
+		for _, file := range sortedFiles {
+			fmt.Printf("\t%s\n", file)
+		}
+	}
+	listFileIfExists := func(file string) {
+		f := path.Join(this.Dir, file)
+		if _, err2 := os.Stat(f); err2 == nil {
+			fmt.Printf("\t%s\n", file)
+		}
+	}
+	
+	listFileIfExists("Makefile")
+	listFileIfExists("README")
+	
+	gosrc := append([]string{}, this.CGoSources...)
+	gosrc = append(gosrc, this.PkgSrc[this.Name]...)
+	
+	listFiles(gosrc)
+	listFiles(this.AsmSrcs)
+	listFiles(this.CSrcs)
+	
 	return
 }
 
