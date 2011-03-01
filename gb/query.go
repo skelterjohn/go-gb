@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"runtime"
 )
 
@@ -58,7 +57,7 @@ func LoadEnvs() bool {
 		GOBIN = path.Join(GOROOT, "bin")
 	}
 
-	RunningInGOROOT = strings.HasPrefix(CWD, GOROOT)
+	RunningInGOROOT = HasPathPrefix(CWD, GOROOT)
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
 
