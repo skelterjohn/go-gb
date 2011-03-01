@@ -45,12 +45,10 @@ func LoadEnvs() bool {
 
 	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
 	if GOOS == "" {
-		println("Environental variable GOOS not set")
-		return false
+		GOOS = runtime.GOOS
 	}
 	if GOARCH == "" {
-		println("Environental variable GOARCH not set")
-		return false
+		GOARCH = runtime.GOARCH
 	}
 	if GOROOT == "" {
 		println("Environental variable GOROOT not set")
