@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"strings"
 	"path"
+	"path/filepath"
 )
 
 type Package struct {
@@ -151,7 +152,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
-	path.Walk(this.Dir, this, errch)
+	filepath.Walk(this.Dir, this, errch)
 
 	if len(this.Sources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
