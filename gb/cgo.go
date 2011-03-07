@@ -82,10 +82,10 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		return
 	}
 
-	var allsrc = []string{path.Join("_cgo", "_cgo_gotypes.go")}
+	var allsrc = []string{path.Join("_cgo", "_obj", "_cgo_gotypes.go")}
 	for _, src := range cgobases {
 		gs := src[:len(src)-3] + ".cgo1.go"
-		allsrc = append(allsrc, path.Join("_cgo", gs))
+		allsrc = append(allsrc, path.Join("_cgo", "_obj", gs))
 	}
 	allsrc = append(allsrc, pkg.GoSources...)
 
@@ -98,7 +98,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
-	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + GetInstallDirPkg(), "_cgo_defun.c"}
+	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + GetInstallDirPkg(), path.Join("_obj", "_cgo_defun.c")}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
 		fmt.Printf("%v\n", cdefargv)
@@ -116,7 +116,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
 	*/
 	gccCompile := func(src, obj string) (err os.Error) {
-		gccargv := []string{"gcc", "-I.."}
+		gccargv := []string{"gcc", "-I..", "-I."}
 		gccargv = append(gccargv, []string{"-m64", "-g", "-fPIC", "-O2", "-o", obj, "-c"}...)
 		gccargv = append(gccargv, pkg.CGoCFlags[pkg.Name]...)
 		gccargv = append(gccargv, src)
@@ -133,7 +133,9 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		cgo := cgb[:len(cgb)-3] + ".cgo2.o"
 		cobjs = append(cobjs, cgo)
 
-		err = gccCompile(cgc, cgo)
+		src := path.Join("_obj", cgc)
+
+		err = gccCompile(src, cgo)
 		if err != nil {
 			return
 		}
@@ -150,11 +152,11 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		}
 	}
 
-	if err = gccCompile("_cgo_export.c", "_cgo_export.o"); err != nil {
+	if err = gccCompile(path.Join("_obj", "_cgo_export.c"), "_cgo_export.o"); err != nil {
 		return
 	}
 	cobjs = append(cobjs, "_cgo_export.o")
-	if err = gccCompile("_cgo_main.c", "_cgo_main.o"); err != nil {
+	if err = gccCompile(path.Join("_obj", "_cgo_main.c"), "_cgo_main.o"); err != nil {
 		return
 	}
 
