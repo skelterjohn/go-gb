@@ -94,7 +94,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.CGoCFlags = make(map[string][]string)
 	this.CGoLDFlags = make(map[string][]string)
 
-	if rel := GetRelative(GOROOT, dir, CWD); !strings.HasPrefix(rel, "..") {
+	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") {
 		this.IsInGOROOT = true
 	}
 

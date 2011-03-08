@@ -116,7 +116,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		gs := src[:len(src)-3] + ".cgo1.go"
 		allsrc = append(allsrc, path.Join("_cgo", "_obj", gs))
 	}
-	allsrc = append(allsrc, pkg.GoSources...)
+	allsrc = append(allsrc, pkg.PkgSrc[pkg.Name]...)
 
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
