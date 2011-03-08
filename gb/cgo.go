@@ -37,7 +37,14 @@ rm -f _obj/e.a
 gopack grc _obj/e.a _go_.6  _cgo_defun.6 _cgo_import.6 e1.cgo2.o e2.cgo2.o _cgo_export.o
 mkdir -p ../_obj/; cp -f _obj/e.a ../_obj/e.a
 */
-
+/*
+_CGO_CFLAGS_386=-m32
+_CGO_CFLAGS_amd64=-m64
+_CGO_LDFLAGS_freebsd=-shared -lpthread -lm
+_CGO_LDFLAGS_linux=-shared -lpthread -lm
+_CGO_LDFLAGS_darwin=-dynamiclib -Wl,-undefined,dynamic_lookup
+_CGO_LDFLAGS_windows=-shared -lm -mthreads
+*/
 var TestCGO = true
 
 func BuildCgoPackage(pkg *Package) (err os.Error) {
@@ -50,6 +57,28 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	if !TestCGO {
 		return MakeBuild(pkg)
 	}
+
+	var CFLAGS []string
+	var LDFLAGS []string
+	
+	switch GOARCH {
+	case "amd64":
+		CFLAGS = []string{"-m64"}
+	default:
+		CFLAGS = []string{"-m32"}
+	}
+	
+	switch GOOS {
+	case "freebsd":
+	case "linux":
+		LDFLAGS = []string{"-shared", "-lpthread", "-lm"}
+	case "darwin":
+		LDFLAGS = []string{"-dynamiclib", "-Wl,-undefined,dynamic_lookup"}
+	case "windows":
+		LDFLAGS = []string{"-shared", "-lm", "-mthreads"}
+	}
+	
+	_ = LDFLAGS // apparently the makefile doesn't use them...
 
 	cgodir := path.Join(pkg.Dir, "_cgo")
 
@@ -117,7 +146,8 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	*/
 	gccCompile := func(src, obj string) (err os.Error) {
 		gccargv := []string{"gcc", "-I..", "-I."}
-		gccargv = append(gccargv, []string{"-m64", "-g", "-fPIC", "-O2", "-o", obj, "-c"}...)
+		gccargv = append(gccargv, CFLAGS...)
+		gccargv = append(gccargv, []string{"-g", "-fPIC", "-O2", "-o", obj, "-c"}...)
 		gccargv = append(gccargv, pkg.CGoCFlags[pkg.Name]...)
 		gccargv = append(gccargv, src)
 		if Verbose {
@@ -164,7 +194,8 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o  
 	*/
 	gcclargv := []string{"gcc"}
-	gcclargv = append(gcclargv, []string{"-m64", "-g", "-fPIC", "-O2", "-o", "_cgo1_.o"}...)
+	gcclargv = append(gcclargv, CFLAGS...)
+	gcclargv = append(gcclargv, []string{"-g", "-fPIC", "-O2", "-o", "_cgo1_.o"}...)
 	gcclargv = append(gcclargv, "_cgo_main.o")
 	gcclargv = append(gcclargv, cobjs...)
 	gcclargv = append(gcclargv, pkg.CGoLDFlags[pkg.Name]...)
