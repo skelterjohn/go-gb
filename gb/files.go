@@ -22,6 +22,7 @@ import (
 	"strings"
 	"bufio"
 	"fmt"
+	"io"
 )
 
 func FilterFlag(src string) bool {
@@ -168,6 +169,8 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 		return
 	}
 
+	io.Copy(dstFile, srcFile)
+	/*
 	buffer := make([]byte, 1024)
 	var cpErr os.Error
 	for {
@@ -184,8 +187,10 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	if cpErr != os.EOF {
 		err = cpErr
 	}
-
+	*/
+	
 	dstFile.Close()
+	srcFile.Close()
 
 	return
 }

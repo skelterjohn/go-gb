@@ -17,6 +17,7 @@ package main
 
 import (
 	"os"
+	"io"
 	"exec"
 	"fmt"
 )
@@ -96,6 +97,10 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 	}
 	if p != nil {
 		src := p.Stdout
+		
+		io.Copy(dump, src)
+		
+		/*
 		buffer := make([]byte, 1024)
 		for {
 			n, cpErr := src.Read(buffer)
@@ -107,6 +112,7 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 				break
 			}
 		}
+		*/
 
 		var wmsg *os.Waitmsg
 		wmsg, err = p.Wait(0)
