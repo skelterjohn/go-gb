@@ -150,6 +150,31 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	return
 }
 
+func (this *Package) DetectCycles() (cycle []*Package) {
+	cycle = this.detectCycle(nil)
+	return
+}
+
+func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
+	for i, p := range visited {
+		if p == this {
+			cycle = visited[:i+1]
+			return
+		}
+	}
+
+	visited = append([]*Package{this}, visited...)
+
+	for _, pkg := range this.DepPkgs {
+		cycle = pkg.detectCycle(visited)
+		if cycle != nil {
+			return
+		}
+	}
+	
+	return
+}
+
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	filepath.Walk(this.Dir, this, errch)

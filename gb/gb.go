@@ -426,6 +426,18 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.ResolveDeps()
 	}
+	
+	for _, pkg := range Packages {
+		cycle := pkg.DetectCycles()
+		if cycle != nil {
+			var targets []string
+			for _, cp := range cycle {
+				targets = append(targets, cp.Target)
+			}
+			err = os.NewError(fmt.Sprintf("Cycle detected: %v", targets))
+			return
+		}
+	}
 
 	for _, pkg := range Packages {
 		pkg.CheckStatus()
