@@ -172,6 +172,15 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 		}
 	}
 	
+	if Test {
+		for _, pkg := range this.TestDepPkgs {
+			cycle = pkg.detectCycle(visited)
+			if cycle != nil {
+				return
+			}
+		}
+	}
+	
 	return
 }
 
@@ -443,9 +452,9 @@ func (this *Package) PrintScan() {
 	}
 	fmt.Printf("%s%s \"%s\"%s\n", prefix, label, this.Target, bis)
 	if ScanList {
-		fmt.Printf(" %s Deps: %v\n", this.Target, this.Deps)
+		fmt.Printf(" %s Deps: %v\n", this.Name, this.Deps)
 		if Test {
-			fmt.Printf(" %s TestDeps: %v\n", this.Target, this.TestDeps)
+			fmt.Printf(" %s TestDeps: %v\n", this.Name, this.TestDeps)
 		}
 	}
 	if ScanListFiles {

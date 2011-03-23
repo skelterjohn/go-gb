@@ -26,27 +26,27 @@ import (
 
 // command line flags
 var Install, //-i
-	Clean,           //-c
-	Nuke,            //-N
-	Scan,            //-sS
-	ScanList,        //-S
-	ScanListFiles,   //-L
-	Test,            //-t
-	Exclusive,       //-e
-	BuildGOROOT,     //-R
-	GoInstall,       //-gG
+	Clean, //-c
+	Nuke, //-N
+	Scan, //-sS
+	ScanList, //-S
+	ScanListFiles, //-L
+	Test, //-t
+	Exclusive, //-e
+	BuildGOROOT, //-R
+	GoInstall, //-gG
 	GoInstallUpdate, //-G
-	Concurrent,      //-p
-	Verbose,         //-v
-	GenMake,         //-M
-	Build,           //-b
-	Force,           //-f
-	Makefiles,       //-m
-	GoFMT,           //-F
-	DoPkgs,          //-P
-	DoCmds,          //-C
-	Distribution,    //-D
-	Workspace bool   //-W
+	Concurrent, //-p
+	Verbose, //-v
+	GenMake, //-M
+	Build, //-b
+	Force, //-f
+	Makefiles, //-m
+	GoFMT, //-F
+	DoPkgs, //-P
+	DoCmds, //-C
+	Distribution, //-D
+	Workspace bool //-W
 
 var IncludeDir string
 var GCArgs []string
@@ -93,7 +93,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	var pkg *Package
 	pkg, err = NewPackage(base, dir)
 	if err == nil {
-		key := "\""+pkg.Target+"\""
+		key := "\"" + pkg.Target + "\""
 		if pkg.IsCmd {
 			key += "-cmd"
 		}
@@ -426,7 +426,7 @@ func RunGB() (err os.Error) {
 	for _, pkg := range Packages {
 		pkg.ResolveDeps()
 	}
-	
+
 	for _, pkg := range Packages {
 		cycle := pkg.DetectCycles()
 		if cycle != nil {
