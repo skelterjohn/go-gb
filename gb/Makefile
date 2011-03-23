@@ -1,5 +1,5 @@
 include $(GOROOT)/src/Make.inc
-
+ 
 TARG=gb
 GOFILES=\
 	build.go\
