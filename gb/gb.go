@@ -471,7 +471,7 @@ func RunGB() (err os.Error) {
 		if PackagesBuilt > 1 {
 			fmt.Printf("Built %d targets\n", PackagesBuilt)
 		} else if PackagesBuilt == 1 {
-			fmt.Printf("Built 1 target")
+			fmt.Printf("Built 1 target\n")
 		}
 		if PackagesInstalled > 1 {
 			fmt.Printf("Installed %d targets\n", PackagesInstalled)
@@ -493,7 +493,7 @@ func RunGB() (err os.Error) {
 		}
 	} else {
 		if PackagesBuilt == 0 {
-			fmt.Printf("No mess to clean")
+			fmt.Printf("No mess to clean\n")
 		}
 	}
 
