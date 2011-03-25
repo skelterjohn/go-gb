@@ -85,7 +85,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		relworkspace := GetRelative(absdir, CWD, CWD)
 
 		var wfile *os.File
-		wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR, 0755)
+		wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR, 0644)
 		wfile.WriteString(relworkspace + "\n")
 		wfile.Close()
 	}
