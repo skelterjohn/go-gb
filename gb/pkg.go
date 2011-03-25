@@ -48,6 +48,8 @@ type Package struct {
 	CSrcs      []string
 	AsmSrcs    []string
 	Sources    []string // the list of all .go, .c, .s source in the target
+	
+	DeadSources []string // all .go, .c, .s files that will not be included in the build
 
 	Objects []string
 
@@ -104,8 +106,10 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	}
 	err = this.GetSourceDeps()
 	if err != nil {
-		return
+		//return
 	}
+	
+	this.FilterDeadSource()
 
 	this.Base = base
 	this.DepPkgs = make([]*Package, 0)
@@ -187,7 +191,7 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	filepath.Walk(this.Dir, this, errch)
-
+	
 	if len(this.Sources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
 	}
@@ -196,6 +200,32 @@ func (this *Package) ScanForSource() (err os.Error) {
 
 	return
 }
+
+func (this *Package) FilterDeadSource() {
+
+	deadset := make(map[string]bool)
+	for _, ds := range this.DeadSources {
+		deadset[ds] = true
+	}
+	for _, s := range this.PkgSrc[this.Name] {
+		deadset[s] = false
+	}
+	for _, s := range this.CGoSources {
+		deadset[s] = false
+	}
+	for _, s := range this.AsmSrcs {
+		deadset[s] = false
+	}
+	
+	this.DeadSources = []string{}
+	for s, ok := range deadset {
+		if ok {
+			this.DeadSources = append(this.DeadSources, s)
+		}
+	}
+
+}
+
 func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
 	return dpath == this.Dir || strings.HasPrefix(dpath, path.Join(this.Dir, "src"))
 }
@@ -214,6 +244,12 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		pb == "_cgo_main.c" ||
 		pb == "_cgo_defun.c" {
 		return
+	}
+
+	if strings.HasSuffix(fpath, ".go") ||
+	   strings.HasSuffix(fpath, ".c") ||
+	   strings.HasSuffix(fpath, ".s") {
+		this.DeadSources = append(this.DeadSources, fpath)
 	}
 
 	//skip files flagged for different OS/ARCH
@@ -265,7 +301,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 
 		if err != nil {
 			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
-			return
+			continue
 		}
 
 		this.SrcDeps[src] = fdeps
@@ -958,6 +994,10 @@ func (this *Package) ListSource() (err os.Error) {
 	listFiles(gosrc)
 	listFiles(this.AsmSrcs)
 	listFiles(this.CSrcs)
+	
+	for _, file := range this.DeadSources {
+		fmt.Printf("\t*%s\n", file)
+	}
 	
 	return
 }
