@@ -1,5 +1,5 @@
 package c
 
-func CFoo() {
+func CFoo() {hjk
 	println("CFoo")
 }

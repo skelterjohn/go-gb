@@ -17,6 +17,7 @@
 package main
 
 import (
+	//"time"
 	"fmt"
 	"os"
 	"path"
@@ -25,6 +26,9 @@ import (
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Error) {
 
 	argv := []string{GetCompilerName()}
+	if len(GCFLAGS) > 0 {
+		argv = append(argv, GCFLAGS...)
+	}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
 	}
@@ -40,32 +44,14 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Erro
 
 func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
-	defer func() { <-buildBlock }()
-	/*
-		reverseDots := ""
-		if !pkg.IsInGOROOT {
-			reverseDots = ReverseDir(pkg.Dir)
-		}
-		pkgDest := path.Join(reverseDots, GetBuildDirPkg())
-		//cmdDest := path.Join(reverseDots, GetBuildDirCmd())
-	*/
+	defer func() { 
+		<-buildBlock
+	}()
+
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
 	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
-	/*
-		srcs := pkg.PkgSrc[pkg.Name]
 
-		argv := []string{GetCompilerName()}
-		if !pkg.IsInGOROOT {
-			argv = append(argv, "-I", pkgDest)
-		}
-		argv = append(argv, "-o", GetIBName())
-		argv = append(argv, srcs...)
-		if Verbose {
-			fmt.Printf("%v\n", argv)
-		}
-		err = RunExternal(CompileCMD, pkg.Dir, argv)
-	*/
 	if err != nil {
 		return
 	}
@@ -84,13 +70,18 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
+	
 
-	//dst := path.Join(reverseDots, pkg.ResultPath)
 	dst := GetRelative(pkg.Dir, pkg.ResultPath, CWD)
 
 	if pkg.IsCmd {
 
 		largs := []string{GetLinkerName()}
+		
+		if len(GLDFLAGS) > 0 {
+			largs = append(largs, GLDFLAGS...)
+		}
+		
 		if !pkg.IsInGOROOT {
 			largs = append(largs, "-L", pkgDest)
 		}
@@ -99,8 +90,10 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		if Verbose {
 			fmt.Printf("%v\n", largs)
 		}
+		//startLink := time.Nanoseconds()
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
-
+		//durLink := time.Nanoseconds()-startLink
+		//fmt.Printf("link took %f\n", float64(durLink)/1e9)
 		os.MkdirAll(GetBuildDirCmd(), 0755)
 		Copy(pkg.Dir, pkg.Target, dst)
 	} else {
@@ -140,6 +133,9 @@ func BuildTest(pkg *Package) (err os.Error) {
 	for testName, testSrcs := range pkg.TestSrc {
 
 		argv := []string{GetCompilerName()}
+		if GCFLAGS != nil {
+			argv = append(argv, GCFLAGS...)
+		}
 		argv = append(argv, "-I", pkgDest)
 		argv = append(argv, "-o", testIB)
 		if testName == pkg.Name {
@@ -178,6 +174,9 @@ func BuildTest(pkg *Package) (err os.Error) {
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
 
 	argv := []string{GetCompilerName()}
+	if GCFLAGS != nil {
+		argv = append(argv, GCFLAGS...)
+	}
 	argv = append(argv, "-I", path.Join("_test", "_obj"))
 	argv = append(argv, "-I", pkgDest)
 	argv = append(argv, "-o", testmainib)
@@ -196,6 +195,9 @@ func BuildTest(pkg *Package) (err os.Error) {
 	}
 
 	largs := []string{GetLinkerName()}
+	if len(GLDFLAGS) > 0 {
+		largs = append(largs, GLDFLAGS...)
+	}
 	largs = append(largs, "-L", path.Join("_test", "_obj"))
 	largs = append(largs, "-L", pkgDest)
 	largs = append(largs, "-o", testBinary, testmainib)

@@ -19,12 +19,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 	"runtime"
 )
 
 var GOROOT, GOOS, GOARCH, GOBIN string
 var OSWD, CWD string
+
+var GCFLAGS, GLDFLAGS []string
 
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
@@ -33,7 +36,7 @@ func LoadCWD() (err os.Error) {
 	if relerr != nil {
 		CWD, err = OSWD, oserr
 	} else {
-		CWD = GetAbs(path.Join(OSWD, rel), OSWD)
+		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
 		fmt.Printf("Running gb in %s\n", CWD)
 	}
 	os.Chdir(CWD)
@@ -54,9 +57,17 @@ func LoadEnvs() bool {
 		return false
 	}
 	if GOBIN == "" {
-		GOBIN = path.Join(GOROOT, "bin")
+		GOBIN = filepath.Join(GOROOT, "bin")
 	}
-
+	
+	gcFlagsStr, gldFlagsStr := os.Getenv("GB_GCFLAGS"), os.Getenv("GB_GLDFLAGS")
+	if gcFlagsStr != "" {
+		GCFLAGS = strings.Split(gcFlagsStr, " ", -1)
+	}
+	if gldFlagsStr != "" {
+		GLDFLAGS = strings.Split(gldFlagsStr, " ", -1)
+	}
+	
 	RunningInGOROOT = HasPathPrefix(CWD, GOROOT)
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
@@ -69,7 +80,7 @@ func GetBuildDirPkg() (dir string) {
 }
 
 func GetInstallDirPkg() (dir string) {
-	return path.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
+	return filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
 }
 
 func GetBuildDirCmd() (dir string) {

@@ -99,20 +99,6 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 		src := p.Stdout
 		
 		io.Copy(dump, src)
-		
-		/*
-		buffer := make([]byte, 1024)
-		for {
-			n, cpErr := src.Read(buffer)
-			if cpErr != nil {
-				break
-			}
-			_, cpErr = dump.Write(buffer[0:n])
-			if cpErr != nil {
-				break
-			}
-		}
-		*/
 
 		var wmsg *os.Waitmsg
 		wmsg, err = p.Wait(0)

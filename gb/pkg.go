@@ -246,12 +246,6 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		return
 	}
 
-	if strings.HasSuffix(fpath, ".go") ||
-	   strings.HasSuffix(fpath, ".c") ||
-	   strings.HasSuffix(fpath, ".s") {
-		this.DeadSources = append(this.DeadSources, fpath)
-	}
-
 	//skip files flagged for different OS/ARCH
 	if !FilterFlag(fpath) {
 		return
@@ -266,6 +260,13 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	if this.Dir != "." {
 		fpath = fpath[rootl:len(fpath)]
 	}
+
+	if strings.HasSuffix(fpath, ".go") ||
+	   strings.HasSuffix(fpath, ".c") ||
+	   strings.HasSuffix(fpath, ".s") {
+		this.DeadSources = append(this.DeadSources, fpath)
+	}
+
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
