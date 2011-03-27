@@ -797,7 +797,7 @@ func (this *Package) Test() (err os.Error) {
 	fmt.Fprintf(file, "}\n\n")
 
 	fmt.Fprintf(file, "func main() {\n")
-	fmt.Fprintf(file, "\ttesting.Main(__regexp__.MatchString, tests)\n")
+	fmt.Fprintf(file, "\ttesting.RunTests(__regexp__.MatchString, tests)\n")
 	fmt.Fprintf(file, "\ttesting.RunBenchmarks(__regexp__.MatchString, benchmarks)\n")
 	fmt.Fprintf(file, "}\n")
 
