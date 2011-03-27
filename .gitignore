@@ -1,5 +1,4 @@
-.hg
-.hgignore
+.hg*
 gb.xcodeproj
 build
 gb/gb
