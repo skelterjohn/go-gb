@@ -80,19 +80,20 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 
 	var err os.Error
 
-	if Workspace {
-		absdir := GetAbs(dir, CWD)
-		relworkspace := GetRelative(absdir, CWD, CWD)
-
-		var wfile *os.File
-		wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR, 0644)
-		wfile.WriteString(relworkspace + "\n")
-		wfile.Close()
-	}
-
 	var pkg *Package
 	pkg, err = NewPackage(base, dir)
 	if err == nil {
+
+		if Workspace {
+			absdir := GetAbs(dir, CWD)
+			relworkspace := GetRelative(absdir, CWD, CWD)
+
+			var wfile *os.File
+			wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+			wfile.WriteString(relworkspace + "\n")
+			wfile.Close()
+		}
+	
 		key := "\"" + pkg.Target + "\""
 		if pkg.IsCmd {
 			key += "-cmd"
@@ -113,11 +114,14 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
 
-	subdirs := GetSubDirs(dir)
-	for _, subdir := range subdirs {
-		if subdir != "src" {
-			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
+	if base != "--" {
+		subdirs := GetSubDirs(dir)
+		for _, subdir := range subdirs {
+			if subdir != "src" {
+				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
+			}
 		}
+	} else {
 	}
 
 	return
@@ -374,7 +378,7 @@ func TryInstall() {
 }
 
 func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean && !GoFMT && !Scan) || (Makefiles && !Clean) || Install || Test
+	Build = Build || (!GenMake && !Clean && !GoFMT && !Scan && !Workspace) || (Makefiles && !Clean) || Install || Test
 
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 

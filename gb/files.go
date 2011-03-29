@@ -170,24 +170,6 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	}
 
 	io.Copy(dstFile, srcFile)
-	/*
-	buffer := make([]byte, 1024)
-	var cpErr os.Error
-	for {
-		var n int
-		n, cpErr = srcFile.Read(buffer)
-		if cpErr != nil {
-			break
-		}
-		_, cpErr = dstFile.Write(buffer[0:n])
-		if cpErr != nil {
-			break
-		}
-	}
-	if cpErr != os.EOF {
-		err = cpErr
-	}
-	*/
 	
 	dstFile.Close()
 	srcFile.Close()
