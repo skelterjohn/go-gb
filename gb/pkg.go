@@ -415,7 +415,7 @@ func (this *Package) GetTarget() (err os.Error) {
 			this.Target, err = bfrd.ReadString('\n')
 			this.Target = strings.TrimSpace(this.Target)
 			this.Base = this.Target
-			if this.Target == "-" {
+			if this.Target == "-" || this.Target == "--" {
 				err = os.NewError("directory opts-out")
 				return
 			}
