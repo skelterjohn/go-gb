@@ -89,7 +89,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			relworkspace := GetRelative(absdir, CWD, CWD)
 
 			var wfile *os.File
-			wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
+			wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
 			wfile.WriteString(relworkspace + "\n")
 			wfile.Close()
 		}
@@ -222,7 +222,7 @@ func TryGenMake() (err os.Error) {
 		if genBuild {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
-			buildFile, err = os.Create("build")
+			buildFile, err = os.Open("build", os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
 			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return

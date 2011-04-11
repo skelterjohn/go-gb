@@ -409,7 +409,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		}
 
 		tpath := path.Join(this.Dir, "/target.gb")
-		fin, err2 := os.Open(tpath)
+		fin, err2 := os.Open(tpath, os.O_RDONLY, 0)
 		if err2 == nil {
 			bfrd := bufio.NewReader(fin)
 			this.Target, err = bfrd.ReadString('\n')
@@ -757,7 +757,7 @@ func (this *Package) Test() (err os.Error) {
 	testsrc := path.Join(this.Dir, "_test", "_testmain.go")
 	dstDir, _ := path.Split(testsrc)
 	os.MkdirAll(dstDir, 0755)
-	file, err := os.Create(testsrc)
+	file, err := os.Open(testsrc, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
 
 	if err != nil {
 		return
@@ -1100,7 +1100,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	fmt.Printf("(in %s) generating makefile for %s \"%s\"\n", this.Dir, which, this.Target)
 
 	var file *os.File
-	file, err = os.Create(mpath)
+	file, err = os.Open(mpath, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
 
 	if err != nil {
 		return

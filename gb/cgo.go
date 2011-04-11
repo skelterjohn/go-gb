@@ -216,7 +216,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	var dump *os.File
-	dump, err = os.Create(path.Join(cgodir, "__cgo_import.c"))
+	dump, err = os.Open(path.Join(cgodir, "__cgo_import.c"), os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
 	if err != nil {
 		return
 	}
