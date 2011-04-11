@@ -51,7 +51,7 @@ func FilterFlag(src string) bool {
 }
 
 func GetSubDirs(dir string) (subdirs []string) {
-	file, err := os.Open(dir, os.O_RDONLY, 0)
+	file, err := os.Open(dir)
 	if err != nil {
 		return
 	}
@@ -87,7 +87,7 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 
 func LineChan(f string, ch chan<- string) (err os.Error) {
 	var fin *os.File
-	if fin, err = os.Open(f, os.O_RDONLY, 0); err == nil {
+	if fin, err = os.Open(f); err == nil {
 		bfrd := bufio.NewReader(fin)
 		for {
 			var line string
@@ -102,7 +102,7 @@ func LineChan(f string, ch chan<- string) (err os.Error) {
 
 func ReadOneLine(file string) (line string, err os.Error) {
 	var fin *os.File
-	fin, err = os.Open(file, os.O_RDONLY, 0)
+	fin, err = os.Open(file)
 	if err == nil {
 		bfrd := bufio.NewReader(fin)
 		line, err = bfrd.ReadString('\n')
@@ -158,19 +158,19 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	}
 
 	var srcFile *os.File
-	srcFile, err = os.Open(srcpath, os.O_RDONLY, 0)
+	srcFile, err = os.Open(srcpath)
 	if err != nil {
 		return
 	}
 
 	var dstFile *os.File
-	dstFile, err = os.Open(dstpath, os.O_CREATE|os.O_RDWR, 0755)
+	dstFile, err = os.Create(dstpath)
 	if err != nil {
 		return
 	}
 
 	io.Copy(dstFile, srcFile)
-	
+
 	dstFile.Close()
 	srcFile.Close()
 

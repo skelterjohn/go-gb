@@ -48,7 +48,7 @@ type Package struct {
 	CSrcs      []string
 	AsmSrcs    []string
 	Sources    []string // the list of all .go, .c, .s source in the target
-	
+
 	DeadSources []string // all .go, .c, .s files that will not be included in the build
 
 	Objects []string
@@ -108,7 +108,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	if err != nil {
 		//return
 	}
-	
+
 	this.FilterDeadSource()
 
 	this.Base = base
@@ -175,7 +175,7 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 			return
 		}
 	}
-	
+
 	if Test {
 		for _, pkg := range this.TestDepPkgs {
 			cycle = pkg.detectCycle(visited)
@@ -184,14 +184,14 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 			}
 		}
 	}
-	
+
 	return
 }
 
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	filepath.Walk(this.Dir, this, errch)
-	
+
 	if len(this.Sources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
 	}
@@ -216,7 +216,7 @@ func (this *Package) FilterDeadSource() {
 	for _, s := range this.AsmSrcs {
 		deadset[s] = false
 	}
-	
+
 	this.DeadSources = []string{}
 	for s, ok := range deadset {
 		if ok {
@@ -262,8 +262,8 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	}
 
 	if strings.HasSuffix(fpath, ".go") ||
-	   strings.HasSuffix(fpath, ".c") ||
-	   strings.HasSuffix(fpath, ".s") {
+		strings.HasSuffix(fpath, ".c") ||
+		strings.HasSuffix(fpath, ".s") {
 		this.DeadSources = append(this.DeadSources, fpath)
 	}
 
@@ -409,7 +409,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		}
 
 		tpath := path.Join(this.Dir, "/target.gb")
-		fin, err2 := os.Open(tpath, os.O_RDONLY, 0)
+		fin, err2 := os.Open(tpath)
 		if err2 == nil {
 			bfrd := bufio.NewReader(fin)
 			this.Target, err = bfrd.ReadString('\n')
@@ -757,7 +757,7 @@ func (this *Package) Test() (err os.Error) {
 	testsrc := path.Join(this.Dir, "_test", "_testmain.go")
 	dstDir, _ := path.Split(testsrc)
 	os.MkdirAll(dstDir, 0755)
-	file, err := os.Open(testsrc, os.O_CREATE|os.O_RDWR, 0644)
+	file, err := os.Create(testsrc)
 
 	if err != nil {
 		return
@@ -985,21 +985,21 @@ func (this *Package) ListSource() (err os.Error) {
 			fmt.Printf("\t%s\n", file)
 		}
 	}
-	
+
 	listFileIfExists("Makefile")
 	listFileIfExists("README")
-	
+
 	gosrc := append([]string{}, this.CGoSources...)
 	gosrc = append(gosrc, this.PkgSrc[this.Name]...)
-	
+
 	listFiles(gosrc)
 	listFiles(this.AsmSrcs)
 	listFiles(this.CSrcs)
-	
+
 	for _, file := range this.DeadSources {
 		fmt.Printf("\t*%s\n", file)
 	}
-	
+
 	return
 }
 
@@ -1100,7 +1100,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 	fmt.Printf("(in %s) generating makefile for %s \"%s\"\n", this.Dir, which, this.Target)
 
 	var file *os.File
-	file, err = os.Open(mpath, os.O_CREATE|os.O_RDWR, 0644)
+	file, err = os.Create(mpath)
 
 	if err != nil {
 		return
@@ -1113,7 +1113,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 			_, err = fmt.Fprintf(file, format, args...)
 		}
 	*/
-	
+
 	reverseDots := ReverseDir(this.Dir)
 
 	data := MakeData{
@@ -1132,7 +1132,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		asmObj := base + GetObjSuffix()
 		data.AsmObjs = append(data.AsmObjs, asmObj)
 	}
-	
+
 	if !this.IsCmd {
 		if this.IsCGo {
 			data.CGoFiles = this.PkgCGoSrc[this.Name]

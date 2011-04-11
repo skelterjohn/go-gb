@@ -60,14 +60,14 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 
 	var CFLAGS []string
 	var LDFLAGS []string
-	
+
 	switch GOARCH {
 	case "amd64":
 		CFLAGS = []string{"-m64"}
 	default:
 		CFLAGS = []string{"-m32"}
 	}
-	
+
 	switch GOOS {
 	case "freebsd":
 	case "linux":
@@ -77,7 +77,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	case "windows":
 		LDFLAGS = []string{"-shared", "-lm", "-mthreads"}
 	}
-	
+
 	_ = LDFLAGS // apparently the makefile doesn't use them...
 
 	cgodir := path.Join(pkg.Dir, "_cgo")
@@ -216,7 +216,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	var dump *os.File
-	dump, err = os.Open(path.Join(cgodir, "__cgo_import.c"), os.O_CREATE|os.O_RDWR, 0755)
+	dump, err = os.Create(path.Join(cgodir, "__cgo_import.c"))
 	if err != nil {
 		return
 	}

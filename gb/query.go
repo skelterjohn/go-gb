@@ -48,9 +48,11 @@ func LoadEnvs() bool {
 	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
 	if GOOS == "" {
 		GOOS = runtime.GOOS
+		os.Setenv("GOOS", GOOS)
 	}
 	if GOARCH == "" {
 		GOARCH = runtime.GOARCH
+		os.Setenv("GOARCH", GOARCH)
 	}
 	if GOROOT == "" {
 		println("Environental variable GOROOT not set")
@@ -58,6 +60,7 @@ func LoadEnvs() bool {
 	}
 	if GOBIN == "" {
 		GOBIN = filepath.Join(GOROOT, "bin")
+		os.Setenv("GOBIN", GOBIN)
 	}
 	
 	gcFlagsStr, gldFlagsStr := os.Getenv("GB_GCFLAGS"), os.Getenv("GB_GLDFLAGS")
