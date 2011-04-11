@@ -1,4 +1,6 @@
 .hg*
+.project
+*.tgz
 gb.xcodeproj
 build
 gb/gb
