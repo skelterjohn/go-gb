@@ -339,7 +339,7 @@ func TryBuild() {
 			pkg.CheckStatus()
 			err := pkg.Build()
 			if err != nil {
-
+				return
 			}
 		}
 	}
