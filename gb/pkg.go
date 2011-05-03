@@ -192,7 +192,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	filepath.Walk(this.Dir, this, errch)
 
-	if len(this.Sources) == 0 { //allsources
+	if len(this.AsmSrcs) + len(this.GoSources) + len(this.TestSources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
