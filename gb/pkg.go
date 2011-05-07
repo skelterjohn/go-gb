@@ -230,6 +230,13 @@ func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
 	return dpath == this.Dir || strings.HasPrefix(dpath, path.Join(this.Dir, "src"))
 }
 func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
+	//ignore hidden and temporary files
+	if strings.HasPrefix(fpath, ".") {
+		return
+	}
+	if strings.HasPrefix(fpath, "#") {
+		return
+	}
 	//skip files generates by the cgo process
 	if strings.HasSuffix(fpath, ".cgo1.go") {
 		return
