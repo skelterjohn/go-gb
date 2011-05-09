@@ -178,6 +178,9 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 
 	if Test {
 		for _, pkg := range this.TestDepPkgs {
+			if pkg == this {
+				continue
+			}
 			cycle = pkg.detectCycle(visited)
 			if cycle != nil {
 				return
