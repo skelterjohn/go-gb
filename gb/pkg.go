@@ -364,7 +364,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			fpkg, ftarget, fdeps, ffuncs, _, _, err = GetDeps(path.Join(this.Dir, src))
 			for _, dep := range fdeps {
 				if dep == "\"C\"" {
-					fmt.Printf("Test src %s wants to use cgo... too much effort.\n", src)
+					ErrLog.Printf("Test src %s wants to use cgo... too much effort.\n", src)
 					continue
 				}
 			}
@@ -389,7 +389,6 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 func (this *Package) GetTarget() (err os.Error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
-		//println("grp:", path.Join(GOROOT, "src", "pkg"), this.Dir)
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
@@ -640,7 +639,7 @@ func (this *Package) Build() (err os.Error) {
 	this.built = true
 
 	if !TestCGO && (!this.HasMakefile && this.IsCGo) {
-		fmt.Printf("(in %s) this is a cgo project; please create a makefile\n", this.Dir)
+		ErrLog.Printf("(in %s) this is a cgo project; please create a makefile\n", this.Dir)
 		return
 	}
 

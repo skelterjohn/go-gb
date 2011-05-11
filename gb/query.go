@@ -55,7 +55,7 @@ func LoadEnvs() bool {
 		os.Setenv("GOARCH", GOARCH)
 	}
 	if GOROOT == "" {
-		println("Environental variable GOROOT not set")
+		ErrLog.Printf("Environental variable GOROOT not set")
 		return false
 	}
 	if GOBIN == "" {

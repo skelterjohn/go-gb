@@ -22,6 +22,7 @@ import (
 	"os"
 	"fmt"
 	"path"
+	"log"
 )
 
 // command line flags
@@ -66,6 +67,7 @@ var RunningInGOROOT bool
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
+var ErrLog = log.New(os.Stderr, "gb error:", 0)
 
 func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
@@ -99,7 +101,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			key += "-cmd"
 		}
 		if dup, exists := Packages[key]; exists {
-			fmt.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
+			ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
 		} else {
 			Packages[key] = pkg
 		}
@@ -162,13 +164,13 @@ func MakeDist(ch chan string) (err os.Error) {
 	fmt.Printf("Copying distribution files to _dist_\n")
 	for file := range ch {
 		if _, err = os.Stat(file); err != nil {
-			fmt.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
+			ErrLog.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
 			return
 		}
 		nfile := path.Join("_dist_", file)
 		npdir, _ := path.Split(nfile)
 		if err = os.MkdirAll(npdir, 0755); err != nil {
-			fmt.Printf("Couldn't create directory '%s'.\n", npdir)
+			ErrLog.Printf("Couldn't create directory '%s'.\n", npdir)
 			return
 		}
 		Copy(".", file, nfile)
@@ -569,13 +571,8 @@ func CheckFlags() bool {
 }
 
 func main() {
-	/*
-		r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
-		println(r)
-	*/
-
 	if err := LoadCWD(); err != nil {
-		fmt.Printf("%v\n", err)
+		ErrLog.Printf("%v\n", err)
 		return
 	}
 
@@ -603,7 +600,7 @@ func main() {
 
 	err = RunGB()
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		ErrLog.Printf("%v\n", err)
 		ReturnFailCode = true
 	}
 
