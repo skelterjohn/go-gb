@@ -113,6 +113,7 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 					lflags = true
 					cgoMsg = strings.TrimSpace(cgoMsg[len("LDFLAGS:"):])
 				}
+
 				if cflags {
 					w.CGoCFlags = append(w.CGoCFlags, cgoMsg)
 				}

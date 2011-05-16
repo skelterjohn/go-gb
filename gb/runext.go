@@ -20,6 +20,7 @@ import (
 	"io"
 	"exec"
 	"fmt"
+	"strings"
 )
 
 var MakeCMD,
@@ -89,9 +90,18 @@ func FindExternals() (err os.Error) {
 	return
 }
 
+func SplitArgs(args []string) (sargs []string) {
+	for _, arg := range args {
+		sarg := strings.Split(arg, " ", -1)
+		sargs = append(sargs, sarg...)
+	}
+	return
+}
+
 func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error) {
+	argv = SplitArgs(argv)
 	var p *exec.Cmd
-	p, err = exec.Run(cmd, argv, nil, wd, exec.PassThrough, exec.Pipe, exec.PassThrough)
+	p, err = exec.Run(cmd, argv, os.Envs, wd, exec.PassThrough, exec.Pipe, exec.PassThrough)
 	if err != nil {
 		return
 	}
@@ -113,8 +123,9 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 	return
 }
 func RunExternal(cmd, wd string, argv []string) (err os.Error) {
+	argv = SplitArgs(argv)
 	var p *exec.Cmd
-	p, err = exec.Run(cmd, argv, nil, wd, exec.PassThrough, exec.PassThrough, exec.PassThrough)
+	p, err = exec.Run(cmd, argv, os.Envs, wd, exec.PassThrough, exec.PassThrough, exec.PassThrough)
 	if err != nil {
 		return
 	}

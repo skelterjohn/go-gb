@@ -199,6 +199,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	gcclargv = append(gcclargv, "_cgo_main.o")
 	gcclargv = append(gcclargv, cobjs...)
 	gcclargv = append(gcclargv, pkg.CGoLDFlags[pkg.Name]...)
+
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
 		fmt.Printf("%v\n", gcclargv)
