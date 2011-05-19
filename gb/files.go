@@ -25,9 +25,27 @@ import (
 	"io"
 )
 
+var (
+	os_flags = []string{"windows", "darwin", "freebsd", "linux"}
+	arch_flags = []string{"amd64", "386", "arm"}
+)
+
+func CheckCGOFlag(flag string) bool {
+	if flag == GOOS || flag == GOARCH {
+		return true
+	}
+	if flag == "unix" &&
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
+		return true
+	}
+	if flag == "bsd" &&
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+		return true
+	}
+	return false
+}
+
 func FilterFlag(src string) bool {
-	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
-	arch_flags := []string{"amd64", "386", "arm"}
 	for _, flag := range os_flags {
 		if strings.Contains(src, "_"+flag) && GOOS != flag {
 			return false

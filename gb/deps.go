@@ -104,6 +104,18 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 			if strings.HasPrefix(text, "#cgo") {
 				cgoMsg := strings.TrimSpace(text[len("#cgo"):])
 
+				fields := strings.Fields(cgoMsg)
+				if len(fields) >= 1 {
+					flag := fields[0]
+					if !strings.HasSuffix(flag, ":") {
+						if !CheckCGOFlag(flag) {
+							return nil
+						} else {
+							cgoMsg = strings.TrimSpace(cgoMsg[len(flag):])
+						}
+					}
+				}
+
 				cflags := false
 				lflags := false
 				if strings.HasPrefix(cgoMsg, "CFLAGS:") {
