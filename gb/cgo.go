@@ -127,7 +127,14 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
-	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + GetInstallDirPkg(), path.Join("_obj", "_cgo_defun.c")}
+	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + GetInstallDirPkg()}
+
+	for _, objdst := range GOPATH_OBJDSTS {
+		cdefargv = append(cdefargv, "-I"+objdst)
+	}
+
+	cdefargv = append(cdefargv, path.Join("_obj", "_cgo_defun.c"))
+
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
 		fmt.Printf("%v\n", cdefargv)

@@ -29,6 +29,10 @@ var OSWD, CWD string
 
 var GCFLAGS, GLDFLAGS []string
 
+var GOPATH, GOPATH_SINGLE string
+var GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
+
+
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
 	OSWD, oserr = os.Getwd()
@@ -62,14 +66,45 @@ func LoadEnvs() bool {
 		GOBIN = filepath.Join(GOROOT, "bin")
 		os.Setenv("GOBIN", GOBIN)
 	}
+
+	GOPATH = os.Getenv("GOPATH")
 	
+	if GOPATH != "" {
+		gopaths := strings.Split(GOPATH, ":", -1)
+		if GOOS == "windows" {
+			gopaths = strings.Split(GOPATH, ";", -1)
+		}
+		for _, gp := range gopaths {
+			if gp == "" {
+				continue
+			}
+			
+			if GOPATH_SINGLE == "" {
+				GOPATH_SINGLE = gp
+			}
+
+			//var GOPATH, GOPATH_OBJDST string
+			//var GOPATH_SRCROOTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
+			GOPATH_SRCROOTS = append(GOPATH_SRCROOTS, filepath.Join(gp, "src"))
+			objdst := filepath.Join(gp, "pkg", fmt.Sprintf("%s_%s", GOOS, GOARCH))
+			GOPATH_OBJDSTS = append(GOPATH_OBJDSTS, objdst)
+			GOPATH_CFLAGS = append(GOPATH_CFLAGS, "-I", objdst)
+			GOPATH_LDFLAGS = append(GOPATH_LDFLAGS, "-L", objdst)
+
+			os.MkdirAll(objdst, 0755)
+		}
+	}
+
 	gcFlagsStr, gldFlagsStr := os.Getenv("GB_GCFLAGS"), os.Getenv("GB_GLDFLAGS")
 	if gcFlagsStr != "" {
-		GCFLAGS = strings.Split(gcFlagsStr, " ", -1)
+		GCFLAGS = append(GCFLAGS, strings.Fields(gcFlagsStr)...)
 	}
 	if gldFlagsStr != "" {
-		GLDFLAGS = strings.Split(gldFlagsStr, " ", -1)
+		GLDFLAGS = append(GLDFLAGS, strings.Fields(gldFlagsStr)...)
 	}
+
+	GCFLAGS = append(GCFLAGS, GOPATH_CFLAGS...)
+	GLDFLAGS = append(GLDFLAGS, GOPATH_LDFLAGS...)
 	
 	RunningInGOROOT = HasPathPrefix(CWD, GOROOT)
 
@@ -83,6 +118,9 @@ func GetBuildDirPkg() (dir string) {
 }
 
 func GetInstallDirPkg() (dir string) {
+	if GOPATH_SINGLE != "" {
+		return filepath.Join(GOPATH_SINGLE, "pkg", GOOS+"_"+GOARCH)
+	}
 	return filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
 }
 
@@ -91,6 +129,9 @@ func GetBuildDirCmd() (dir string) {
 }
 
 func GetInstallDirCmd() (dir string) {
+	if GOPATH_SINGLE != "" {
+		return filepath.Join(GOPATH_SINGLE, "bin")
+	}
 	return GOBIN
 }
 
