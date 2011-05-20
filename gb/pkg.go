@@ -71,6 +71,7 @@ type Package struct {
 
 	HasMakefile bool
 	IsInGOROOT  bool
+	IsInGOPATH string
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -98,6 +99,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 
 	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") {
 		this.IsInGOROOT = true
+	}
+
+	for _, gp := range GOPATHS {
+		if rel := GetRelative(filepath.Join(gp, "src"), dir, CWD); !strings.HasPrefix(rel, "..") {
+			this.IsInGOPATH = gp //say which gopath we're in
+		}
 	}
 
 	err = this.ScanForSource()
@@ -392,10 +399,19 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
 			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
+			ErrLog.Println(err)
 			return
 		}
 
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
+	} else if !this.IsCmd && this.IsInGOPATH != "" {
+		//this is a gopath target
+		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src", "pkg"), this.Dir, CWD)
+		if strings.HasPrefix(this.Target, "..") {
+			err = os.NewError(fmt.Sprintf("(in %s) GOPATH pkg is not in $GOPATH/src/pkg for GOPATH=%s", this.Dir, this.IsInGOPATH))
+			ErrLog.Println(err)
+			return
+		}
 	} else {
 		if this.Target == "" {
 			this.Target = this.Base
@@ -435,20 +451,35 @@ func (this *Package) GetTarget() (err os.Error) {
 	this.Target = path.Clean(this.Target)
 
 	err = nil
+
 	if this.IsCmd {
 		if GOOS == "windows" {
 			this.Target += ".exe"
 		}
-		this.InstallPath = path.Join(GetInstallDirCmd(), this.Target)
-		this.ResultPath = path.Join(GetBuildDirCmd(), this.Target)
-	} else {
-
-		this.InstallPath = path.Join(GetInstallDirPkg(), this.Target+".a")
-		this.ResultPath = path.Join(GetBuildDirPkg(), this.Target+".a")
 	}
 
 	if this.IsInGOROOT {
+		if this.IsCmd {
+			this.InstallPath = filepath.Join(GOBIN, this.Target)
+		} else {
+			this.InstallPath = filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH, this.Target+".a")
+		}
 		this.ResultPath = this.InstallPath
+	} else if this.IsInGOPATH != "" {
+		if this.IsCmd {
+			this.InstallPath = filepath.Join(this.IsInGOPATH, "bin", this.Target)
+		} else {
+			this.InstallPath = filepath.Join(this.IsInGOPATH, "pkg", GOOS+"_"+GOARCH, this.Target+".a")
+		}
+		this.ResultPath = this.InstallPath
+	} else {
+		if this.IsCmd {
+			this.InstallPath = path.Join(GetInstallDirCmd(), this.Target)
+			this.ResultPath = path.Join(GetBuildDirCmd(), this.Target)
+		} else {
+			this.InstallPath = path.Join(GetInstallDirPkg(), this.Target+".a")
+			this.ResultPath = path.Join(GetBuildDirPkg(), this.Target+".a")
+		}
 	}
 
 	this.Stat()

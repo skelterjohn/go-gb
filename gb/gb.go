@@ -63,6 +63,7 @@ var BrokenMsg []string
 var ReturnFailCode bool
 
 var RunningInGOROOT bool
+var RunningInGOPATH string
 
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
@@ -110,6 +111,10 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		if tbase, terr := DirTargetGB(dir); terr == nil {
 			base = tbase
 		}
+	}
+
+	if pkg == nil {
+		return
 	}
 
 	if pkg.Target == "." {
@@ -183,6 +188,9 @@ func TryScan() {
 	if Scan {
 		for _, pkg := range Packages {
 			if pkg.IsInGOROOT && !RunningInGOROOT {
+				continue
+			}
+			if pkg.IsInGOPATH != "" && RunningInGOPATH == "" {
 				continue
 			}
 			if IsListed(pkg.Dir) {
@@ -396,6 +404,11 @@ func RunGB() (err os.Error) {
 		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
 		ScanDirectory("", path.Join(GOROOT, "src"))
 		fmt.Printf("done\n")
+		for _, gp := range GOPATHS {
+			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
+			ScanDirectory("", path.Join(gp, "src"))
+			fmt.Printf("done\n")
+		}
 	}
 
 	for _, arg := range args {

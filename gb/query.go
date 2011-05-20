@@ -30,19 +30,42 @@ var OSWD, CWD string
 var GCFLAGS, GLDFLAGS []string
 
 var GOPATH, GOPATH_SINGLE string
-var GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
+var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
 
 
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
 	OSWD, oserr = os.Getwd()
 	rel, relerr := ReadOneLine("workspace.gb")
-	if relerr != nil {
-		CWD, err = OSWD, oserr
-	} else {
+
+	CWD, err = OSWD, oserr
+
+	if relerr == nil {
 		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
-		fmt.Printf("Running gb in %s\n", CWD)
+		fmt.Printf("Running gb in workspace %s\n", CWD)
+	} else if GOPATH=os.Getenv("GOPATH"); GOPATH != "" {
+		gopaths := strings.Split(GOPATH, ":", -1)
+		if GOOS == "windows" {
+			gopaths = strings.Split(GOPATH, ";", -1)
+		}
+		for _, gp := range gopaths {
+			gp = strings.TrimSpace(gp)
+			if gp == "" {
+				continue
+			}
+			gpsrc := filepath.Join(gp, "src")
+
+			if HasPathPrefix(OSWD, gp) {
+				RunningInGOPATH = gp
+				if CWD != gpsrc {
+					CWD = gpsrc
+					fmt.Printf("Running gb in GOPATH %s\n", CWD)
+					os.Chdir(CWD)
+				}
+			}
+		}
 	}
+
 	os.Chdir(CWD)
 	return
 }
@@ -75,17 +98,21 @@ func LoadEnvs() bool {
 			gopaths = strings.Split(GOPATH, ";", -1)
 		}
 		for _, gp := range gopaths {
+			gp = strings.TrimSpace(gp)
 			if gp == "" {
 				continue
 			}
-			
+
+			gpsrc := filepath.Join(gp, "src")
+
+
+			GOPATHS = append(GOPATHS, gp)
+
 			if GOPATH_SINGLE == "" {
 				GOPATH_SINGLE = gp
 			}
 
-			//var GOPATH, GOPATH_OBJDST string
-			//var GOPATH_SRCROOTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
-			GOPATH_SRCROOTS = append(GOPATH_SRCROOTS, filepath.Join(gp, "src"))
+			GOPATH_SRCROOTS = append(GOPATH_SRCROOTS, gpsrc)
 			objdst := filepath.Join(gp, "pkg", fmt.Sprintf("%s_%s", GOOS, GOARCH))
 			GOPATH_OBJDSTS = append(GOPATH_OBJDSTS, objdst)
 			GOPATH_CFLAGS = append(GOPATH_CFLAGS, "-I", objdst)
@@ -106,7 +133,7 @@ func LoadEnvs() bool {
 	GCFLAGS = append(GCFLAGS, GOPATH_CFLAGS...)
 	GLDFLAGS = append(GLDFLAGS, GOPATH_LDFLAGS...)
 	
-	RunningInGOROOT = HasPathPrefix(CWD, GOROOT)
+	RunningInGOROOT = HasPathPrefix(CWD, filepath.Join(GOROOT, "src"))
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
 

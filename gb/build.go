@@ -71,7 +71,6 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 	}
 	
-
 	dst := GetRelative(pkg.Dir, pkg.ResultPath, CWD)
 
 	if pkg.IsCmd {
