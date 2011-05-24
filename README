@@ -2,6 +2,8 @@
 
 To install,
 go-gb/gb> make install
+or
+> goinstall github.com/skelterjohn/go-gb/gb
 
 Overview
 
