@@ -17,7 +17,6 @@ package main
 
 import (
 	"os"
-	"io"
 	"exec"
 	"fmt"
 	"strings"
@@ -100,6 +99,25 @@ func SplitArgs(args []string) (sargs []string) {
 
 func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error) {
 	argv = SplitArgs(argv)
+	c := exec.Command(cmd, argv[1:]...)
+	c.Dir = wd
+	c.Stdout = dump
+	c.Stderr = os.Stderr
+
+	err = c.Run()
+	if wmsg, ok := err.(*os.Waitmsg); ok {
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+		} else {
+			err = nil
+		}
+	}
+	return
+}
+func RunExternal(cmd, wd string, argv []string) (err os.Error) {
+	return RunExternalDump(cmd, wd, argv, os.Stdout)
+}
+/*
 	var p *exec.Cmd
 	p, err = exec.Run(cmd, argv, os.Environ(), wd, exec.PassThrough, exec.Pipe, exec.PassThrough)
 	if err != nil {
@@ -122,6 +140,7 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 	}
 	return
 }
+
 func RunExternal(cmd, wd string, argv []string) (err os.Error) {
 	argv = SplitArgs(argv)
 	var p *exec.Cmd
@@ -142,3 +161,4 @@ func RunExternal(cmd, wd string, argv []string) (err os.Error) {
 	}
 	return
 }
+*/
