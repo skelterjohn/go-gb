@@ -406,7 +406,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
 	} else if !this.IsCmd && this.IsInGOPATH != "" {
 		//this is a gopath target
-		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src", "pkg"), this.Dir, CWD)
+		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
 			err = os.NewError(fmt.Sprintf("(in %s) GOPATH pkg is not in $GOPATH/src/pkg for GOPATH=%s", this.Dir, this.IsInGOPATH))
 			ErrLog.Println(err)
@@ -1013,7 +1013,7 @@ func (this *Package) Install() (err os.Error) {
 
 func (this *Package) ListSource() (err os.Error) {
 	listFiles := func(files []string) {
-		sortedFiles := sort.StringArray(files)
+		sortedFiles := sort.StringSlice(files)
 		sortedFiles.Sort()
 		for _, file := range sortedFiles {
 			fmt.Printf("\t%s\n", file)
