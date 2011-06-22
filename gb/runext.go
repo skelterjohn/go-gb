@@ -103,46 +103,21 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 	c := exec.Command(cmd, argv[1:]...)
 	c.Dir = wd
 	c.Env = os.Environ()
+
 	c.Stdout = dump
 	c.Stderr = os.Stderr
 
 	err = c.Run()
-	if err != nil {
-		if wmsg, ok := err.(*os.Waitmsg); ok {			
-			if wmsg.ExitStatus() != 0 {
-				err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			} else {
-				err = nil
-			}
-		}
-		return
-	}
 
+	if wmsg, ok := err.(*os.Waitmsg); ok {
+		if wmsg.ExitStatus() != 0 {
+			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+		} else {
+			err = nil
+		}
+	}
 	return
 }
-
 func RunExternal(cmd, wd string, argv []string) (err os.Error) {
 	return RunExternalDump(cmd, wd, argv, os.Stdout)
-/*
-	argv = SplitArgs(argv)
-
-	c := exec.Command(cmd, argv[1:]...)
-	c.Dir = wd
-	c.Env = os.Environ()
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-
-	err = c.Run()
-	if err != nil {
-		if wmsg, ok := err.(*os.Waitmsg); ok {
-			if wmsg.ExitStatus() != 0 {
-				err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
-			} else {
-				err = nil
-			}
-		}
-		return
-	}
-
-	return*/
 }
