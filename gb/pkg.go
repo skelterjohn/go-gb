@@ -86,6 +86,11 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		return
 	}
 
+	if !FilterPkg(dir) {
+		err = os.NewError("Filtered package based on GOOS/GOARCH")
+		return
+	}
+
 	this = new(Package)
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
@@ -130,6 +135,11 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	}
 	if _, err2 := os.Stat(path.Join(this.Dir, "/makefile")); err2 == nil {
 		this.HasMakefile = true
+	}
+
+	if !this.HasMakefile && this.IsInGOROOT {
+		err = os.NewError("GOROOT pkg without makefile - not meant to be built")
+		return
 	}
 
 	if len(this.Sources) == 0 {
