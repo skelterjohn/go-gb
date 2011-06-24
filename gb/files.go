@@ -87,6 +87,9 @@ func FilterFlag(src string) bool {
 }
 
 func splitPathAll(p string) (bits []string) {
+	if p == "/" {
+		return []string{}	
+	}
 	dir, base := path.Split(p)
 	if dir != "" {
 		bits = append(splitPathAll(path.Clean(dir)), base)
