@@ -86,10 +86,6 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		return
 	}
 
-	if !FilterPkg(dir) {
-		err = os.NewError("Filtered package based on GOOS/GOARCH")
-		return
-	}
 
 	this = new(Package)
 	this.block = make(chan bool, 1)
@@ -165,6 +161,11 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.IsCmd = this.Name == "main"
 	this.Objects = append(this.Objects, path.Join(this.Dir, GetIBName()))
 	err = this.GetTarget()
+	
+	if !FilterPkg(this.Target) {
+		err = os.NewError("Filtered package based on GOOS/GOARCH")
+		return
+	}
 
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
 
