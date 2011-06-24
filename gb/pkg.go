@@ -398,8 +398,14 @@ func (this *Package) GetTarget() (err os.Error) {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
-			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
-			ErrLog.Println(err)
+			/*
+				don't complain if the only .go file is documentation,
+				since almost all of the C cmds have such a file.
+			*/
+			if _, ok := this.PkgSrc["documentation"]; !ok && len(this.PkgSrc)==1 {
+				err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
+				ErrLog.Println(err)
+			}
 			return
 		}
 
