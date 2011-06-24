@@ -433,6 +433,9 @@ func RunGB() (err os.Error) {
 		if !RunningInGOROOT && pkg.IsInGOROOT {
 			continue
 		}
+		if RunningInGOPATH == "" && pkg.IsInGOPATH != "" {
+			continue
+		}
 		if IsListed(pkg.Dir) {
 			ListedPkgs = append(ListedPkgs, pkg)
 		}
