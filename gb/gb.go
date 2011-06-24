@@ -70,6 +70,10 @@ var Packages = make(map[string]*Package)
 
 var ErrLog = log.New(os.Stderr, "gb error:", 0)
 
+var ForceMakePkgs = map[string]bool {
+	"math": true,
+}
+
 func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||

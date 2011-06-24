@@ -342,6 +342,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			}
 		}
 		if isCGoSrc {
+			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
 			this.CGoSources = append(this.CGoSources, src)
 			this.PkgCGoSrc[fpkg] = append(this.PkgCGoSrc[fpkg], src)
 		} else {
@@ -363,7 +364,12 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
 	}
 
+	for _, buildSrc := range this.PkgCGoSrc[this.Name] {
+		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
+	}
+
 	this.Deps = RemoveDups(this.Deps)
+	
 	if Test {
 		for _, src := range this.TestSources {
 			var fpkg, ftarget string
@@ -729,6 +735,8 @@ func (this *Package) Build() (err os.Error) {
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
 
 		if Makefiles && this.HasMakefile {
+			err = MakeBuild(this)
+		} else if this.IsInGOROOT && ForceMakePkgs[this.Name] {
 			err = MakeBuild(this)
 		} else if this.IsCGo {
 			err = BuildCgoPackage(this)
