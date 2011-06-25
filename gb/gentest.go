@@ -46,7 +46,7 @@ import __regexp__ "regexp"
 var tests = []testing.InternalTest{
 {{.repeated section TestPkgs}}
 {{.repeated section TestFuncs}}
-	{"main.{{@}}", __main__.{{@}}},
+	{"{{PkgName}}.{{@}}", {{PkgAlias}}.{{@}}},
 {{.end}}
 {{.end}}
 }
@@ -54,7 +54,7 @@ var tests = []testing.InternalTest{
 var benchmarks = []testing.InternalBenchmark{
 {{.repeated section TestPkgs}}
 {{.repeated section TestBenchmarks}}
-	{"main.{{@}}", __main__.{{@}}},
+	{"{{PkgName}}.{{@}}", {{PkgAlias}}.{{@}}},
 {{.end}}
 {{.end}}
 }
