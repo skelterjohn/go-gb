@@ -16,5 +16,6 @@ GOFILES=\
 	cgo.go\
 	query.go\
 	genmake.go\
+	gentest.go\
 
 include $(GOROOT)/src/Make.cmd

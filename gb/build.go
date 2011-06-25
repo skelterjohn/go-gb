@@ -209,7 +209,11 @@ func BuildTest(pkg *Package) (err os.Error) {
 	}
 	var testBinaryAbs string
 	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), CWD)
-	if err = RunExternal(testBinaryAbs, pkg.Dir, []string{testBinary}); err != nil {
+	testargs := append([]string{testBinary}, TestArgs...)
+	if Verbose {
+		fmt.Printf("%v\n", testargs)
+	}
+	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
 		ReturnFailCode = true
 		return
 	}

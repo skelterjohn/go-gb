@@ -280,11 +280,11 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		return
 	}
 
-	/* //no longer necessary since this goes into the _test dir
+	//no longer necessary since this goes into the _test dir
 	if strings.HasSuffix(fpath, "_testmain.go") {
 		return
 	}
-	*/
+	
 	rootl := len(this.Dir) + 1
 	if this.Dir != "." {
 		fpath = fpath[rootl:len(fpath)]
@@ -835,6 +835,9 @@ func (this *Package) Test() (err os.Error) {
 		return
 	}
 
+	testSuite := &TestSuite{}
+	
+/*
 	fmt.Fprintf(file, "package main\n\n")
 
 	//fmt.Fprintf(file, "import \"%s\"\n", this.Target)
@@ -847,25 +850,69 @@ func (this *Package) Test() (err os.Error) {
 	}
 	fmt.Fprintf(file, "import \"testing\"\n")
 	fmt.Fprintf(file, "import __regexp__ \"regexp\"\n\n")
+	*/
+	testpkgMap := make(map[string]*TestPkg)
 
-	fmt.Fprintf(file, "var tests = []testing.InternalTest{\n")
+	//fmt.Fprintf(file, "var tests = []testing.InternalTest{\n")
 	for name, tests := range pkgtests {
+		if _, ok := testpkgMap[name]; !ok {
+			testpkgMap[name] = &TestPkg {
+			PkgAlias: name,
+			PkgName: name,
+			}
+		}
+
+		tpkg := testpkgMap[name]
+
 		for _, test := range tests {
+			/*
 			callName := name
 			if name == "main" {
 				callName = "__main__"
 			}
-			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, callName, test)
+			 */
+			tpkg.TestFuncs = append(tpkg.TestFuncs, test)
+			
+			//fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, callName, test)
 		}
 	}
-	fmt.Fprintf(file, "}\n")
+	//fmt.Fprintf(file, "}\n")
 
-	fmt.Fprintf(file, "var benchmarks = []testing.InternalBenchmark{\n")
+	//fmt.Fprintf(file, "var benchmarks = []testing.InternalBenchmark{\n")
 	for name, benchmarks := range pkgbenchmarks {
+		if _, ok := testpkgMap[name]; !ok {
+			testpkgMap[name] = &TestPkg {
+			PkgAlias: name,
+			PkgName: name,
+			}
+		}
+
+		tpkg := testpkgMap[name]
+
 		for _, benchmark := range benchmarks {
-			fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, benchmark, name, benchmark)
+			/*
+			callName := name
+			if name == "main" {
+				callName = "__main__"
+			}*/
+			//fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, benchmark, callName, benchmark)
+			tpkg.TestBenchmarks = append(tpkg.TestBenchmarks, benchmark)
 		}
 	}
+
+	for _, tpkg := range testpkgMap {
+		if tpkg.PkgName == "main" {
+			tpkg.PkgAlias = "__main__"
+		}
+		testSuite.TestPkgs = append(testSuite.TestPkgs, tpkg)
+	}
+	
+	err = TestmainTemplate.Execute(file, testSuite)
+	if err != nil {
+		return
+	}
+
+	/*
 	fmt.Fprintf(file, "}\n\n")
 
 	fmt.Fprintf(file, "func main() {\n")
@@ -874,7 +921,7 @@ func (this *Package) Test() (err os.Error) {
 	fmt.Fprintf(file, "}\n")
 
 	file.Close()
-
+*/
 	err = BuildTest(this)
 
 	this.Stat()

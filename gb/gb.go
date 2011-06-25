@@ -59,6 +59,8 @@ var ListedTargets int
 var ListedDirs map[string]bool
 var ListedPkgs []*Package
 
+var TestArgs []string
+
 var BrokenMsg []string
 var ReturnFailCode bool
 
@@ -536,9 +538,13 @@ func RunGB() (err os.Error) {
 }
 
 func CheckFlags() bool {
-	for _, arg := range os.Args[1:len(os.Args)] {
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "-test.") {
+			TestArgs = append(TestArgs, arg)
+			continue
+		}
 		if len(arg) > 0 && arg[0] == '-' {
-			for _, flag := range arg[1:len(arg)] {
+			for _, flag := range arg[1:] {
 				switch flag {
 				case 'i':
 					Install = true
