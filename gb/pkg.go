@@ -70,6 +70,7 @@ type Package struct {
 	CGoLDFlags map[string][]string
 
 	HasMakefile bool
+	MustUseMakefile bool
 	IsInGOROOT  bool
 	IsInGOPATH string
 
@@ -413,16 +414,20 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 func (this *Package) GetTarget() (err os.Error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
+		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
+		if !strings.HasPrefix(this.Target, "..") {
+			this.IsCmd = true
+			this.MustUseMakefile = true
+		}
+	}
+	if !this.IsCmd && this.IsInGOROOT {
+		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
-			/*
-				don't complain if the only .go file is documentation,
-				since almost all of the C cmds have such a file.
-			*/
-			if _, ok := this.PkgSrc["documentation"]; !ok && len(this.PkgSrc)==1 {
-				err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
-				ErrLog.Println(err)
-			}
+			//if _, ok := this.PkgSrc["documentation"]; !ok && len(this.PkgSrc)==1 {
+			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
+			ErrLog.Println(err)
+			//}
 			return
 		}
 
@@ -505,6 +510,10 @@ func (this *Package) GetTarget() (err os.Error) {
 		}
 	}
 
+	if this.IsInGOROOT && ForceMakePkgs[this.Target] {
+		this.MustUseMakefile = true
+	}
+
 	this.Stat()
 
 	return
@@ -535,7 +544,7 @@ func (this *Package) PrintScan() {
 	} else {
 		label = "pkg"
 	}
-	if this.IsCGo {
+	if this.IsCGo && !this.IsCmd{
 		label = "cgo"
 	}
 	if this.IsInGOROOT {
@@ -745,9 +754,7 @@ func (this *Package) Build() (err os.Error) {
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
 
-		if Makefiles && this.HasMakefile {
-			err = MakeBuild(this)
-		} else if this.IsInGOROOT && ForceMakePkgs[this.Name] {
+		if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
 			err = MakeBuild(this)
 		} else if this.IsCGo {
 			err = BuildCgoPackage(this)
