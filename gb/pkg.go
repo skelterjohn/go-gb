@@ -167,6 +167,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		err = os.NewError("Filtered package based on GOOS/GOARCH")
 		return
 	}
+	
+	if this.IsCmd && this.IsCGo {
+		err = os.NewError(fmt.Sprintf("(in %s) cannot have a cgo cmd", this.Dir))
+		ErrLog.Println(err)
+		return
+	}
 
 	this.Active = (DoCmds && this.IsCmd) || (DoPkgs && !this.IsCmd)
 
