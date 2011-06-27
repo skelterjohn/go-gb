@@ -422,6 +422,10 @@ func (this *Package) GetTarget() (err os.Error) {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
+			if this.IsCGo {
+				err = os.NewError("gb can't compile the c cmds")
+				return
+			}
 			this.IsCmd = true
 			this.MustUseMakefile = true
 		}
