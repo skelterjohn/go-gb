@@ -440,7 +440,6 @@ func (this *Package) GetTarget() (err os.Error) {
 			//}
 			return
 		}
-
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
 	} else if !this.IsCmd && this.IsInGOPATH != "" {
 		//this is a gopath target
@@ -560,13 +559,16 @@ func (this *Package) PrintScan() {
 	if this.IsInGOROOT {
 		label = "goroot " + label
 	}
+	if this.IsInGOPATH != "" {
+		label = "gopath " + label	
+	}
 
 	displayDir := this.Dir
 	if this.IsInGOROOT {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
 	}
 	var prefix string
-	if !this.IsInGOROOT {
+	if !this.IsInGOROOT && this.IsInGOPATH == "" {
 		prefix = fmt.Sprintf("in %s: ", displayDir)
 	}
 	fmt.Printf("%s%s \"%s\"%s\n", prefix, label, this.Target, bis)
