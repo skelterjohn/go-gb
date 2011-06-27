@@ -423,7 +423,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
 			if this.IsCGo {
-				err = os.NewError("gb can't compile the c cmds")
+				err = os.NewError("gb can't compile the GOROOT c cmds")
 				return
 			}
 			this.IsCmd = true
