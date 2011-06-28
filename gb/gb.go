@@ -79,10 +79,13 @@ var ErrLog = log.New(os.Stderr, "gb error:", 0)
  on the architexture
  
  go/build has a source-generation step that uses make variables
+
+ os has source generation
  */
 var ForceMakePkgs = map[string]bool {
 	"math": true,
 	"go/build": true,
+	"os": true,
 }
 
 func ScanDirectory(base, dir string) (err2 os.Error) {

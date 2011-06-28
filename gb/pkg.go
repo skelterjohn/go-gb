@@ -558,8 +558,7 @@ func (this *Package) PrintScan() {
 	}
 	if this.IsInGOROOT {
 		label = "goroot " + label
-	}
-	if this.IsInGOPATH != "" {
+	} else if this.IsInGOPATH != "" {
 		label = "gopath " + label	
 	}
 
