@@ -56,7 +56,7 @@ var PackagesBuilt int
 var PackagesInstalled int
 var BrokenPackages int
 var ListedTargets int
-var ListedDirs map[string]bool
+var ListedDirs, ValidatedDirs map[string]bool
 var ListedPkgs []*Package
 
 var TestArgs []string
@@ -70,7 +70,7 @@ var RunningInGOPATH string
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
-var ErrLog = log.New(os.Stderr, "gb error:", 0)
+var ErrLog = log.New(os.Stderr, "gb error: ", 0)
 
 /*
  gb doesn't know how to build these packages
@@ -152,6 +152,19 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	return
 }
 
+func ValidateDir(name string) {
+	if Exclusive {
+		ValidatedDirs[name] = true
+		return
+	}
+	for lt := range ListedDirs {
+		rel := GetRelative(lt, name, CWD)
+		if !HasPathPrefix(rel, "..") {
+			ValidatedDirs[lt] = true
+		}
+	}
+}
+
 func IsListed(name string) bool {
 	if ListedTargets == 0 {
 		return true
@@ -165,11 +178,6 @@ func IsListed(name string) bool {
 		if !HasPathPrefix(rel, "..") {
 			return true
 		}
-		/*
-			if HasPathPrefix(name, lt) {
-				return true
-			}
-		*/
 	}
 	return false
 }
@@ -411,6 +419,7 @@ func RunGB() (err os.Error) {
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 
 	ListedDirs = make(map[string]bool)
+	ValidatedDirs = make(map[string]bool)
 
 	args := os.Args[1:len(os.Args)]
 
@@ -456,6 +465,14 @@ func RunGB() (err os.Error) {
 		}
 		if IsListed(pkg.Dir) {
 			ListedPkgs = append(ListedPkgs, pkg)
+			ValidateDir(pkg.Dir)
+		}
+	}
+
+	for lt := range ListedDirs {
+		if !ValidatedDirs[lt] {
+			err = os.NewError(fmt.Sprintf("Listed directory %q doesn't correspond to a known package", lt))
+			return
 		}
 	}
 
