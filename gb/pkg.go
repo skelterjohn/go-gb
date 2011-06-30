@@ -76,6 +76,8 @@ type Package struct {
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
+	FailedToBuildDeps bool
+
 	//to make sure that only one thread works on a given package at a time
 	block chan bool
 }
@@ -704,6 +706,11 @@ func (this *Package) Build() (err os.Error) {
 		<-this.block
 	}()
 
+
+	if this.FailedToBuildDeps {
+		err = os.NewError("Cannot build deps")
+		return
+	}
 	if !this.NeedsBuild {
 		return
 	}
@@ -733,6 +740,7 @@ func (this *Package) Build() (err os.Error) {
 
 		err = pkg.Build()
 		if err != nil {
+			this.FailedToBuildDeps = true
 			return
 		}
 		if pkg.BinTime > inTime {
@@ -763,7 +771,11 @@ func (this *Package) Build() (err os.Error) {
 		if this.Name != "main" {
 			which = "pkg"
 		}
-		fmt.Printf("(in %s) building %s \"%s\"\n", this.Dir, which, this.Target)
+		labelDir := this.Dir
+		if HasPathPrefix(labelDir, GOROOT) {
+			labelDir = "$GOROOT"+labelDir[len(GOROOT):]
+		}
+		fmt.Printf("(in %s) building %s \"%s\"\n", labelDir, which, this.Target)
 
 		if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
 			err = MakeBuild(this)
@@ -1103,7 +1115,7 @@ func (this *Package) Install() (err os.Error) {
 
 func (this *Package) ListSource() (err os.Error) {
 	listFiles := func(files []string) {
-		sortedFiles := sort.StringArray(files)
+		sortedFiles := sort.StringSlice(files)
 		sortedFiles.Sort()
 		for _, file := range sortedFiles {
 			fmt.Printf("\t%s\n", file)
