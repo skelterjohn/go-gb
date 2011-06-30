@@ -76,7 +76,7 @@ type Package struct {
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
-	FailedToBuildDeps bool
+	FailedToBuild bool
 
 	//to make sure that only one thread works on a given package at a time
 	block chan bool
@@ -706,8 +706,13 @@ func (this *Package) Build() (err os.Error) {
 		<-this.block
 	}()
 
+	defer func() {
+		if err != nil {
+			this.FailedToBuild = true
+		}
+	}()
 
-	if this.FailedToBuildDeps {
+	if this.FailedToBuild {
 		err = os.NewError("Cannot build deps")
 		return
 	}
@@ -740,7 +745,6 @@ func (this *Package) Build() (err os.Error) {
 
 		err = pkg.Build()
 		if err != nil {
-			this.FailedToBuildDeps = true
 			return
 		}
 		if pkg.BinTime > inTime {
