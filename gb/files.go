@@ -26,8 +26,18 @@ import (
 )
 
 var (
-	os_flags = []string{"windows", "darwin", "freebsd", "linux"}
-	arch_flags = []string{"amd64", "386", "arm"}
+	os_flags = map[string]bool {
+		"windows": true,
+		"darwin": true,
+		"freebsd": true,
+		"linux": true,
+		"plan9": true,
+	}
+	arch_flags = map[string]bool {
+		"amd64": true,
+		"386": true,
+		"arm": true,
+	}
 )
 
 func CheckCGOFlag(flag string) bool {
@@ -38,6 +48,10 @@ func CheckCGOFlag(flag string) bool {
 		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
 		return true
 	}
+	if flag == "posix" &&
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux" || GOOS == "windows") {
+		return true
+	}
 	if flag == "bsd" &&
 		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
 		return true
@@ -46,12 +60,12 @@ func CheckCGOFlag(flag string) bool {
 }
 
 func FilterFlag(src string) bool {
-	for _, flag := range os_flags {
+	for flag := range os_flags {
 		if strings.Contains(src, "_"+flag) && GOOS != flag {
 			return false
 		}
 	}
-	for _, flag := range arch_flags {
+	for flag := range arch_flags {
 		if strings.Contains(src, "_"+flag) && GOARCH != flag {
 			return false
 		}
@@ -60,11 +74,57 @@ func FilterFlag(src string) bool {
 		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
 		return false
 	}
+	if strings.Contains(src, "_posix") &&
+		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux" || GOOS == "windows") {
+		return false
+	}
 	if strings.Contains(src, "_bsd") &&
 		!(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
 		return false
 	}
 
+	return true
+}
+
+func splitPathAll(p string) (bits []string) {
+	if p == "/" {
+		return []string{}	
+	}
+	dir, base := path.Split(p)
+	if dir != "" {
+		bits = append(splitPathAll(path.Clean(dir)), base)
+	} else {
+		bits = []string{base}
+	}
+	return
+}
+
+//GOOS and GOARCH excluded if they don't match GOOS and GOARCH
+func FilterPkg(dir string) bool {
+	splitdir := splitPathAll(dir)
+	for _, flag := range splitdir {
+		if os_flags[flag] && flag != GOOS {
+			return false
+		}
+		if arch_flags[flag] && flag != GOARCH {
+			return false
+		}
+		if flag == "unix" {
+			if !(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
+				return false
+			}
+		}
+		if flag == "posix" {
+			if !(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux" || GOOS == "windows") {
+				return false
+			}
+		}
+		if flag == "bsd" {
+			if !(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+				return false
+			}
+		}
+	}
 	return true
 }
 

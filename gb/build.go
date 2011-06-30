@@ -26,11 +26,11 @@ import (
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Error) {
 
 	argv := []string{GetCompilerName()}
-	if len(GCFLAGS) > 0 {
-		argv = append(argv, GCFLAGS...)
-	}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
+	}
+	if len(GCFLAGS) > 0 {
+		argv = append(argv, GCFLAGS...)
 	}
 	argv = append(argv, "-o", obj)
 	argv = append(argv, src...)
@@ -133,10 +133,10 @@ func BuildTest(pkg *Package) (err os.Error) {
 	for testName, testSrcs := range pkg.TestSrc {
 
 		argv := []string{GetCompilerName()}
+		argv = append(argv, "-I", pkgDest)
 		if GCFLAGS != nil {
 			argv = append(argv, GCFLAGS...)
 		}
-		argv = append(argv, "-I", pkgDest)
 		argv = append(argv, "-o", testIB)
 		if testName == pkg.Name {
 			argv = append(argv, pkg.PkgSrc[pkg.Name]...)
@@ -174,11 +174,11 @@ func BuildTest(pkg *Package) (err os.Error) {
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
 
 	argv := []string{GetCompilerName()}
+	argv = append(argv, "-I", path.Join("_test", "_obj"))
+	argv = append(argv, "-I", pkgDest)
 	if GCFLAGS != nil {
 		argv = append(argv, GCFLAGS...)
 	}
-	argv = append(argv, "-I", path.Join("_test", "_obj"))
-	argv = append(argv, "-I", pkgDest)
 	argv = append(argv, "-o", testmainib)
 	argv = append(argv, path.Join("_test", "_testmain.go"))
 
@@ -195,11 +195,11 @@ func BuildTest(pkg *Package) (err os.Error) {
 	}
 
 	largs := []string{GetLinkerName()}
+	largs = append(largs, "-L", path.Join("_test", "_obj"))
+	largs = append(largs, "-L", pkgDest)
 	if len(GLDFLAGS) > 0 {
 		largs = append(largs, GLDFLAGS...)
 	}
-	largs = append(largs, "-L", path.Join("_test", "_obj"))
-	largs = append(largs, "-L", pkgDest)
 	largs = append(largs, "-o", testBinary, testmainib)
 	if Verbose {
 		fmt.Printf("%v\n", largs)
@@ -209,7 +209,11 @@ func BuildTest(pkg *Package) (err os.Error) {
 	}
 	var testBinaryAbs string
 	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), CWD)
-	if err = RunExternal(testBinaryAbs, pkg.Dir, []string{testBinary}); err != nil {
+	testargs := append([]string{testBinary}, TestArgs...)
+	if Verbose {
+		fmt.Printf("%v\n", testargs)
+	}
+	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
 		ReturnFailCode = true
 		return
 	}
