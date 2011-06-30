@@ -27,10 +27,7 @@ used. gb figures that out by analyzing the directory structure and source.
 
 It works on a "one target per directory" rule to discover which source
 files are to be compiled with one another. The idea is to obviate the need 
-for any sort of build script. The only exception to this rule is when a src 
-directory exists; if a directory mytarget has a subdirectory mytarget/src, 
-this src directory will be exhaustively searched for source files, and they 
-will all belong to the target based in mytarget.
+for any sort of build script.
 
 gb will compile a set of "relevant targets" that exist within directories
 listed on the command line, and any other targets that these have an import

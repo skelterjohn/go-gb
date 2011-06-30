@@ -18,6 +18,8 @@ package main
 
 import (
 	"os"
+	"bytes"
+	"bufio"
 	"strings"
 	"go/parser"
 	"go/token"
@@ -94,30 +96,61 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 				w.Target = text[len("target:"):len(text)]
 			}
 		} else {
+			
+			handleCommentLine := func(text string) {
+				if strings.HasPrefix(text, "#cgo") {
+					cgoMsg := strings.TrimSpace(text[len("#cgo"):])
+
+					fields := strings.Fields(cgoMsg)
+					if len(fields) >= 1 {
+						flag := fields[0]
+						if !strings.HasSuffix(flag, ":") {
+							if !CheckCGOFlag(flag) {
+								return
+							} else {
+								cgoMsg = strings.TrimSpace(cgoMsg[len(flag):])
+							}
+						}
+					}
+
+					cflags := false
+					lflags := false
+					if strings.HasPrefix(cgoMsg, "CFLAGS:") {
+						cflags = true
+						cgoMsg = strings.TrimSpace(cgoMsg[len("CFLAGS:"):])
+					} else if strings.HasPrefix(cgoMsg, "LDFLAGS:") {
+						lflags = true
+						cgoMsg = strings.TrimSpace(cgoMsg[len("LDFLAGS:"):])
+					}
+
+					if cflags {
+						w.CGoCFlags = append(w.CGoCFlags, cgoMsg)
+					}
+					if lflags {
+						w.CGoLDFlags = append(w.CGoLDFlags, cgoMsg)
+					}
+				}
+			}
 
 			text := string(n.Text)
-			if !strings.HasPrefix(text, "//") {
-				return nil
-			}
-			text = strings.TrimSpace(text[2:])
-
-			if strings.HasPrefix(text, "#cgo") {
-				cgoMsg := strings.TrimSpace(text[len("#cgo"):])
-
-				cflags := false
-				lflags := false
-				if strings.HasPrefix(cgoMsg, "CFLAGS:") {
-					cflags = true
-					cgoMsg = strings.TrimSpace(cgoMsg[len("CFLAGS:"):])
-				} else if strings.HasPrefix(cgoMsg, "LDFLAGS:") {
-					lflags = true
-					cgoMsg = strings.TrimSpace(cgoMsg[len("LDFLAGS:"):])
-				}
-				if cflags {
-					w.CGoCFlags = append(w.CGoCFlags, cgoMsg)
-				}
-				if lflags {
-					w.CGoLDFlags = append(w.CGoLDFlags, cgoMsg)
+			if strings.HasPrefix(text, "//") {
+				text = strings.TrimSpace(text[2:])
+				handleCommentLine(text)
+			} else if strings.HasPrefix(text, "/*") && strings.HasSuffix(text, "*/") {
+				text = strings.TrimSpace(text[2:len(text)-2])
+				br := bufio.NewReader(bytes.NewBuffer([]byte(text)))
+				for {
+					line, isprefix, err := br.ReadLine()
+					if err != nil {
+						break
+					}
+					if isprefix {
+						ErrLog.Printf("Extra long comment ignored: %v", node.Pos())
+						return
+					}
+					lines := string(line)
+					lines = strings.TrimSpace(lines)
+					handleCommentLine(lines)
 				}
 			}
 		}

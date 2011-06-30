@@ -22,6 +22,7 @@ import (
 	"os"
 	"fmt"
 	"path"
+	"log"
 )
 
 // command line flags
@@ -62,10 +63,12 @@ var BrokenMsg []string
 var ReturnFailCode bool
 
 var RunningInGOROOT bool
+var RunningInGOPATH string
 
 var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
+var ErrLog = log.New(os.Stderr, "gb error:", 0)
 
 func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
@@ -89,7 +92,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			relworkspace := GetRelative(absdir, CWD, CWD)
 
 			var wfile *os.File
-			wfile, err = os.Open(path.Join(absdir, "workspace.gb"), os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
+			wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
 			wfile.WriteString(relworkspace + "\n")
 			wfile.Close()
 		}
@@ -99,7 +102,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			key += "-cmd"
 		}
 		if dup, exists := Packages[key]; exists {
-			fmt.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
+			ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
 		} else {
 			Packages[key] = pkg
 		}
@@ -108,6 +111,10 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		if tbase, terr := DirTargetGB(dir); terr == nil {
 			base = tbase
 		}
+	}
+
+	if pkg == nil {
+		return
 	}
 
 	if pkg.Target == "." {
@@ -162,13 +169,13 @@ func MakeDist(ch chan string) (err os.Error) {
 	fmt.Printf("Copying distribution files to _dist_\n")
 	for file := range ch {
 		if _, err = os.Stat(file); err != nil {
-			fmt.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
+			ErrLog.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
 			return
 		}
 		nfile := path.Join("_dist_", file)
 		npdir, _ := path.Split(nfile)
 		if err = os.MkdirAll(npdir, 0755); err != nil {
-			fmt.Printf("Couldn't create directory '%s'.\n", npdir)
+			ErrLog.Printf("Couldn't create directory '%s'.\n", npdir)
 			return
 		}
 		Copy(".", file, nfile)
@@ -181,6 +188,9 @@ func TryScan() {
 	if Scan {
 		for _, pkg := range Packages {
 			if pkg.IsInGOROOT && !RunningInGOROOT {
+				continue
+			}
+			if pkg.IsInGOPATH != "" && RunningInGOPATH == "" {
 				continue
 			}
 			if IsListed(pkg.Dir) {
@@ -222,7 +232,7 @@ func TryGenMake() (err os.Error) {
 		if genBuild {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
-			buildFile, err = os.Open("build", os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
+			buildFile, err = os.Create("build")
 			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return
@@ -339,7 +349,7 @@ func TryBuild() {
 			pkg.CheckStatus()
 			err := pkg.Build()
 			if err != nil {
-
+				return
 			}
 		}
 	}
@@ -394,6 +404,11 @@ func RunGB() (err os.Error) {
 		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
 		ScanDirectory("", path.Join(GOROOT, "src"))
 		fmt.Printf("done\n")
+		for _, gp := range GOPATHS {
+			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
+			ScanDirectory("", path.Join(gp, "src"))
+			fmt.Printf("done\n")
+		}
 	}
 
 	for _, arg := range args {
@@ -569,13 +584,8 @@ func CheckFlags() bool {
 }
 
 func main() {
-	/*
-		r, _ := GetRelative("e:\\tmp\\go-etc\\mingw4~1\\go", ".")
-		println(r)
-	*/
-
 	if err := LoadCWD(); err != nil {
-		fmt.Printf("%v\n", err)
+		ErrLog.Printf("%v\n", err)
 		return
 	}
 
@@ -603,7 +613,7 @@ func main() {
 
 	err = RunGB()
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		ErrLog.Printf("%v\n", err)
 		ReturnFailCode = true
 	}
 

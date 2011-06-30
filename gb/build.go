@@ -71,7 +71,6 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		}
 	}
 	
-
 	dst := GetRelative(pkg.Dir, pkg.ResultPath, CWD)
 
 	if pkg.IsCmd {
@@ -85,6 +84,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		if !pkg.IsInGOROOT {
 			largs = append(largs, "-L", pkgDest)
 		}
+		
 		//largs = append(largs, "-o", dst, GetIBName())
 		largs = append(largs, "-o", pkg.Target, GetIBName())
 		if Verbose {

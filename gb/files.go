@@ -25,9 +25,27 @@ import (
 	"io"
 )
 
+var (
+	os_flags = []string{"windows", "darwin", "freebsd", "linux"}
+	arch_flags = []string{"amd64", "386", "arm"}
+)
+
+func CheckCGOFlag(flag string) bool {
+	if flag == GOOS || flag == GOARCH {
+		return true
+	}
+	if flag == "unix" &&
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "linux") {
+		return true
+	}
+	if flag == "bsd" &&
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+		return true
+	}
+	return false
+}
+
 func FilterFlag(src string) bool {
-	os_flags := []string{"windows", "darwin", "freebsd", "linux"}
-	arch_flags := []string{"amd64", "386", "arm"}
 	for _, flag := range os_flags {
 		if strings.Contains(src, "_"+flag) && GOOS != flag {
 			return false
@@ -51,7 +69,7 @@ func FilterFlag(src string) bool {
 }
 
 func GetSubDirs(dir string) (subdirs []string) {
-	file, err := os.Open(dir, os.O_RDONLY, 0)
+	file, err := os.Open(dir)
 	if err != nil {
 		return
 	}
@@ -87,7 +105,7 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 
 func LineChan(f string, ch chan<- string) (err os.Error) {
 	var fin *os.File
-	if fin, err = os.Open(f, os.O_RDONLY, 0); err == nil {
+	if fin, err = os.Open(f); err == nil {
 		bfrd := bufio.NewReader(fin)
 		for {
 			var line string
@@ -102,7 +120,7 @@ func LineChan(f string, ch chan<- string) (err os.Error) {
 
 func ReadOneLine(file string) (line string, err os.Error) {
 	var fin *os.File
-	fin, err = os.Open(file, os.O_RDONLY, 0)
+	fin, err = os.Open(file)
 	if err == nil {
 		bfrd := bufio.NewReader(fin)
 		line, err = bfrd.ReadString('\n')
@@ -158,13 +176,13 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	}
 
 	var srcFile *os.File
-	srcFile, err = os.Open(srcpath, os.O_RDONLY, 0)
+	srcFile, err = os.Open(srcpath)
 	if err != nil {
 		return
 	}
 
 	var dstFile *os.File
-	dstFile, err = os.Open(dstpath, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0644)
+	dstFile, err = os.Create(dstpath)
 	if err != nil {
 		return
 	}
