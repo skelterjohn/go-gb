@@ -158,7 +158,7 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 	case *ast.FuncDecl:
 		if w.ScanFuncs {
 			fdecl, ok := node.(*ast.FuncDecl)
-			if ok {
+			if ok && fdecl.Recv == nil {
 				w.Funcs = append(w.Funcs, fdecl.Name.Name)
 			}
 		}
