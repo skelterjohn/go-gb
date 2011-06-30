@@ -130,9 +130,12 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
 
-	for testName, testSrcs := range pkg.TestSrc {
+	buildTestName := func(testName string) (err os.Error) {
+
+		testSrcs := pkg.TestSrc[testName]
 
 		argv := []string{GetCompilerName()}
+		argv = append(argv, "-I", path.Join("_test", "_obj"))
 		argv = append(argv, "-I", pkgDest)
 		if GCFLAGS != nil {
 			argv = append(argv, GCFLAGS...)
@@ -154,10 +157,13 @@ func BuildTest(pkg *Package) (err os.Error) {
 		if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
 			return os.NewError("compile error")
 		}
+		dst := path.Join("_test", "_obj", testName) + ".a"
 
-		dst := path.Join("_test", "_obj", "_test", testName) + ".a"
+		if testName == pkg.Name {
+			dst = path.Join("_test", "_obj", pkg.Target) + ".a"
+		}
 
-		mkdirdst := path.Join(pkg.Dir, "_test", "_obj", "_test", testName) + ".a"
+		mkdirdst := path.Join(pkg.Dir, dst)
 		dstDir, _ := path.Split(mkdirdst)
 		os.MkdirAll(dstDir, 0755)
 
@@ -169,6 +175,16 @@ func BuildTest(pkg *Package) (err os.Error) {
 			return
 		}
 
+		return
+	}	
+
+	err = buildTestName(pkg.Name)
+	if err != nil { return }
+
+	for testName := range pkg.TestSrc {
+		if testName == pkg.Name { continue }
+		err = buildTestName(testName)
+		if err != nil { return }
 	}
 
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())

@@ -401,6 +401,21 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 					continue
 				}
 			}
+/*
+			//if there are no Test* or Benchmark* functions, forget it
+			for _, ffunc := range ffuncs {
+				if strings.HasPrefix(ffunc, "Test") {
+					goto havetests
+				}
+				if strings.HasPrefix(ffunc, "Benchmark") {
+					goto havetests
+				}
+			}
+			fmt.Printf("skipping %s\n", src)
+			continue
+havetests:
+			fmt.Printf("using %s\n", src)
+*/
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -883,9 +898,15 @@ func (this *Package) Test() (err os.Error) {
 	//fmt.Fprintf(file, "var tests = []testing.InternalTest{\n")
 	for name, tests := range pkgtests {
 		if _, ok := testpkgMap[name]; !ok {
+			targ := name
+			
+			if name == this.Name {
+				targ = this.Target
+			}
 			testpkgMap[name] = &TestPkg {
 			PkgAlias: name,
 			PkgName: name,
+			PkgTarget: targ,
 			}
 		}
 

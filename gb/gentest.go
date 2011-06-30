@@ -21,7 +21,7 @@ import (
 )
 
 type TestPkg struct {
-	PkgAlias, PkgName string
+	PkgAlias, PkgName, PkgTarget string
 	TestFuncs, TestBenchmarks []string
 }
 
@@ -37,7 +37,7 @@ var TestmainTemplate = func() *template.Template {
 package main
 
 {{.repeated section TestPkgs}}
-import {{PkgAlias}} "_test/{{PkgName}}"
+import {{PkgAlias}} "{{PkgTarget}}"
 {{.end}}
 import "testing"
 import __os__ "os"
