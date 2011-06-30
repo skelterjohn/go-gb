@@ -120,9 +120,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 			key += "-cmd"
 		}
 		if dup, exists := Packages[key]; exists {
-			if GetAbs(dup.Dir, CWD) != GetAbs(pkg.Dir, CWD) {
-				ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
-			}
+			ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
 		} else {
 			Packages[key] = pkg
 		}

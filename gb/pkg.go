@@ -1103,7 +1103,7 @@ func (this *Package) Install() (err os.Error) {
 
 func (this *Package) ListSource() (err os.Error) {
 	listFiles := func(files []string) {
-		sortedFiles := sort.StringArray(files)
+		sortedFiles := sort.StringSlice(files)
 		sortedFiles.Sort()
 		for _, file := range sortedFiles {
 			fmt.Printf("\t%s\n", file)
