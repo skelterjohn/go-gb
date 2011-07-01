@@ -478,6 +478,11 @@ func RunGB() (err os.Error) {
 		}
 	}
 
+	if len(ListedPkgs) == 0 {
+		err = os.NewError("No targets found in "+CWD)
+		return
+	}
+
 	for _, pkg := range Packages {
 		pkg.Stat()
 	}
