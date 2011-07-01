@@ -69,10 +69,10 @@ type Package struct {
 	CGoCFlags  map[string][]string
 	CGoLDFlags map[string][]string
 
-	HasMakefile bool
+	HasMakefile     bool
 	MustUseMakefile bool
-	IsInGOROOT  bool
-	IsInGOPATH string
+	IsInGOROOT      bool
+	IsInGOPATH      string
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -88,7 +88,6 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		err = os.NewError("not a directory")
 		return
 	}
-
 
 	this = new(Package)
 	this.block = make(chan bool, 1)
@@ -164,12 +163,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.IsCmd = this.Name == "main"
 	this.Objects = append(this.Objects, path.Join(this.Dir, GetIBName()))
 	err = this.GetTarget()
-	
+
 	if !FilterPkg(this.Target) {
 		err = os.NewError("Filtered package based on GOOS/GOARCH")
 		return
 	}
-	
+
 	if this.IsCmd && this.IsCGo {
 		err = os.NewError(fmt.Sprintf("(in %s) cannot have a cgo cmd", this.Dir))
 		ErrLog.Println(err)
@@ -222,7 +221,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	filepath.Walk(this.Dir, this, errch)
 
-	if len(this.AsmSrcs) + len(this.GoSources) + len(this.TestSources) == 0 { //allsources
+	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
@@ -292,7 +291,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 	if strings.HasSuffix(fpath, "_testmain.go") {
 		return
 	}
-	
+
 	rootl := len(this.Dir) + 1
 	if this.Dir != "." {
 		fpath = fpath[rootl:len(fpath)]
@@ -389,7 +388,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 	}
 
 	this.Deps = RemoveDups(this.Deps)
-	
+
 	if Test {
 		for _, src := range this.TestSources {
 			var fpkg, ftarget string
@@ -401,21 +400,21 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 					continue
 				}
 			}
-/*
-			//if there are no Test* or Benchmark* functions, forget it
-			for _, ffunc := range ffuncs {
-				if strings.HasPrefix(ffunc, "Test") {
-					goto havetests
-				}
-				if strings.HasPrefix(ffunc, "Benchmark") {
-					goto havetests
-				}
-			}
-			fmt.Printf("skipping %s\n", src)
-			continue
-havetests:
-			fmt.Printf("using %s\n", src)
-*/
+			/*
+						//if there are no Test* or Benchmark* functions, forget it
+						for _, ffunc := range ffuncs {
+							if strings.HasPrefix(ffunc, "Test") {
+								goto havetests
+							}
+							if strings.HasPrefix(ffunc, "Benchmark") {
+								goto havetests
+							}
+						}
+						fmt.Printf("skipping %s\n", src)
+						continue
+			havetests:
+						fmt.Printf("using %s\n", src)
+			*/
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -570,13 +569,13 @@ func (this *Package) PrintScan() {
 	} else {
 		label = "pkg"
 	}
-	if this.IsCGo && !this.IsCmd{
+	if this.IsCGo && !this.IsCmd {
 		label = "cgo"
 	}
 	if this.IsInGOROOT {
 		label = "goroot " + label
 	} else if this.IsInGOPATH != "" {
-		label = "gopath " + label	
+		label = "gopath " + label
 	}
 
 	displayDir := this.Dir
@@ -792,7 +791,7 @@ func (this *Package) Build() (err os.Error) {
 		}
 		labelDir := this.Dir
 		if HasPathPrefix(labelDir, GOROOT) {
-			labelDir = "$GOROOT"+labelDir[len(GOROOT):]
+			labelDir = "$GOROOT" + labelDir[len(GOROOT):]
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", labelDir, which, this.Target)
 
@@ -878,20 +877,20 @@ func (this *Package) Test() (err os.Error) {
 	}
 
 	testSuite := &TestSuite{}
-	
-/*
-	fmt.Fprintf(file, "package main\n\n")
 
-	//fmt.Fprintf(file, "import \"%s\"\n", this.Target)
-	for name, _ := range this.TestSrc {
-		if name == "main" {
-			fmt.Fprintf(file, "import __main__ \"_test/%s\"\n", name)
-		} else {
-			fmt.Fprintf(file, "import \"_test/%s\"\n", name)
+	/*
+		fmt.Fprintf(file, "package main\n\n")
+
+		//fmt.Fprintf(file, "import \"%s\"\n", this.Target)
+		for name, _ := range this.TestSrc {
+			if name == "main" {
+				fmt.Fprintf(file, "import __main__ \"_test/%s\"\n", name)
+			} else {
+				fmt.Fprintf(file, "import \"_test/%s\"\n", name)
+			}
 		}
-	}
-	fmt.Fprintf(file, "import \"testing\"\n")
-	fmt.Fprintf(file, "import __regexp__ \"regexp\"\n\n")
+		fmt.Fprintf(file, "import \"testing\"\n")
+		fmt.Fprintf(file, "import __regexp__ \"regexp\"\n\n")
 	*/
 	testpkgMap := make(map[string]*TestPkg)
 
@@ -899,14 +898,14 @@ func (this *Package) Test() (err os.Error) {
 	for name, tests := range pkgtests {
 		if _, ok := testpkgMap[name]; !ok {
 			targ := name
-			
+
 			if name == this.Name {
 				targ = this.Target
 			}
-			testpkgMap[name] = &TestPkg {
-			PkgAlias: name,
-			PkgName: name,
-			PkgTarget: targ,
+			testpkgMap[name] = &TestPkg{
+				PkgAlias:  name,
+				PkgName:   name,
+				PkgTarget: targ,
 			}
 		}
 
@@ -914,13 +913,13 @@ func (this *Package) Test() (err os.Error) {
 
 		for _, test := range tests {
 			/*
-			callName := name
-			if name == "main" {
-				callName = "__main__"
-			}
-			 */
+				callName := name
+				if name == "main" {
+					callName = "__main__"
+				}
+			*/
 			tpkg.TestFuncs = append(tpkg.TestFuncs, test)
-			
+
 			//fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, test, callName, test)
 		}
 	}
@@ -929,9 +928,9 @@ func (this *Package) Test() (err os.Error) {
 	//fmt.Fprintf(file, "var benchmarks = []testing.InternalBenchmark{\n")
 	for name, benchmarks := range pkgbenchmarks {
 		if _, ok := testpkgMap[name]; !ok {
-			testpkgMap[name] = &TestPkg {
-			PkgAlias: name,
-			PkgName: name,
+			testpkgMap[name] = &TestPkg{
+				PkgAlias: name,
+				PkgName:  name,
 			}
 		}
 
@@ -939,10 +938,10 @@ func (this *Package) Test() (err os.Error) {
 
 		for _, benchmark := range benchmarks {
 			/*
-			callName := name
-			if name == "main" {
-				callName = "__main__"
-			}*/
+				callName := name
+				if name == "main" {
+					callName = "__main__"
+				}*/
 			//fmt.Fprintf(file, "\t{\"%s.%s\", %s.%s},\n", name, benchmark, callName, benchmark)
 			tpkg.TestBenchmarks = append(tpkg.TestBenchmarks, benchmark)
 		}
@@ -954,22 +953,22 @@ func (this *Package) Test() (err os.Error) {
 		}
 		testSuite.TestPkgs = append(testSuite.TestPkgs, tpkg)
 	}
-	
+
 	err = TestmainTemplate.Execute(file, testSuite)
 	if err != nil {
 		return
 	}
 
 	/*
-	fmt.Fprintf(file, "}\n\n")
+		fmt.Fprintf(file, "}\n\n")
 
-	fmt.Fprintf(file, "func main() {\n")
-	fmt.Fprintf(file, "\ttesting.RunTests(__regexp__.MatchString, tests)\n")
-	fmt.Fprintf(file, "\ttesting.RunBenchmarks(__regexp__.MatchString, benchmarks)\n")
-	fmt.Fprintf(file, "}\n")
+		fmt.Fprintf(file, "func main() {\n")
+		fmt.Fprintf(file, "\ttesting.RunTests(__regexp__.MatchString, tests)\n")
+		fmt.Fprintf(file, "\ttesting.RunBenchmarks(__regexp__.MatchString, benchmarks)\n")
+		fmt.Fprintf(file, "}\n")
 
-	file.Close()
-*/
+		file.Close()
+	*/
 	err = BuildTest(this)
 
 	this.Stat()

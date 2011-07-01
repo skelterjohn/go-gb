@@ -22,7 +22,7 @@ import (
 
 type TestPkg struct {
 	PkgAlias, PkgName, PkgTarget string
-	TestFuncs, TestBenchmarks []string
+	TestFuncs, TestBenchmarks    []string
 }
 
 type TestSuite struct {
@@ -33,7 +33,7 @@ var TestmainTemplate = func() *template.Template {
 	t := template.New(nil)
 	t.SetDelims("{{", "}}")
 	t.Parse(
-`
+		`
 package main
 
 {{.repeated section TestPkgs}}
@@ -80,4 +80,3 @@ func main() {
 `)
 	return t
 }()
-

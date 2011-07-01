@@ -96,7 +96,7 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 				w.Target = text[len("target:"):len(text)]
 			}
 		} else {
-			
+
 			handleCommentLine := func(text string) {
 				if strings.HasPrefix(text, "#cgo") {
 					cgoMsg := strings.TrimSpace(text[len("#cgo"):])
@@ -137,7 +137,7 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 				text = strings.TrimSpace(text[2:])
 				handleCommentLine(text)
 			} else if strings.HasPrefix(text, "/*") && strings.HasSuffix(text, "*/") {
-				text = strings.TrimSpace(text[2:len(text)-2])
+				text = strings.TrimSpace(text[2 : len(text)-2])
 				br := bufio.NewReader(bytes.NewBuffer([]byte(text)))
 				for {
 					line, isprefix, err := br.ReadLine()

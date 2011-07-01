@@ -127,7 +127,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
-	
+
 	gorootObj := filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
 
 	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + gorootObj}

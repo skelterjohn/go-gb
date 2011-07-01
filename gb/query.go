@@ -32,15 +32,15 @@ var GCFLAGS, GLDFLAGS []string
 var GOPATH, GOPATH_SINGLE string
 var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
 
-var ValidGOARCHs = map[string]bool {
+var ValidGOARCHs = map[string]bool{
 	"amd64": true,
-	"386": true,
-	"arm": true,
+	"386":   true,
+	"arm":   true,
 }
 
-var ValidGOOSs = map[string]bool {
-	"darwin": true,
-	"linux": true,
+var ValidGOOSs = map[string]bool{
+	"darwin":  true,
+	"linux":   true,
 	"windows": true,
 }
 
@@ -54,7 +54,7 @@ func LoadCWD() (err os.Error) {
 	if relerr == nil {
 		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
 		fmt.Printf("Running gb in workspace %s\n", CWD)
-	} else if GOPATH=os.Getenv("GOPATH"); GOPATH != "" {
+	} else if GOPATH = os.Getenv("GOPATH"); GOPATH != "" {
 		gopaths := strings.Split(GOPATH, ":", -1)
 		if GOOS == "windows" {
 			gopaths = strings.Split(GOPATH, ";", -1)
@@ -70,7 +70,7 @@ func LoadCWD() (err os.Error) {
 				RunningInGOPATH = gp
 				if CWD != gpsrc {
 					CWD = gpsrc
-					fmt.Printf("Running gb in GOPATH %s\n", CWD)
+					fmt.Printf("Running gb in GOPATH workspace %s\n", CWD)
 					os.Chdir(CWD)
 				}
 			}
@@ -112,7 +112,7 @@ func LoadEnvs() bool {
 	}
 
 	GOPATH = os.Getenv("GOPATH")
-	
+
 	if GOPATH != "" {
 		gopaths := strings.Split(GOPATH, ":", -1)
 		if GOOS == "windows" {
@@ -125,7 +125,6 @@ func LoadEnvs() bool {
 			}
 
 			gpsrc := filepath.Join(gp, "src")
-
 
 			GOPATHS = append(GOPATHS, gp)
 
@@ -153,7 +152,7 @@ func LoadEnvs() bool {
 
 	GCFLAGS = append(GCFLAGS, GOPATH_CFLAGS...)
 	GLDFLAGS = append(GLDFLAGS, GOPATH_LDFLAGS...)
-	
+
 	RunningInGOROOT = HasPathPrefix(CWD, filepath.Join(GOROOT, "src"))
 
 	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns

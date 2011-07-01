@@ -74,18 +74,18 @@ var ErrLog = log.New(os.Stderr, "gb error: ", 0)
 
 /*
  gb doesn't know how to build these packages
- 
+
  math has both pure go and asm versions of many functions, and which is used depends
  on the architexture
- 
+
  go/build has a source-generation step that uses make variables
 
  os has source generation
- */
-var ForceMakePkgs = map[string]bool {
-	"math": true,
+*/
+var ForceMakePkgs = map[string]bool{
+	"math":     true,
 	"go/build": true,
-	"os": true,
+	"os":       true,
 }
 
 func ScanDirectory(base, dir string) (err2 os.Error) {

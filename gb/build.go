@@ -44,7 +44,7 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Erro
 
 func BuildPackage(pkg *Package) (err os.Error) {
 	buildBlock <- true
-	defer func() { 
+	defer func() {
 		<-buildBlock
 	}()
 
@@ -70,21 +70,21 @@ func BuildPackage(pkg *Package) (err os.Error) {
 			return
 		}
 	}
-	
+
 	dst := GetRelative(pkg.Dir, pkg.ResultPath, CWD)
 
 	if pkg.IsCmd {
 
 		largs := []string{GetLinkerName()}
-		
+
 		if len(GLDFLAGS) > 0 {
 			largs = append(largs, GLDFLAGS...)
 		}
-		
+
 		if !pkg.IsInGOROOT {
 			largs = append(largs, "-L", pkgDest)
 		}
-		
+
 		//largs = append(largs, "-o", dst, GetIBName())
 		largs = append(largs, "-o", pkg.Target, GetIBName())
 		if Verbose {
@@ -94,7 +94,11 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 		//durLink := time.Nanoseconds()-startLink
 		//fmt.Printf("link took %f\n", float64(durLink)/1e9)
-		os.MkdirAll(GetBuildDirCmd(), 0755)
+		dstDir, _ := path.Split(pkg.ResultPath)
+		if Verbose {
+			fmt.Printf("Creating directory %s\n", dstDir)
+		}
+		os.MkdirAll(dstDir, 0755)
 		Copy(pkg.Dir, pkg.Target, dst)
 	} else {
 		dstDir, _ := path.Split(pkg.ResultPath)
@@ -176,15 +180,21 @@ func BuildTest(pkg *Package) (err os.Error) {
 		}
 
 		return
-	}	
+	}
 
 	err = buildTestName(pkg.Name)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	for testName := range pkg.TestSrc {
-		if testName == pkg.Name { continue }
+		if testName == pkg.Name {
+			continue
+		}
 		err = buildTestName(testName)
-		if err != nil { return }
+		if err != nil {
+			return
+		}
 	}
 
 	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())

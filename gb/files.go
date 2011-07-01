@@ -26,17 +26,17 @@ import (
 )
 
 var (
-	os_flags = map[string]bool {
+	os_flags = map[string]bool{
 		"windows": true,
-		"darwin": true,
+		"darwin":  true,
 		"freebsd": true,
-		"linux": true,
-		"plan9": true,
+		"linux":   true,
+		"plan9":   true,
 	}
-	arch_flags = map[string]bool {
+	arch_flags = map[string]bool{
 		"amd64": true,
-		"386": true,
-		"arm": true,
+		"386":   true,
+		"arm":   true,
 	}
 )
 
@@ -88,7 +88,7 @@ func FilterFlag(src string) bool {
 
 func splitPathAll(p string) (bits []string) {
 	if p == "/" {
-		return []string{}	
+		return []string{}
 	}
 	dir, base := path.Split(p)
 	if dir != "" {
