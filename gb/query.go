@@ -55,9 +55,9 @@ func LoadCWD() (err os.Error) {
 		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
 		fmt.Printf("Running gb in workspace %s\n", CWD)
 	} else if GOPATH = os.Getenv("GOPATH"); GOPATH != "" {
-		gopaths := strings.Split(GOPATH, ":", -1)
+		gopaths := strings.Split(GOPATH, ":")
 		if GOOS == "windows" {
-			gopaths = strings.Split(GOPATH, ";", -1)
+			gopaths = strings.Split(GOPATH, ";")
 		}
 		for _, gp := range gopaths {
 			gp = strings.TrimSpace(gp)
@@ -114,9 +114,9 @@ func LoadEnvs() bool {
 	GOPATH = os.Getenv("GOPATH")
 
 	if GOPATH != "" {
-		gopaths := strings.Split(GOPATH, ":", -1)
+		gopaths := strings.Split(GOPATH, ":")
 		if GOOS == "windows" {
-			gopaths = strings.Split(GOPATH, ";", -1)
+			gopaths = strings.Split(GOPATH, ";")
 		}
 		for _, gp := range gopaths {
 			gp = strings.TrimSpace(gp)

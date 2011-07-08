@@ -91,7 +91,7 @@ func FindExternals() (err os.Error) {
 
 func SplitArgs(args []string) (sargs []string) {
 	for _, arg := range args {
-		sarg := strings.Split(arg, " ", -1)
+		sarg := strings.Split(arg, " ")
 		sargs = append(sargs, sarg...)
 	}
 	return
