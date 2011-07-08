@@ -23,5 +23,6 @@ example/c/Makefile
 example/d/Makefile
 example/e/Makefile
 example/build
+*.sublime-project
 
 
