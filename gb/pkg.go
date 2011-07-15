@@ -219,7 +219,10 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
-	filepath.Walk(this.Dir, this, errch)
+	go filepath.Walk(this.Dir, this, errch)
+	for fperr := range errch {
+		ErrLog.Printf("Error while scanning: %s", fperr)
+	}
 
 	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources) == 0 { //allsources
 		err = os.NewError("No source files in " + this.Dir)
