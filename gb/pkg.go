@@ -219,7 +219,10 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
-	go filepath.Walk(this.Dir, this, errch)
+	go func() {
+		filepath.Walk(this.Dir, this, errch)
+		close(errch)
+	}()
 	for fperr := range errch {
 		ErrLog.Printf("Error while scanning: %s", fperr)
 	}
