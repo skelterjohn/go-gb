@@ -17,7 +17,7 @@
 package main
 
 import (
-	"template"
+	"exp/template"
 )
 
 type TestPkg struct {
@@ -28,7 +28,7 @@ type TestPkg struct {
 type TestSuite struct {
 	TestPkgs []*TestPkg
 }
-
+/*
 var TestmainTemplate = func() *template.Template {
 	t := template.New(nil)
 	t.SetDelims("{{", "}}")
@@ -78,5 +78,47 @@ func main() {
 }
 
 `)
+	return t
+}()
+*/
+var TestmainTemplateExp = func() *template.Template {
+	t := template.New("testmain")
+	err := t.Parse(
+		`package main
+
+{{range .TestPkgs}}import {{.PkgAlias}} "{{.PkgTarget}}"
+{{end}}
+import "testing"
+import __os__ "os"
+import __regexp__ "regexp"
+
+var tests = []testing.InternalTest{
+{{range .TestPkgs}}{{if $PkgName=.PkgName}}{{if $PkgAlias=.PkgAlias}}{{range .TestFuncs}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
+}
+
+var benchmarks = []testing.InternalBenchmark{
+{{range .TestPkgs}}{{if $PkgName=.PkgName}}{{if $PkgAlias=.PkgAlias}}{{range .TestBenchmarks}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
+}
+
+var matchPat string
+var matchRe *__regexp__.Regexp
+
+func matchString(pat, str string) (result bool, err __os__.Error) {
+	if matchRe == nil || matchPat != pat {
+		matchPat = pat
+		matchRe, err = __regexp__.Compile(matchPat)
+		if err != nil {
+			return
+		}
+	}
+	return matchRe.MatchString(str), nil
+}
+
+func main() {
+	testing.Main(matchString, tests, benchmarks)
+}
+
+`)
+	if err != nil { panic(err) }
 	return t
 }()
