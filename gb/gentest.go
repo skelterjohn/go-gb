@@ -119,6 +119,8 @@ func main() {
 }
 
 `)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	return t
 }()

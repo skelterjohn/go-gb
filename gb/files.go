@@ -194,7 +194,6 @@ func DirTargetGB(dir string) (target string, err os.Error) {
 	return
 }
 
-
 func ReverseDir(dir string) (rev string) {
 	rev = "."
 	for dir != "." && dir != "" {

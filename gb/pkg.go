@@ -407,19 +407,19 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 				}
 			}
 			/*
-						//if there are no Test* or Benchmark* functions, forget it
-						for _, ffunc := range ffuncs {
-							if strings.HasPrefix(ffunc, "Test") {
-								goto havetests
+							//if there are no Test* or Benchmark* functions, forget it
+							for _, ffunc := range ffuncs {
+								if strings.HasPrefix(ffunc, "Test") {
+									goto havetests
+								}
+								if strings.HasPrefix(ffunc, "Benchmark") {
+									goto havetests
+								}
 							}
-							if strings.HasPrefix(ffunc, "Benchmark") {
-								goto havetests
-							}
-						}
-						fmt.Printf("skipping %s\n", src)
-						continue
-			havetests:
-						fmt.Printf("using %s\n", src)
+							fmt.Printf("skipping %s\n", src)
+							continue
+				havetests:
+							fmt.Printf("using %s\n", src)
 			*/
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
@@ -1252,7 +1252,7 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		}
 		err = MakeCmdTemplateExp.Execute(file, data)
 	}
-	
+
 	if err != nil {
 		return
 	}

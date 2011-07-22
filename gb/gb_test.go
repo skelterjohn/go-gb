@@ -26,7 +26,6 @@ type GRTest struct {
 	truth             string
 }
 
-
 func TestGetRelative(t *testing.T) {
 	grTests := []GRTest{
 		{`/home/projects/goproject`, `/home/go`, `these_are_absolute`, `../../go`},

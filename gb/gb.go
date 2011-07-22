@@ -83,9 +83,9 @@ var ErrLog = log.New(os.Stderr, "gb error: ", 0)
  os has source generation
 */
 var ForceMakePkgs = map[string]bool{
-	"math":     true,
-	"go/build": true,
-	"os":       true,
+	"math":       true,
+	"go/build":   true,
+	"os":         true,
 	"hash/crc32": true,
 }
 
@@ -480,7 +480,7 @@ func RunGB() (err os.Error) {
 	}
 
 	if len(ListedPkgs) == 0 {
-		err = os.NewError("No targets found in "+CWD)
+		err = os.NewError("No targets found in " + CWD)
 		return
 	}
 
