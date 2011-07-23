@@ -35,7 +35,8 @@ working directory to identify targets. Any directory that contains .go
 files or .c files will be identified as a target. Each target's name is then 
 determined by first looking at its relative path, but can be overridden by 
 either a target.gb file containing a new name, or a //target:<name> comment 
-in one of the source files, before the package statement. This renaming of 
+in one of the source files, before the package statement. (See 
+`examples/f/g`.) This renaming of 
 targets is primarily useful for projects that are intended to be installed 
 with goinstall, which requires that the target name match a URL.
 
