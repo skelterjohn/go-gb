@@ -93,7 +93,11 @@ func (w *Walker) Visit(node ast.Node) (v ast.Visitor) {
 			text = strings.TrimSpace(text[2:])
 
 			if strings.HasPrefix(text, "target:") {
-				w.Target = strings.TrimSpace(text[len("target:"):])
+				fields := strings.Fields(text[len("target:"):])
+				if len(fields) > 0 {
+					w.Target = fields[0]
+				}
+				//w.Target = strings.TrimSpace(text[len("target:"):])
 			}
 		} else {
 
