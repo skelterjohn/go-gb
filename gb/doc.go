@@ -49,6 +49,10 @@ in one of the source files, before the package statement. This renaming of
 targets is primarily useful for projects that are intended to be installed 
 with goinstall, which requires that the target name match a URL.
 
+If target.gb contains the text "-", no target is created from that
+directory. If it contains the text "--", no target is created from that
+directory nor from any of its subdirectories.
+
 gb will match target names with import statements found in the source to 
 determine the workspace dependency structure. It will use this structure to 
 do incremental building correctly.
