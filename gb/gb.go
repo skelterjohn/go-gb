@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-//target:gb
+//target: gb
 package main
 
 import (
