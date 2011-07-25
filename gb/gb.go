@@ -145,9 +145,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	if base != "--" {
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
-			if subdir != "src" {
-				ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
-			}
+			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 		}
 	} else {
 	}
