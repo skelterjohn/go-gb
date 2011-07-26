@@ -2,8 +2,10 @@
 
 To install,
 go-gb/gb> make install
-or
+or (to track release)
 > goinstall github.com/skelterjohn/go-gb/gb
+or (to track weekly)
+> goinstall go-gb.googlecode.com/hg/gb
 
 Overview
 
