@@ -478,11 +478,11 @@ func (this *Package) GetTarget() (err os.Error) {
 			if this.IsCmd {
 				this.Target = path.Base(this.Dir)
 				if this.Target == "." {
-					this.Target = "main"
+					this.Target = filepath.Base(CWD)//"main"
 				}
 			} else {
 				if this.Target == "." {
-					this.Target = "localpkg"
+					this.Target = filepath.Base(CWD)//"localpkg"
 				}
 				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
 					this.Target = GetRelative("pkg", this.Dir, CWD)
