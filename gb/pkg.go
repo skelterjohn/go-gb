@@ -579,20 +579,20 @@ func (this *Package) PrintScan() {
 		label = "cgo"
 	}
 	if this.IsInGOROOT {
-		label = "goroot " + label
+		label = "GOROOT " + label
 	} else if this.IsInGOPATH != "" {
-		label = "gopath " + label
+		label = "GOPATH=" + this.IsInGOPATH + " " + label
 	}
 
 	displayDir := this.Dir
 	if this.IsInGOROOT {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
 	}
-	var prefix string
-	if !this.IsInGOROOT && this.IsInGOPATH == "" {
-		prefix = fmt.Sprintf("in %s: ", displayDir)
+	var suffix string
+	if !this.IsInGOROOT && this.Dir != this.Target {
+		suffix = fmt.Sprintf(" in %s", displayDir)
 	}
-	fmt.Printf("%s%s \"%s\"%s\n", prefix, label, this.Target, bis)
+	fmt.Printf("%s \"%s\"%s%s\n", label, this.Target, suffix, bis)
 	if ScanList {
 		fmt.Printf(" %s Deps: %v\n", this.Name, this.Deps)
 		if Test {
