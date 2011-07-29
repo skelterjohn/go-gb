@@ -83,7 +83,7 @@ func main() {
 */
 var TestmainTemplateExp = func() *template.Template {
 	t := template.New("testmain")
-	err := t.Parse(
+	t, err := t.Parse(
 		`package main
 
 {{range .TestPkgs}}import {{.PkgAlias}} "{{.PkgTarget}}"
