@@ -1245,12 +1245,12 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 				}
 			}
 		}
-		err = MakePkgTemplateExp.Execute(file, data)
+		err = MakePkgTemplate.Execute(file, data)
 	} else {
 		if GOOS == "windows" && strings.HasSuffix(data.Target, ".exe") {
 			data.Target = data.Target[0 : len(data.Target)-len(".exe")]
 		}
-		err = MakeCmdTemplateExp.Execute(file, data)
+		err = MakeCmdTemplate.Execute(file, data)
 	}
 
 	if err != nil {
