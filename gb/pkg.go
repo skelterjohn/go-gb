@@ -729,6 +729,7 @@ func (this *Package) Build() (err os.Error) {
 	defer func() {
 		if err != nil {
 			this.FailedToBuild = true
+			this.CleanFiles()
 		}
 	}()
 
