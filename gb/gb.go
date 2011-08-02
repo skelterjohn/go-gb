@@ -87,6 +87,7 @@ var ForceMakePkgs = map[string]bool{
 	"go/build":   true,
 	"os":         true,
 	"hash/crc32": true,
+	"godoc":      true,
 }
 
 func ScanDirectory(base, dir string) (err2 os.Error) {
