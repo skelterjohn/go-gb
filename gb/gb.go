@@ -59,7 +59,7 @@ var ListedTargets int
 var ListedDirs, ValidatedDirs map[string]bool
 var ListedPkgs []*Package
 
-var HardArgs, SoftArgs int
+var HardArgs, BuildArgs int
 
 var TestArgs []string
 
@@ -580,7 +580,6 @@ func CheckFlags() bool {
 				GoFMT = true
 			case "--dist":
 				Distribution = true
-				Verbose = true
 			case "--create-makefiles":
 				GenMake = true
 			case "--create-workspace":
@@ -595,10 +594,12 @@ func CheckFlags() bool {
 				switch flag {
 				case 'i':
 					Install = true
+					BuildArgs++
 				case 'c':
 					Clean = true
 				case 'b':
 					Build = true
+					BuildArgs++
 				case 's':
 					Scan = true
 				case 'S':
@@ -609,6 +610,7 @@ func CheckFlags() bool {
 					ScanListFiles = true
 				case 't':
 					Test = true
+					BuildArgs++
 				case 'e':
 					Exclusive = true
 				case 'v':
@@ -619,9 +621,11 @@ func CheckFlags() bool {
 					Force = true
 				case 'g':
 					GoInstall = true
+					BuildArgs++
 				case 'G':
 					GoInstall = true
 					GoInstallUpdate = true
+					BuildArgs++
 				case 'p':
 					Concurrent = true
 				case 'P':
@@ -637,13 +641,12 @@ func CheckFlags() bool {
 					Usage()
 					return false
 				}
-				SoftArgs++
 			}
 		}
 	}
 
-	if HardArgs > 0 && SoftArgs > 0 {
-		ErrLog.Printf("Cannot have -- and - style arguments at the same time.\n")
+	if HardArgs > 0 && BuildArgs > 0 {
+		ErrLog.Printf("Cannot have -- style arguments and build at the same time.\n")
 		return false
 	}
 
