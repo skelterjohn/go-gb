@@ -102,7 +102,10 @@ Options:
 
  -g		Tell gb to use goinstall to build remote packages available at
 		one of the following websites: googlecode.com, github.com,
-		bitbucket.org and launchpad.net.		 
+		bitbucket.org and launchpad.net.
+		
+ -G		Same as -g, except goinstall fetches new code from the
+        repository.
 
  -p		Attempt to build a package immediately once its dependencies are
 		met and a processor is free.
@@ -126,17 +129,9 @@ Options:
  -m		Use makefiles. If this flag is set, and a target contains a
 		makefile, that makefile will be used to build.
 
- -M		Generate makefiles and a build script. In each relevant target,
-		create a makefile that supports incremental building with the
-		rest of the targets. The build script invokes each of the
-		makefiles in a topological order, ensuring that running "./build"
-		will always result in a correct build.
-
  -f		For use with "-M", force overwriting of makefiles. Otherwise
 		you will be prompted when attempting to create a makefile for
 		a target that already has one.
-
- -F		Run gofmt on all source for relevant targets.
 
  -P		Build/clean/install only packages. Useful if you have a set of
 		helper commands to test your packages, but don't want to install
@@ -144,17 +139,33 @@ Options:
 
  -C		The same as "-P", but for commands.
 
- -D		Create a distribution directory for the relevant targets in a
-		new directory "_dist_". All source files, including "*.go", "*.c",
-		"*.s", and build files, including "makefile" and a top level
-		"build" script, will be copied to this directory.
-
  -R		Add targets in $GOROOT/src to those that gb can build. They will
 		not be built automatically, but if a local target has an import
 		dependence on a target in $GOROOT/src, it will be brought up to
 		date. This works with the "-s" option. Using "-Rs" will list
 		any targets in $GOROOT/src that the local targets depend on.
 
+ --create-makefiles
+ 		Generate makefiles and a build script. In each relevant target,
+		create a makefile that supports incremental building with the
+		rest of the targets. The build script invokes each of the
+		makefiles in a topological order, ensuring that running "./build"
+		will always result in a correct build.
+
+ --create-workspace
+ 		Create workspace.gb files for all listed targets. Doing this
+ 		allows you to run gb from within the target directories as if
+ 		you were running gb from the directory you ran 
+ 		--create-workspace in.
+
+ --dist
+ 		Create a distribution directory for the relevant targets in a
+		new directory "_dist_". All source files, including "*.go", "*.c",
+		"*.s", and build files, including "makefile" and a top level
+		"build" script, will be copied to this directory.
+
+ --gofmt
+ 		Run gofmt on all source for relevant targets.
 
 */
 package documentation

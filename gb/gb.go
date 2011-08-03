@@ -59,6 +59,8 @@ var ListedTargets int
 var ListedDirs, ValidatedDirs map[string]bool
 var ListedPkgs []*Package
 
+var HardArgs, SoftArgs int
+
 var TestArgs []string
 
 var BrokenMsg []string
@@ -416,7 +418,9 @@ func TryInstall() {
 }
 
 func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean && !GoFMT && !Scan && !Workspace) || (Makefiles && !Clean) || Install || Test
+	Build = Build || (!Clean && !Scan) || (Makefiles && !Clean) || Install || Test
+
+	Build = Build && HardArgs == 0
 
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 
@@ -570,16 +574,29 @@ func CheckFlags() bool {
 			TestArgs = append(TestArgs, arg)
 			continue
 		}
-		if len(arg) > 0 && arg[0] == '-' {
+		if strings.HasPrefix(arg, "--") {
+			switch arg {
+			case "--gofmt":
+				GoFMT = true
+			case "--dist":
+				Distribution = true
+				Verbose = true
+			case "--create-makefiles":
+				GenMake = true
+			case "--create-workspace":
+				Workspace = true
+			default:
+				Usage()
+				return false
+			}
+			HardArgs++
+		} else if strings.HasPrefix(arg, "-") {
 			for _, flag := range arg[1:] {
 				switch flag {
 				case 'i':
 					Install = true
 				case 'c':
 					Clean = true
-				case 'N':
-					Clean = true
-					Nuke = true
 				case 'b':
 					Build = true
 				case 's':
@@ -598,8 +615,6 @@ func CheckFlags() bool {
 					Verbose = true
 				case 'm':
 					Makefiles = true
-				case 'M':
-					GenMake = true
 				case 'f':
 					Force = true
 				case 'g':
@@ -609,26 +624,29 @@ func CheckFlags() bool {
 					GoInstallUpdate = true
 				case 'p':
 					Concurrent = true
-				case 'F':
-					GoFMT = true
 				case 'P':
 					DoPkgs = true
 				case 'C':
 					DoCmds = true
-				case 'D':
-					Distribution = true
-				case 'W':
-					Workspace = true
 				case 'R':
 					BuildGOROOT = true
+				case 'N':
+					Clean = true
+					Nuke = true
 				default:
 					Usage()
 					return false
-
 				}
+				SoftArgs++
 			}
 		}
 	}
+
+	if HardArgs > 0 && SoftArgs > 0 {
+		ErrLog.Printf("Cannot have -- and - style arguments at the same time.\n")
+		return false
+	}
+
 	return true
 }
 

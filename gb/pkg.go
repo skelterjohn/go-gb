@@ -46,6 +46,7 @@ type Package struct {
 	GoSources  []string
 	CGoSources []string
 	CSrcs      []string
+	CHeaders   []string
 	AsmSrcs    []string
 	Sources    []string // the list of all .go, .c, .s source in the target
 
@@ -284,6 +285,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		pb == "_cgo_import.c" ||
 		pb == "__cgo_import.c" ||
 		pb == "_cgo_main.c" ||
+		pb == "_cgo_export.h" ||
 		pb == "_cgo_defun.c" {
 		return
 	}
@@ -323,6 +325,9 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 			this.GoSources = append(this.GoSources, fpath)
 		}
 		this.Sources = append(this.Sources, fpath)
+	}
+	if strings.HasSuffix(fpath, ".h") {
+		this.CHeaders = append(this.CHeaders, fpath)
 	}
 	if strings.HasSuffix(fpath, ".c") {
 		this.CSrcs = append(this.CSrcs, fpath)
@@ -478,11 +483,11 @@ func (this *Package) GetTarget() (err os.Error) {
 			if this.IsCmd {
 				this.Target = path.Base(this.Dir)
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD)//"main"
+					this.Target = filepath.Base(CWD) //"main"
 				}
 			} else {
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD)//"localpkg"
+					this.Target = filepath.Base(CWD) //"localpkg"
 				}
 				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
 					this.Target = GetRelative("pkg", this.Dir, CWD)
@@ -1156,6 +1161,9 @@ func (this *Package) CollectDistributionFiles(ch chan string) (err os.Error) {
 		ch <- path.Join(this.Dir, src)
 	}
 	for _, src := range this.CSrcs {
+		ch <- path.Join(this.Dir, src)
+	}
+	for _, src := range this.CHeaders {
 		ch <- path.Join(this.Dir, src)
 	}
 	for _, src := range this.CGoSources {

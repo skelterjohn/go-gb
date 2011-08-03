@@ -94,7 +94,7 @@ OFiles=\
 {{end}}{{if .CGoFiles}}
 
 CGOFILES=\
-{{if .CGoFiles}}	{{.}}\
+{{range .CGoFiles}}	{{.}}\
 {{end}}
 {{end}}{{if .CObjs}}
 
