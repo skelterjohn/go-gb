@@ -262,7 +262,7 @@ func TryGenMake() (err os.Error) {
 		if genBuild {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
-			buildFile, err = os.Create("build")
+			buildFile, err = os.OpenFile("build", os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0755)
 			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return
