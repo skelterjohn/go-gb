@@ -155,8 +155,7 @@ Options:
  --workspace
  		Create workspace.gb files for all listed targets. Doing this
  		allows you to run gb from within the target directories as if
- 		you were running gb from the directory you ran 
- 		--create-workspace in.
+ 		you were running gb from the directory you ran --workspace in.
 
  --dist
  		Create a distribution directory for the relevant targets in a
