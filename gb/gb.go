@@ -580,9 +580,9 @@ func CheckFlags() bool {
 				GoFMT = true
 			case "--dist":
 				Distribution = true
-			case "--create-makefiles":
+			case "--makefiles":
 				GenMake = true
-			case "--create-workspace":
+			case "--workspace":
 				Workspace = true
 			default:
 				Usage()

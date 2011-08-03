@@ -145,14 +145,14 @@ Options:
 		date. This works with the "-s" option. Using "-Rs" will list
 		any targets in $GOROOT/src that the local targets depend on.
 
- --create-makefiles
+ --makefiles
  		Generate makefiles and a build script. In each relevant target,
 		create a makefile that supports incremental building with the
 		rest of the targets. The build script invokes each of the
 		makefiles in a topological order, ensuring that running "./build"
 		will always result in a correct build.
 
- --create-workspace
+ --workspace
  		Create workspace.gb files for all listed targets. Doing this
  		allows you to run gb from within the target directories as if
  		you were running gb from the directory you ran 

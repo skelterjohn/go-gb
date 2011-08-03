@@ -42,14 +42,14 @@ Options:
  -S scan and list targets and their dependencies without building
  -t run tests
  -v verbose
- --create-makefiles
-     generate standard makefiles without building
- --create-workspace
-     create workspace.gb files in all directories
  --dist
      create distribution directory
  --gofmt
      run gofmt on source files in targeted directories
+ --makefiles
+     generate standard makefiles without building
+ --workspace
+     create workspace.gb files in all directories
 `
 
 func Usage() {
