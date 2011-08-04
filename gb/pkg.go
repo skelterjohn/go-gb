@@ -1299,7 +1299,7 @@ func (this *Package) AddToBuild(bfile *os.File) (err os.Error) {
 			return
 		}
 	}
-	_, err = fmt.Fprintf(bfile, "&& echo \"(in %s)\" && cd %s && make $1 && cd - > /dev/null \\\n", this.Dir, this.Dir)
+	_, err = fmt.Fprintf(bfile, "&& echo \"(in %s)\" gomake $1 && cd %s && gomake $1 && cd - > /dev/null \\\n", this.Dir, this.Dir)
 	return
 }
 
