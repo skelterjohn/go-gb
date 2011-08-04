@@ -63,9 +63,9 @@ func FindExternals() (err os.Error) {
 	}
 
 	var err2 os.Error
-	MakeCMD, err2 = exec.LookPath("make")
+	MakeCMD, err2 = exec.LookPath("gomake")
 	if err2 != nil {
-		fmt.Printf("Could not find 'make' in path\n")
+		fmt.Printf("Could not find 'gomake' in path\n")
 	}
 	GoInstallCMD, err2 = exec.LookPath("goinstall")
 	if err2 != nil {
