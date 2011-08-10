@@ -53,5 +53,5 @@ Options:
 `
 
 func Usage() {
-	fmt.Printf(UsageText)
+	fmt.Print(UsageText)
 }

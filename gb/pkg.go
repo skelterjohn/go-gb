@@ -165,6 +165,10 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.Objects = append(this.Objects, path.Join(this.Dir, GetIBName()))
 	err = this.GetTarget()
 
+	if reqOS, ok := OSFiltersMust[this.Target]; ok && reqOS != GOOS {
+		err = os.NewError(fmt.Sprintf("%s can only build with GOOS=%s", this.Target, reqOS))
+	}
+
 	if !FilterPkg(this.Target) {
 		err = os.NewError("Filtered package based on GOOS/GOARCH")
 		return

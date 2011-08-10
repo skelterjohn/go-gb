@@ -92,6 +92,10 @@ var ForceMakePkgs = map[string]bool{
 	"godoc":      true,
 }
 
+var OSFiltersMust = map[string]string{
+	"wingui": "windows",
+}
+
 func ScanDirectory(base, dir string) (err2 os.Error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||
@@ -150,7 +154,6 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		for _, subdir := range subdirs {
 			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 		}
-	} else {
 	}
 
 	return

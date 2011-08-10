@@ -88,6 +88,9 @@ same time, you can run gb -R to build dependencies in $GOROOT.
 To include extra files in a distribution, create a file 'dist.gb' that lists
 the additional files to copy.
 
+gb passes any command line arguments that begin with "-test." to testing
+binaries, when you run gb -t.
+
 
 Options:
  -i		Install build pkgs and cmds to $GOROOT/pkg/$GOOS_$GOARCH and
