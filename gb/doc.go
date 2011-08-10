@@ -122,7 +122,9 @@ Options:
  -S		Same as "-s", except import dependencies are also printed.
 
  -t		Run all tests contained in *_test.go source for the relevant
-		targets. Behaves similarly to "make test".
+		targets. Behaves similarly to "make test". All additional
+		command line arguments beginning with "-test." are passed to the
+		test binary (see http://golang.org/cmd/gotest for details).
 
  -e		Exclusive target list. Do not attempt to build any packages that
 		aren't in the directories listed on the command line.
