@@ -26,10 +26,7 @@ func MakeBuild(pkg *Package) (err os.Error) {
 		fmt.Printf("(in %s) Can't use make to build %s\n", pkg.Dir, pkg.Target)
 		return
 	}
-
-	buildBlock <- true
-	defer func() { <-buildBlock }()
-
+	
 	margs := []string{"gomake", "clean"}
 	if Install || pkg.IsInGOROOT {
 		margs = append(margs, "install")

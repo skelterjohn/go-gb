@@ -69,7 +69,6 @@ var ReturnFailCode bool
 var RunningInGOROOT bool
 var RunningInGOPATH string
 
-var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
 var ErrLog = log.New(os.Stderr, "gb error: ", 0)

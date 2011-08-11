@@ -155,8 +155,6 @@ func LoadEnvs() bool {
 
 	RunningInGOROOT = HasPathPrefix(CWD, filepath.Join(GOROOT, "src"))
 
-	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
-
 	return true
 }
 

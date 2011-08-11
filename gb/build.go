@@ -43,11 +43,6 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Erro
 }
 
 func BuildPackage(pkg *Package) (err os.Error) {
-	buildBlock <- true
-	defer func() {
-		<-buildBlock
-	}()
-
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
 	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
