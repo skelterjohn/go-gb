@@ -17,7 +17,7 @@
 package main
 
 import (
-	"exp/template"
+	"template"
 )
 
 type TestPkg struct {

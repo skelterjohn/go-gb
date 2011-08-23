@@ -17,8 +17,7 @@
 package main
 
 import (
-	"exp/template"
-	//"template"
+	"template"
 )
 
 type MakeData struct {
