@@ -42,6 +42,10 @@ in one of the source files, before the package statement. (See
 targets is primarily useful for projects that are intended to be installed 
 with goinstall, which requires that the target name match a URL.
 
+If gb is run within a directory that has a valid target, the target's name
+will be taken from the containing directory, rather than the relative path,
+".".
+
 gb will match target names with import statements found in the source to 
 determine the workspace dependency structure. It will use this structure to 
 do incremental building correctly.
