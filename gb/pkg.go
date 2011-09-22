@@ -225,7 +225,17 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 func (this *Package) ScanForSource() (err os.Error) {
 	errch := make(chan os.Error)
 	go func() {
-		filepath.Walk(this.Dir, this, errch)
+		wf := func(path string, info *os.FileInfo, err os.Error) os.Error {
+			if info.IsDirectory() {
+				if !this.VisitDir(path, info) {
+					return filepath.SkipDir
+				}
+			} else {
+				this.VisitFile(path, info)
+			}
+			return nil
+		}
+		filepath.Walk(this.Dir, wf)
 		close(errch)
 	}()
 	for fperr := range errch {
