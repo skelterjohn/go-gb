@@ -56,16 +56,15 @@ func FindExternals() (err os.Error) {
 		fmt.Printf("Could not find 'gopack' in path\n")
 		return
 	}
-	CGoCMD, err = exec.LookPath("cgo")
-	if err != nil {
-		fmt.Printf("Could not find 'cgo' in path\n")
-		return
-	}
 
 	var err2 os.Error
-	MakeCMD, err2 = exec.LookPath("make")
+	CGoCMD, err2 = exec.LookPath("cgo")
 	if err2 != nil {
-		fmt.Printf("Could not find 'make' in path\n")
+		fmt.Printf("Could not find 'cgo' in path\n")
+	}
+	MakeCMD, err2 = exec.LookPath("gomake")
+	if err2 != nil {
+		fmt.Printf("Could not find 'gomake' in path\n")
 	}
 	GoInstallCMD, err2 = exec.LookPath("goinstall")
 	if err2 != nil {

@@ -18,7 +18,6 @@ package main
 
 import (
 	"template"
-	//"exp/template"
 )
 
 type TestPkg struct {
@@ -29,7 +28,7 @@ type TestPkg struct {
 type TestSuite struct {
 	TestPkgs []*TestPkg
 }
-
+/*
 var TestmainTemplate = func() *template.Template {
 	t := template.New(nil)
 	t.SetDelims("{{", "}}")
@@ -81,7 +80,7 @@ func main() {
 `)
 	return t
 }()
-/*
+*/
 var TestmainTemplate = func() *template.Template {
 	t := template.New("testmain")
 	t, err := t.Parse(
@@ -125,4 +124,3 @@ func main() {
 	}
 	return t
 }()
-*/

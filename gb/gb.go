@@ -59,6 +59,8 @@ var ListedTargets int
 var ListedDirs, ValidatedDirs map[string]bool
 var ListedPkgs []*Package
 
+var HardArgs, BuildArgs int
+
 var TestArgs []string
 
 var BrokenMsg []string
@@ -67,7 +69,6 @@ var ReturnFailCode bool
 var RunningInGOROOT bool
 var RunningInGOPATH string
 
-var buildBlock chan bool
 var Packages = make(map[string]*Package)
 
 var ErrLog = log.New(os.Stderr, "gb error: ", 0)
@@ -87,6 +88,11 @@ var ForceMakePkgs = map[string]bool{
 	"go/build":   true,
 	"os":         true,
 	"hash/crc32": true,
+	"godoc":      true,
+}
+
+var OSFiltersMust = map[string]string{
+	"wingui": "windows",
 }
 
 func ScanDirectory(base, dir string) (err2 os.Error) {
@@ -147,7 +153,6 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		for _, subdir := range subdirs {
 			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
 		}
-	} else {
 	}
 
 	return
@@ -259,7 +264,7 @@ func TryGenMake() (err os.Error) {
 		if genBuild {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
-			buildFile, err = os.Create("build")
+			buildFile, err = os.OpenFile("build", os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0755)
 			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return
@@ -415,7 +420,9 @@ func TryInstall() {
 }
 
 func RunGB() (err os.Error) {
-	Build = Build || (!GenMake && !Clean && !GoFMT && !Scan && !Workspace) || (Makefiles && !Clean) || Install || Test
+	Build = Build || (!Clean && !Scan) || (Makefiles && !Clean) || Install || Test
+
+	Build = Build && HardArgs == 0
 
 	DoPkgs, DoCmds = DoPkgs || (!DoPkgs && !DoCmds), DoCmds || (!DoPkgs && !DoCmds)
 
@@ -569,18 +576,32 @@ func CheckFlags() bool {
 			TestArgs = append(TestArgs, arg)
 			continue
 		}
-		if len(arg) > 0 && arg[0] == '-' {
+		if strings.HasPrefix(arg, "--") {
+			switch arg {
+			case "--gofmt":
+				GoFMT = true
+			case "--dist":
+				Distribution = true
+			case "--makefiles":
+				GenMake = true
+			case "--workspace":
+				Workspace = true
+			default:
+				Usage()
+				return false
+			}
+			HardArgs++
+		} else if strings.HasPrefix(arg, "-") {
 			for _, flag := range arg[1:] {
 				switch flag {
 				case 'i':
 					Install = true
+					BuildArgs++
 				case 'c':
 					Clean = true
-				case 'N':
-					Clean = true
-					Nuke = true
 				case 'b':
 					Build = true
+					BuildArgs++
 				case 's':
 					Scan = true
 				case 'S':
@@ -591,43 +612,46 @@ func CheckFlags() bool {
 					ScanListFiles = true
 				case 't':
 					Test = true
+					BuildArgs++
 				case 'e':
 					Exclusive = true
 				case 'v':
 					Verbose = true
 				case 'm':
 					Makefiles = true
-				case 'M':
-					GenMake = true
 				case 'f':
 					Force = true
 				case 'g':
 					GoInstall = true
+					BuildArgs++
 				case 'G':
 					GoInstall = true
 					GoInstallUpdate = true
+					BuildArgs++
 				case 'p':
 					Concurrent = true
-				case 'F':
-					GoFMT = true
 				case 'P':
 					DoPkgs = true
 				case 'C':
 					DoCmds = true
-				case 'D':
-					Distribution = true
-				case 'W':
-					Workspace = true
 				case 'R':
 					BuildGOROOT = true
+				case 'N':
+					Clean = true
+					Nuke = true
 				default:
 					Usage()
 					return false
-
 				}
 			}
 		}
 	}
+
+	if HardArgs > 0 && BuildArgs > 0 {
+		ErrLog.Printf("Cannot have -- style arguments and build at the same time.\n")
+		return false
+	}
+
 	return true
 }
 

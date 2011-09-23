@@ -155,8 +155,6 @@ func LoadEnvs() bool {
 
 	RunningInGOROOT = HasPathPrefix(CWD, filepath.Join(GOROOT, "src"))
 
-	buildBlock = make(chan bool, runtime.GOMAXPROCS(0)) //0 doesn't change, only returns
-
 	return true
 }
 
@@ -182,64 +180,37 @@ func GetInstallDirCmd() (dir string) {
 	return GOBIN
 }
 
-func GetCompilerName() (name string) {
+func ArchChar() (c string) {
 	switch GOARCH {
 	case "amd64":
-		return "6g"
+		return "6"
 	case "386":
-		return "8g"
+		return "8"
 	case "arm":
-		return "5g"
+		return "5"
 	}
+	panic("unknown arch "+GOARCH)
 	return
+}
+
+func GetCompilerName() (name string) {
+	return ArchChar()+"g"
 }
 
 func GetCCompilerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6c"
-	case "386":
-		return "8c"
-	case "arm":
-		return "5c"
-	}
-	return
+	return ArchChar()+"c"
 }
 
 func GetAssemblerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6a"
-	case "386":
-		return "8a"
-	case "arm":
-		return "5a"
-	}
-	return
+	return ArchChar()+"a"
 }
 
 func GetLinkerName() (name string) {
-	switch GOARCH {
-	case "amd64":
-		return "6l"
-	case "386":
-		return "8l"
-	case "arm":
-		return "5l"
-	}
-	return
+	return ArchChar()+"l"
 }
 
 func GetObjSuffix() (suffix string) {
-	switch GOARCH {
-	case "amd64":
-		return ".6"
-	case "386":
-		return ".8"
-	case "arm":
-		return ".5"
-	}
-	return
+	return "."+ArchChar()
 }
 
 func GetIBName() (name string) {
