@@ -506,6 +506,9 @@ func (this *Package) GetTarget() (err os.Error) {
 				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
 					this.Target = GetRelative("pkg", this.Dir, CWD)
 				}
+				if this.Base == this.Dir && HasPathPrefix(this.Dir, "src") && this.Dir != "src" {
+					this.Target = GetRelative("src", this.Dir, CWD)
+				}
 			}
 		} else {
 			this.Base = this.Target
