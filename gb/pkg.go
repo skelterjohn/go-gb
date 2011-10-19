@@ -387,6 +387,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		}
 		if isCGoSrc {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
+			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
 			this.PkgCGoSrc[fpkg] = append(this.PkgCGoSrc[fpkg], src)
 		} else {
@@ -419,27 +420,15 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			var fpkg, ftarget string
 			var fdeps, ffuncs []string
 			fpkg, ftarget, fdeps, ffuncs, _, _, err = GetDeps(path.Join(this.Dir, src))
+			if this.Name != "\"runtime\"" {
+				fdeps = append(fdeps, "\"runtime\"")
+			}
 			for _, dep := range fdeps {
 				if dep == "\"C\"" {
 					ErrLog.Printf("Test src %s wants to use cgo... too much effort.\n", src)
 					continue
 				}
 			}
-			/*
-							//if there are no Test* or Benchmark* functions, forget it
-							for _, ffunc := range ffuncs {
-								if strings.HasPrefix(ffunc, "Test") {
-									goto havetests
-								}
-								if strings.HasPrefix(ffunc, "Benchmark") {
-									goto havetests
-								}
-							}
-							fmt.Printf("skipping %s\n", src)
-							continue
-				havetests:
-							fmt.Printf("using %s\n", src)
-			*/
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -448,9 +437,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			if ftarget != "" {
 				this.Target = ftarget
 			}
-			//this.Name = fpkg
 			this.TestDeps = append(this.TestDeps, fdeps...)
-			//this.Funcs = append(this.Funcs, ffuncs...)
 			this.TestFuncs[fpkg] = append(this.TestFuncs[fpkg], ffuncs...)
 		}
 		this.TestDeps = RemoveDups(this.TestDeps)
