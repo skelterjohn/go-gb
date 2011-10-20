@@ -32,7 +32,8 @@ var MakeCMD,
 	GoInstallCMD,
 	GoFMTCMD,
 	CGoCMD,
-	GCCCMD string
+	GCCCMD,
+	ProtocCMD string
 
 func FindExternals() (err os.Error) {
 
@@ -81,6 +82,10 @@ func FindExternals() (err os.Error) {
 	CCMD, err2 = exec.LookPath(GetCCompilerName())
 	if err2 != nil {
 		fmt.Printf("Could not find '%' in path\n", GetCCompilerName())
+	}
+	ProtocCMD, err2 = exec.LookPath("protoc")
+	if err2 != nil {
+		//fmt.Printf("Could not find 'protoc' in path\n")
 	}
 
 	CopyCMD, _ = exec.LookPath("cp")

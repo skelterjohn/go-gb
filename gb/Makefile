@@ -16,6 +16,7 @@ GOFILES=\
 	goinstall.go\
 	make.go\
 	pkg.go\
+	protobuf.go\
 	query.go\
 	runext.go\
 	usage.go\

@@ -37,6 +37,7 @@ type Package struct {
 	ResultPath, InstallPath string
 
 	IsCGo bool
+	IsProtobuf bool
 
 	//these prevent multipath issues for tree following
 	built, cleaned, addedToBuild, gofmted, scanned bool
@@ -48,8 +49,10 @@ type Package struct {
 	CSrcs      []string
 	CHeaders   []string
 	AsmSrcs    []string
+	ProtoSrcs  []string // for protobufs
 	Sources    []string // the list of all .go, .c, .s source in the target
 
+	ProtoGoSrcs []string // the .go files that correspond to .proto files
 	DeadSources []string // all .go, .c, .s files that will not be included in the build
 
 	Objects []string
@@ -174,6 +177,18 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		return
 	}
 
+	if this.IsProtobuf && ProtocCMD == "" {
+		err = os.NewError(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
+	if this.IsCGo && CGoCMD == "" {
+		err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
 	if this.IsCmd && this.IsCGo {
 		err = os.NewError(fmt.Sprintf("(in %s) cannot have a cgo cmd", this.Dir))
 		ErrLog.Println(err)
@@ -266,6 +281,9 @@ func (this *Package) FilterDeadSource() {
 	for _, s := range this.AsmSrcs {
 		deadset[s] = false
 	}
+	for _, s := range this.ProtoGoSrcs {
+		deadset[s] = false
+	}
 
 	this.DeadSources = []string{}
 	for s, ok := range deadset {
@@ -304,6 +322,11 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		return
 	}
 
+	//only get these from .proto files
+	if strings.HasSuffix(fpath, ".pb.go") {
+		return
+	}
+
 	//skip files flagged for different OS/ARCH
 	if !FilterFlag(fpath) {
 		return
@@ -325,6 +348,13 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		this.DeadSources = append(this.DeadSources, fpath)
 	}
 
+	if strings.HasSuffix(fpath, ".proto") {
+		this.ProtoSrcs = append(this.ProtoSrcs, fpath)
+		this.Sources = append(this.Sources, fpath)
+		generatedGo := GoForProto(fpath)
+		this.ProtoGoSrcs = append(this.ProtoGoSrcs, generatedGo)
+		this.IsProtobuf = true
+	}
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
@@ -411,6 +441,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 
 	for _, buildSrc := range this.PkgCGoSrc[this.Name] {
 		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
+	}
+
+	if this.IsProtobuf {
+		this.Deps = append(this.Deps, "\"math\"", "\"os\"", "\"goprotobuf.googlecode.com/hg/proto\"")
 	}
 
 	this.Deps = RemoveDups(this.Deps)
@@ -811,14 +845,19 @@ func (this *Package) Build() (err os.Error) {
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", labelDir, which, this.Target)
 
-		if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
-			err = MakeBuild(this)
-		} else if this.IsCGo {
-			err = BuildCgoPackage(this)
-		} else {
-			err = BuildPackage(this)
+		if this.IsProtobuf {
+			err = GenerateProtobufSource(this)
 		}
 
+		if err == nil {
+			if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
+				err = MakeBuild(this)
+			} else if this.IsCGo {
+				err = BuildCgoPackage(this)
+			} else {
+				err = BuildPackage(this)
+			}
+		}
 		if err == nil {
 			PackagesBuilt++
 		} else {
@@ -1003,6 +1042,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 	ib := false
 	res := false
 	cgo := false
+	proto := false
 	test := false
 	for _, obj := range this.Objects {
 		if _, err2 := os.Stat(obj); err2 == nil {
@@ -1023,11 +1063,18 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(path.Join(this.Dir, "_cgo")); err2 == nil {
 		cgo = true
 	}
+
+	for _, pbgo := range this.ProtoGoSrcs {
+		if _, err2 := os.Stat(path.Join(this.Dir, pbgo)); err2 == nil {
+			proto = true
+		}
+	}
+
 	testdir := path.Join(this.Dir, "_test")
 	if _, err2 := os.Stat(testdir); err2 == nil {
 		test = true
 	}
-	if !ib && !res && !test && !cgo {
+	if !ib && !res && !test && !cgo && !proto {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
@@ -1058,6 +1105,15 @@ func (this *Package) CleanFiles() (err os.Error) {
 
 	if this.IsCGo {
 		err = CleanCGoPackage(this)
+	}
+
+	if this.IsProtobuf {
+		for _, pbgo := range this.ProtoGoSrcs {
+			if Verbose {
+				fmt.Printf(" Removing %s\n", pbgo)
+			}
+			err = os.Remove(path.Join(this.Dir, pbgo))
+		}
 	}
 
 	return
