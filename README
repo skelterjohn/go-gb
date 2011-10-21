@@ -69,10 +69,7 @@ or $GOARCH appears in the file name in the form of *_VALUE*.go, that file
 will only be included if it matches $GOOS or $GOARCH. The flag *_unix*.go 
 will match any of the unix-based $GOOS options.
 
-gb can still be used to compile cgo projects, but you must provide a 
-makefile. gb identifies a cgo project by the presence of cgo_*.go files or
-*.c files, and will always try to use a makefile if one exists. If no 
-makefile exists, gb will skip this target (with a warning).
+gb can automatically build cgo projects.
 
 Quickly check the build status of any target with gb -s. It will print out 
 a list of targets, and will tell you if they are up to date or installed 

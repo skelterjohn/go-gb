@@ -31,6 +31,7 @@ var MakeCMD,
 	CopyCMD,
 	GoInstallCMD,
 	GoFMTCMD,
+	GoFixCMD,
 	CGoCMD,
 	GCCCMD,
 	ProtocCMD string
@@ -74,6 +75,10 @@ func FindExternals() (err os.Error) {
 	GoFMTCMD, err2 = exec.LookPath("gofmt")
 	if err2 != nil {
 		fmt.Printf("Could not find 'gofmt' in path\n")
+	}
+	GoFixCMD, err2 = exec.LookPath("gofix")
+	if err2 != nil {
+		fmt.Printf("Could not find 'gofix' in path\n")
 	}
 	GCCCMD, err2 = exec.LookPath("gcc")
 	if err2 != nil {

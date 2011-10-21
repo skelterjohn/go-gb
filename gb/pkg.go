@@ -36,11 +36,11 @@ type Package struct {
 
 	ResultPath, InstallPath string
 
-	IsCGo bool
+	IsCGo      bool
 	IsProtobuf bool
 
 	//these prevent multipath issues for tree following
-	built, cleaned, addedToBuild, gofmted, scanned bool
+	built, cleaned, addedToBuild, gofmted, gofixed, scanned bool
 
 	NeedsBuild, NeedsInstall, NeedsGoInstall bool
 
@@ -1192,6 +1192,7 @@ func (this *Package) ListSource() (err os.Error) {
 	listFiles(gosrc)
 	listFiles(this.AsmSrcs)
 	listFiles(this.CSrcs)
+	listFiles(this.ProtoSrcs)
 
 	for _, file := range this.DeadSources {
 		fmt.Printf("\t*%s\n", file)
@@ -1374,16 +1375,18 @@ func (this *Package) GoFMT() (err os.Error) {
 
 	this.gofmted = true
 
-	for _, pkg := range this.DepPkgs {
-		if Concurrent {
-			go pkg.GoFMT()
-		} else {
-			err = pkg.GoFMT()
-			if err != nil {
-				return
+	/*
+		for _, pkg := range this.DepPkgs {
+			if Concurrent {
+				go pkg.GoFMT()
+			} else {
+				err = pkg.GoFMT()
+				if err != nil {
+					return
+				}
 			}
 		}
-	}
+	*/
 
 	fmt.Printf("(in %s) running gofmt\n", this.Dir)
 	for _, src := range this.GoSources {
@@ -1404,6 +1407,29 @@ func (this *Package) GoFMT() (err os.Error) {
 			return
 		}
 	}
+
+	this.Stat()
+
+	return
+}
+
+func (this *Package) GoFix() (err os.Error) {
+	if this.gofixed || (Exclusive && !ListedDirs[this.Dir]) {
+		return
+	}
+
+	if !this.Active {
+		return
+	}
+
+	this.gofixed = true
+
+	fmt.Printf("(in %s) running gofix\n", this.Dir)
+
+	allgo := append([]string{}, this.GoSources...)
+	allgo = append(allgo, this.TestSources...)
+	allgo = append(allgo, this.CGoSources...)
+	err = RunGoFix(this.Dir, allgo)
 
 	this.Stat()
 

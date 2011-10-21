@@ -12,6 +12,7 @@ GOFILES=\
 	gb.go\
 	genmake.go\
 	gentest.go\
+	gofix.go\
 	gofmt.go\
 	goinstall.go\
 	make.go\

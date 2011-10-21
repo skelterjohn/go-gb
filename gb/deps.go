@@ -38,15 +38,15 @@ func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []
 		return
 	}
 
-	w := &Walker {
-		Name: "",
-		Target: "",
-		pkgPos: 0,
-		Deps: []string{},
-		Funcs: []string{},
+	w := &Walker{
+		Name:       "",
+		Target:     "",
+		pkgPos:     0,
+		Deps:       []string{},
+		Funcs:      []string{},
 		CGoLDFlags: []string{},
-		CGoCFlags: []string{},
-		ScanFuncs: isTest,
+		CGoCFlags:  []string{},
+		ScanFuncs:  isTest,
 	}
 
 	ast.Walk(w, file)

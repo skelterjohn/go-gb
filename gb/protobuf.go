@@ -8,7 +8,7 @@ import (
 
 func GoForProto(protosrc string) (gosrc string) {
 	base := protosrc[:len(protosrc)-len(".proto")]
-	gosrc = base+".pb.go"
+	gosrc = base + ".pb.go"
 	return
 }
 
