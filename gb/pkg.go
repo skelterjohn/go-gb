@@ -518,11 +518,11 @@ func (this *Package) GetTarget() (err os.Error) {
 			if this.IsCmd {
 				this.Target = path.Base(this.Dir)
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD) //"main"
+					this.Target = filepath.Base(CWD)
 				}
 			} else {
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD) //"localpkg"
+					this.Target = filepath.Base(CWD)
 				}
 
 				tryFixPrefix := func(prefix string) (fixed bool) {

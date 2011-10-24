@@ -21,6 +21,39 @@ import (
 	"fmt"
 )
 
+type GATest struct {
+	path, cwd string
+	truth string
+}
+
+func TestGetAbs(t *testing.T) {
+	gaTests := []GATest{
+		{`package2`, `/home/user/workspace`, `/home/user/workspace/package2`},
+		{`/home/go`, `/home/user/workspace`, `/home/go`},
+	}
+	gaTestsWindows := []GATest{
+		{`C:\something`, `/home/user/workspace`, `C:/something`},
+		{`C:/something`, `/home/user/workspace`, `C:/something`},
+		{`A:\something/else`, `/home/user/workspace`, `A:/something/else`},
+	}
+
+	for _, gat := range gaTests {
+		result := GetAbs(gat.path, gat.cwd)
+		if result != gat.truth {
+			t.Error(fmt.Sprintf("GetAbs(\"%s\", \"%s\") -> %s, was expecting %s", gat.path, gat.cwd, result, gat.truth))
+		}
+	}
+
+	TestWindows = true
+	for _, gat := range gaTestsWindows {
+		result := GetAbs(gat.path, gat.cwd)
+		if result != gat.truth {
+			t.Error(fmt.Sprintf("GetAbs(\"%s\", \"%s\") -> %s, was expecting %s", gat.path, gat.cwd, result, gat.truth))
+		}
+	}
+	TestWindows = false
+}
+
 type GRTest struct {
 	start, finish, wd string
 	truth             string
@@ -43,6 +76,7 @@ func TestGetRelative(t *testing.T) {
 		{`D:\e\f\g`, `a/b/c`, `e:\\home`, `E:/home/a/b/c`},
 		{`D:\e\f\g`, `a/b/c`, `e:/home`, `E:/home/a/b/c`},
 		{`e:\dnload\go-lang\go07\go`, `.`, `E:\prog\splitsound\repo01`, `../../../../prog/splitsound/repo01`},
+		{`A:\go\walk\src\pkg\walk`, `C:\go\src\pkg`, `A:\go\walk`, `C:/go/src/pkg`},
 	}
 
 	for _, grt := range grTests {
