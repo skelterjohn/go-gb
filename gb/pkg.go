@@ -524,12 +524,15 @@ func (this *Package) GetTarget() (err os.Error) {
 				if this.Target == "." {
 					this.Target = filepath.Base(CWD) //"localpkg"
 				}
-				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
-					this.Target = GetRelative("pkg", this.Dir, CWD)
+
+				tryFixPrefix := func(prefix string) (fixed bool) {
+					if this.Base == this.Dir && HasPathPrefix(this.Dir, prefix) && this.Dir != prefix {
+						this.Target = GetRelative(prefix, this.Dir, CWD)
+						return true
+					}
+					return false
 				}
-				if this.Base == this.Dir && HasPathPrefix(this.Dir, "src") && this.Dir != "src" {
-					this.Target = GetRelative("src", this.Dir, CWD)
-				}
+				_ = tryFixPrefix(path.Join("src", "pkg")) || tryFixPrefix("src") || tryFixPrefix("src")
 			}
 		} else {
 			this.Base = this.Target
