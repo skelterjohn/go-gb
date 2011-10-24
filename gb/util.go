@@ -19,6 +19,7 @@ package main
 import (
 	"runtime"
 	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -40,7 +41,7 @@ func GetAbs(p, cwd string) (abspath string) {
 			return
 		}
 	}
-	abspath = filepath.Join(cwd, p)
+	abspath = path.Join(cwd, p)
 	return
 }
 
@@ -58,7 +59,7 @@ func pathClean(p string) (r string) {
 			p = strings.ToUpper(p[0:1]) + p[1:len(p)]
 		}
 	}
-	r = filepath.Clean(p)
+	r = path.Clean(p)
 	return
 }
 
@@ -102,17 +103,17 @@ func GetRelative(start, finish, cwd string) (relative string) {
 
 	backtracking := "."
 	for !HasPathPrefix(finish, start) {
-		backtracking = filepath.Join(backtracking, "..")
-		start, _ = filepath.Split(start)
+		backtracking = path.Join(backtracking, "..")
+		start, _ = path.Split(start)
 		start = pathClean(start)
 	}
 	if start == finish {
-		return pathClean(filepath.Join(backtracking, "."))
+		return pathClean(path.Join(backtracking, "."))
 	}
 	if start == "/" {
-		relative = filepath.Join(backtracking, finish)
+		relative = path.Join(backtracking, finish)
 	} else {
-		relative = filepath.Join(backtracking, finish[len(start)+1:len(finish)])
+		relative = path.Join(backtracking, finish[len(start)+1:len(finish)])
 	}
 	return
 }
