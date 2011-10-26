@@ -635,7 +635,7 @@ func (this *Package) PrintScan() {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
 	}
 	var suffix string
-	if !this.IsInGOROOT && this.Dir != this.Target {
+	if !this.IsInGOROOT && this.IsInGOPATH == "" && this.Dir != this.Target {
 		suffix = fmt.Sprintf(" in %s", displayDir)
 	}
 	fmt.Printf("%s \"%s\"%s%s\n", label, this.Target, suffix, bis)
