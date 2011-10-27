@@ -15,8 +15,6 @@
 */
 
 /*
-Overview
-
 gb is nearly configuration-free project builder for the go language.
 
 With gb, one only has to run the simple command line, gb, in order to bring
