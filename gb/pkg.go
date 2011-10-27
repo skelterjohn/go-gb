@@ -36,10 +36,11 @@ type Package struct {
 
 	ResultPath, InstallPath string
 
-	IsCGo bool
+	IsCGo      bool
+	IsProtobuf bool
 
 	//these prevent multipath issues for tree following
-	built, cleaned, addedToBuild, gofmted, scanned bool
+	built, cleaned, addedToBuild, gofmted, gofixed, scanned bool
 
 	NeedsBuild, NeedsInstall, NeedsGoInstall bool
 
@@ -48,8 +49,10 @@ type Package struct {
 	CSrcs      []string
 	CHeaders   []string
 	AsmSrcs    []string
+	ProtoSrcs  []string // for protobufs
 	Sources    []string // the list of all .go, .c, .s source in the target
 
+	ProtoGoSrcs []string // the .go files that correspond to .proto files
 	DeadSources []string // all .go, .c, .s files that will not be included in the build
 
 	Objects []string
@@ -101,12 +104,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	this.CGoCFlags = make(map[string][]string)
 	this.CGoLDFlags = make(map[string][]string)
 
-	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") {
+	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 		this.IsInGOROOT = true
 	}
 
 	for _, gp := range GOPATHS {
-		if rel := GetRelative(filepath.Join(gp, "src"), dir, CWD); !strings.HasPrefix(rel, "..") {
+		if rel := GetRelative(filepath.Join(gp, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 			this.IsInGOPATH = gp //say which gopath we're in
 		}
 	}
@@ -171,6 +174,18 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 
 	if !FilterPkg(this.Target) {
 		err = os.NewError("Filtered package based on GOOS/GOARCH")
+		return
+	}
+
+	if this.IsProtobuf && ProtocCMD == "" {
+		err = os.NewError(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
+	if this.IsCGo && CGoCMD == "" {
+		err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
+		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
@@ -268,6 +283,9 @@ func (this *Package) FilterDeadSource() {
 	for _, s := range this.AsmSrcs {
 		deadset[s] = false
 	}
+	for _, s := range this.ProtoGoSrcs {
+		deadset[s] = false
+	}
 
 	this.DeadSources = []string{}
 	for s, ok := range deadset {
@@ -306,6 +324,11 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		return
 	}
 
+	//only get these from .proto files
+	if strings.HasSuffix(fpath, ".pb.go") {
+		return
+	}
+
 	//skip files flagged for different OS/ARCH
 	if !FilterFlag(fpath) {
 		return
@@ -327,6 +350,13 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		this.DeadSources = append(this.DeadSources, fpath)
 	}
 
+	if strings.HasSuffix(fpath, ".proto") {
+		this.ProtoSrcs = append(this.ProtoSrcs, fpath)
+		this.Sources = append(this.Sources, fpath)
+		generatedGo := GoForProto(fpath)
+		this.ProtoGoSrcs = append(this.ProtoGoSrcs, generatedGo)
+		this.IsProtobuf = true
+	}
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
@@ -389,6 +419,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		}
 		if isCGoSrc {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
+			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
 			this.PkgCGoSrc[fpkg] = append(this.PkgCGoSrc[fpkg], src)
 		} else {
@@ -414,6 +445,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.Deps = append(this.Deps, this.SrcDeps[buildSrc]...)
 	}
 
+	if this.IsProtobuf {
+		this.Deps = append(this.Deps, "\"math\"", "\"os\"", "\"goprotobuf.googlecode.com/hg/proto\"")
+	}
+
 	this.Deps = RemoveDups(this.Deps)
 
 	if Test {
@@ -421,27 +456,15 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			var fpkg, ftarget string
 			var fdeps, ffuncs []string
 			fpkg, ftarget, fdeps, ffuncs, _, _, err = GetDeps(path.Join(this.Dir, src))
+			if this.Name != "\"runtime\"" {
+				fdeps = append(fdeps, "\"runtime\"")
+			}
 			for _, dep := range fdeps {
 				if dep == "\"C\"" {
 					ErrLog.Printf("Test src %s wants to use cgo... too much effort.\n", src)
 					continue
 				}
 			}
-			/*
-							//if there are no Test* or Benchmark* functions, forget it
-							for _, ffunc := range ffuncs {
-								if strings.HasPrefix(ffunc, "Test") {
-									goto havetests
-								}
-								if strings.HasPrefix(ffunc, "Benchmark") {
-									goto havetests
-								}
-							}
-							fmt.Printf("skipping %s\n", src)
-							continue
-				havetests:
-							fmt.Printf("using %s\n", src)
-			*/
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
 				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
@@ -450,9 +473,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			if ftarget != "" {
 				this.Target = ftarget
 			}
-			//this.Name = fpkg
 			this.TestDeps = append(this.TestDeps, fdeps...)
-			//this.Funcs = append(this.Funcs, ffuncs...)
 			this.TestFuncs[fpkg] = append(this.TestFuncs[fpkg], ffuncs...)
 		}
 		this.TestDeps = RemoveDups(this.TestDeps)
@@ -499,15 +520,21 @@ func (this *Package) GetTarget() (err os.Error) {
 			if this.IsCmd {
 				this.Target = path.Base(this.Dir)
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD) //"main"
+					this.Target = filepath.Base(CWD)
 				}
 			} else {
 				if this.Target == "." {
-					this.Target = filepath.Base(CWD) //"localpkg"
+					this.Target = filepath.Base(CWD)
 				}
-				if this.Base == this.Dir && HasPathPrefix(this.Dir, "pkg") && this.Dir != "pkg" {
-					this.Target = GetRelative("pkg", this.Dir, CWD)
+
+				tryFixPrefix := func(prefix string) (fixed bool) {
+					if this.Base == this.Dir && HasPathPrefix(this.Dir, prefix) && this.Dir != prefix {
+						this.Target = GetRelative(prefix, this.Dir, CWD)
+						return true
+					}
+					return false
 				}
+				_ = tryFixPrefix(path.Join("src", "pkg")) || tryFixPrefix("src") || tryFixPrefix("src")
 			}
 		} else {
 			this.Base = this.Target
@@ -610,7 +637,7 @@ func (this *Package) PrintScan() {
 		displayDir = strings.Replace(displayDir, GOROOT, "$GOROOT", 1)
 	}
 	var suffix string
-	if !this.IsInGOROOT && this.Dir != this.Target {
+	if !this.IsInGOROOT && this.IsInGOPATH == "" && this.Dir != this.Target {
 		suffix = fmt.Sprintf(" in %s", displayDir)
 	}
 	fmt.Printf("%s \"%s\"%s%s\n", label, this.Target, suffix, bis)
@@ -823,14 +850,19 @@ func (this *Package) Build() (err os.Error) {
 		}
 		fmt.Printf("(in %s) building %s \"%s\"\n", labelDir, which, this.Target)
 
-		if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
-			err = MakeBuild(this)
-		} else if this.IsCGo {
-			err = BuildCgoPackage(this)
-		} else {
-			err = BuildPackage(this)
+		if this.IsProtobuf {
+			err = GenerateProtobufSource(this)
 		}
 
+		if err == nil {
+			if (Makefiles || this.MustUseMakefile) && this.HasMakefile {
+				err = MakeBuild(this)
+			} else if this.IsCGo {
+				err = BuildCgoPackage(this)
+			} else {
+				err = BuildPackage(this)
+			}
+		}
 		if err == nil {
 			PackagesBuilt++
 		} else {
@@ -1015,6 +1047,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 	ib := false
 	res := false
 	cgo := false
+	proto := false
 	test := false
 	for _, obj := range this.Objects {
 		if _, err2 := os.Stat(obj); err2 == nil {
@@ -1035,11 +1068,18 @@ func (this *Package) CleanFiles() (err os.Error) {
 	if _, err2 := os.Stat(path.Join(this.Dir, "_cgo")); err2 == nil {
 		cgo = true
 	}
+
+	for _, pbgo := range this.ProtoGoSrcs {
+		if _, err2 := os.Stat(path.Join(this.Dir, pbgo)); err2 == nil {
+			proto = true
+		}
+	}
+
 	testdir := path.Join(this.Dir, "_test")
 	if _, err2 := os.Stat(testdir); err2 == nil {
 		test = true
 	}
-	if !ib && !res && !test && !cgo {
+	if !ib && !res && !test && !cgo && !proto {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
@@ -1070,6 +1110,15 @@ func (this *Package) CleanFiles() (err os.Error) {
 
 	if this.IsCGo {
 		err = CleanCGoPackage(this)
+	}
+
+	if this.IsProtobuf {
+		for _, pbgo := range this.ProtoGoSrcs {
+			if Verbose {
+				fmt.Printf(" Removing %s\n", pbgo)
+			}
+			err = os.Remove(path.Join(this.Dir, pbgo))
+		}
 	}
 
 	return
@@ -1148,6 +1197,7 @@ func (this *Package) ListSource() (err os.Error) {
 	listFiles(gosrc)
 	listFiles(this.AsmSrcs)
 	listFiles(this.CSrcs)
+	listFiles(this.ProtoSrcs)
 
 	for _, file := range this.DeadSources {
 		fmt.Printf("\t*%s\n", file)
@@ -1330,16 +1380,18 @@ func (this *Package) GoFMT() (err os.Error) {
 
 	this.gofmted = true
 
-	for _, pkg := range this.DepPkgs {
-		if Concurrent {
-			go pkg.GoFMT()
-		} else {
-			err = pkg.GoFMT()
-			if err != nil {
-				return
+	/*
+		for _, pkg := range this.DepPkgs {
+			if Concurrent {
+				go pkg.GoFMT()
+			} else {
+				err = pkg.GoFMT()
+				if err != nil {
+					return
+				}
 			}
 		}
-	}
+	*/
 
 	fmt.Printf("(in %s) running gofmt\n", this.Dir)
 	for _, src := range this.GoSources {
@@ -1360,6 +1412,29 @@ func (this *Package) GoFMT() (err os.Error) {
 			return
 		}
 	}
+
+	this.Stat()
+
+	return
+}
+
+func (this *Package) GoFix() (err os.Error) {
+	if this.gofixed || (Exclusive && !ListedDirs[this.Dir]) {
+		return
+	}
+
+	if !this.Active {
+		return
+	}
+
+	this.gofixed = true
+
+	fmt.Printf("(in %s) running gofix\n", this.Dir)
+
+	allgo := append([]string{}, this.GoSources...)
+	allgo = append(allgo, this.TestSources...)
+	allgo = append(allgo, this.CGoSources...)
+	err = RunGoFix(this.Dir, allgo)
 
 	this.Stat()
 

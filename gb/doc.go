@@ -110,7 +110,7 @@ Options:
  -g		Tell gb to use goinstall to build remote packages available at
 		one of the following websites: googlecode.com, github.com,
 		bitbucket.org and launchpad.net.
-		
+
  -G		Same as -g, except goinstall fetches new code from the
         repository.
 

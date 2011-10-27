@@ -12,10 +12,12 @@ GOFILES=\
 	gb.go\
 	genmake.go\
 	gentest.go\
+	gofix.go\
 	gofmt.go\
 	goinstall.go\
 	make.go\
 	pkg.go\
+	protobuf.go\
 	query.go\
 	runext.go\
 	usage.go\

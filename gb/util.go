@@ -18,6 +18,7 @@ package main
 
 import (
 	"runtime"
+	"path/filepath"
 	"path"
 	"strings"
 )
@@ -35,7 +36,7 @@ func GetAbs(p, cwd string) (abspath string) {
 			return
 		}
 	} else {
-		if path.IsAbs(p) {
+		if filepath.IsAbs(p) {
 			abspath = p
 			return
 		}

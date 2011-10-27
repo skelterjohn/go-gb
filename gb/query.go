@@ -189,28 +189,28 @@ func ArchChar() (c string) {
 	case "arm":
 		return "5"
 	}
-	panic("unknown arch "+GOARCH)
+	panic("unknown arch " + GOARCH)
 	return
 }
 
 func GetCompilerName() (name string) {
-	return ArchChar()+"g"
+	return ArchChar() + "g"
 }
 
 func GetCCompilerName() (name string) {
-	return ArchChar()+"c"
+	return ArchChar() + "c"
 }
 
 func GetAssemblerName() (name string) {
-	return ArchChar()+"a"
+	return ArchChar() + "a"
 }
 
 func GetLinkerName() (name string) {
-	return ArchChar()+"l"
+	return ArchChar() + "l"
 }
 
 func GetObjSuffix() (suffix string) {
-	return "."+ArchChar()
+	return "." + ArchChar()
 }
 
 func GetIBName() (name string) {

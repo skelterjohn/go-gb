@@ -44,6 +44,7 @@ var Install, //-i
 	Force, //-f
 	Makefiles, //-m
 	GoFMT, //-F
+	GoFix,
 	DoPkgs, //-P
 	DoCmds, //-C
 	Distribution, //-D
@@ -245,6 +246,18 @@ func TryGoFMT() (err os.Error) {
 	return
 }
 
+func TryGoFix() (err os.Error) {
+	if GoFix {
+		for _, pkg := range ListedPkgs {
+			err = pkg.GoFix()
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
 func TryGenMake() (err os.Error) {
 	if GenMake {
 		_, ferr := os.Stat("build")
@@ -264,7 +277,7 @@ func TryGenMake() (err os.Error) {
 		if genBuild {
 			fmt.Printf("(in .) generating build script\n")
 			var buildFile *os.File
-			buildFile, err = os.OpenFile("build", os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0755)
+			buildFile, err = os.OpenFile("build", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0755)
 			bwrite := func(format string, args ...interface{}) {
 				if err != nil {
 					return
@@ -515,6 +528,10 @@ func RunGB() (err os.Error) {
 
 	TryScan()
 
+	if err = TryGoFix(); err != nil {
+		return
+	}
+
 	if err = TryGoFMT(); err != nil {
 		return
 	}
@@ -580,6 +597,8 @@ func CheckFlags() bool {
 			switch arg {
 			case "--gofmt":
 				GoFMT = true
+			case "--gofix":
+				GoFix = true
 			case "--dist":
 				Distribution = true
 			case "--makefiles":
