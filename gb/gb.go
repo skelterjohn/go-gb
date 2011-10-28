@@ -83,12 +83,19 @@ var ErrLog = log.New(os.Stderr, "gb error: ", 0)
  go/build has a source-generation step that uses make variables
 
  os has source generation
+
+ syscall has crazy pure go/asm versions
+
+ crypto/tls has a file root_stub.go which is excluded
 */
 var ForceMakePkgs = map[string]bool{
 	"math":       true,
 	"go/build":   true,
 	"os":         true,
 	"hash/crc32": true,
+	"syscall":    true,
+	"runtime":    true,
+	"crypto/tls": true,
 	"godoc":      true,
 }
 

@@ -261,7 +261,13 @@ func (this *Package) ScanForSource() (err os.Error) {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
-	this.IsCGo = this.IsCGo || len(this.CSrcs) /*+len(this.AsmSrcs)*/ > 0
+	/*
+	this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
+
+	if this.IsCGo {
+		fmt.Println("CSrcs makes it CGo", this.CSrcs)
+	}
+	*/
 
 	return
 }
