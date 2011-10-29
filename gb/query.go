@@ -82,8 +82,9 @@ func LoadCWD() (err os.Error) {
 }
 
 func LoadEnvs() bool {
+	GOROOT = runtime.GOROOT()
 
-	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
+	GOOS, GOARCH, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOBIN")
 	if GOOS == "" {
 		GOOS = runtime.GOOS
 		os.Setenv("GOOS", GOOS)
@@ -91,10 +92,6 @@ func LoadEnvs() bool {
 	if GOARCH == "" {
 		GOARCH = runtime.GOARCH
 		os.Setenv("GOARCH", GOARCH)
-	}
-	if GOROOT == "" {
-		ErrLog.Printf("Environental variable GOROOT not set")
-		return false
 	}
 	if GOBIN == "" {
 		GOBIN = filepath.Join(GOROOT, "bin")

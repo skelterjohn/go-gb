@@ -20,6 +20,7 @@ import (
 	"exec"
 	"fmt"
 	"strings"
+	"path/filepath"
 )
 
 var MakeCMD,
@@ -36,47 +37,56 @@ var MakeCMD,
 	GCCCMD,
 	ProtocCMD string
 
+func FindGobinExternal(name string) (path string, err os.Error) {
+	path, err = exec.LookPath(name)
+	if err != nil {
+		path = filepath.Join(GOBIN, name)
+		_, err = os.Stat(path)
+	}
+	return
+}
+
 func FindExternals() (err os.Error) {
 
-	CompileCMD, err = exec.LookPath(GetCompilerName())
+	CompileCMD, err = FindGobinExternal(GetCompilerName())
 	if err != nil {
 		fmt.Printf("Could not find '%s' in path\n", GetCompilerName())
 		return
 	}
-	AsmCMD, err = exec.LookPath(GetAssemblerName())
+	AsmCMD, err = FindGobinExternal(GetAssemblerName())
 	if err != nil {
 		fmt.Printf("Could not find '%s' in path\n", GetAssemblerName())
 		return
 	}
-	LinkCMD, err = exec.LookPath(GetLinkerName())
+	LinkCMD, err = FindGobinExternal(GetLinkerName())
 	if err != nil {
 		fmt.Printf("Could not find '%s' in path\n", GetLinkerName())
 		return
 	}
-	PackCMD, err = exec.LookPath("gopack")
+	PackCMD, err = FindGobinExternal("gopack")
 	if err != nil {
 		fmt.Printf("Could not find 'gopack' in path\n")
 		return
 	}
 
 	var err2 os.Error
-	CGoCMD, err2 = exec.LookPath("cgo")
+	CGoCMD, err2 = FindGobinExternal("cgo")
 	if err2 != nil {
 		fmt.Printf("Could not find 'cgo' in path\n")
 	}
-	MakeCMD, err2 = exec.LookPath("gomake")
+	MakeCMD, err2 = FindGobinExternal("gomake")
 	if err2 != nil {
 		fmt.Printf("Could not find 'gomake' in path\n")
 	}
-	GoInstallCMD, err2 = exec.LookPath("goinstall")
+	GoInstallCMD, err2 = FindGobinExternal("goinstall")
 	if err2 != nil {
 		fmt.Printf("Could not find 'goinstall' in path\n")
 	}
-	GoFMTCMD, err2 = exec.LookPath("gofmt")
+	GoFMTCMD, err2 = FindGobinExternal("gofmt")
 	if err2 != nil {
 		fmt.Printf("Could not find 'gofmt' in path\n")
 	}
-	GoFixCMD, err2 = exec.LookPath("gofix")
+	GoFixCMD, err2 = FindGobinExternal("gofix")
 	if err2 != nil {
 		fmt.Printf("Could not find 'gofix' in path\n")
 	}
@@ -84,7 +94,7 @@ func FindExternals() (err os.Error) {
 	if err2 != nil {
 		fmt.Printf("Could not find 'gcc' in path\n")
 	}
-	CCMD, err2 = exec.LookPath(GetCCompilerName())
+	CCMD, err2 = FindGobinExternal(GetCCompilerName())
 	if err2 != nil {
 		fmt.Printf("Could not find '%' in path\n", GetCCompilerName())
 	}
