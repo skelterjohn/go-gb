@@ -74,7 +74,7 @@ func matchString(pat, str string) (result bool, err __os__.Error) {
 }
 
 func main() {
-	testing.Main(matchString, tests, benchmarks, []testing.InternalExamples{})
+	testing.Main(matchString, tests, benchmarks)
 }
 
 `)
@@ -115,7 +115,7 @@ func matchString(pat, str string) (result bool, err __os__.Error) {
 }
 
 func main() {
-	testing.Main(matchString, tests, benchmarks, []testing.InternalExample{})
+	testing.Main(matchString, tests, benchmarks)
 }
 
 `)
