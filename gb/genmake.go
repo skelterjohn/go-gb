@@ -51,10 +51,14 @@ GBROOT={{.GBROOT}}
 
 # gb: compile/link against local install
 GCIMPORTS+= -I $(GBROOT)/_obj
-LDIMPORTS+= -L $(GBROOT)/_obj{{if .GOPATHS}}
-# gb: compile/link against GOPATH entries{{range .GOPATHS}}
-GCIMPORTS+= -I {{.}}/pkg/$(GOOS)_$(GOARCH)
-LDIMPORTS+= -L {{.}}/pkg/$(GOOS)_$(GOARCH){{end}}{{end}}
+LDIMPORTS+= -L $(GBROOT)/_obj
+# gb: compile/link against GOPATH entries
+GOPATHSEP=:
+ifeq ($(GOHOSTOS),windows)
+GOPATHSEP=;
+endif
+GCIMPORTS=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+LDIMPORTS=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
 
 # gb: default target is in GBROOT this way
 command:
@@ -106,10 +110,14 @@ GBROOT={{.GBROOT}}
 
 # gb: compile/link against local install
 GCIMPORTS+= -I $(GBROOT)/{{.BuildDirPkg}}
-LDIMPORTS+= -L $(GBROOT)/{{.BuildDirPkg}}{{if .GOPATHS}}
-# gb: compile/link against GOPATH entries{{range .GOPATHS}}
-GCIMPORTS+= -I {{.}}/pkg/$(GOOS)_$(GOARCH)
-LDIMPORTS+= -L {{.}}/pkg/$(GOOS)_$(GOARCH){{end}}{{end}}
+LDIMPORTS+= -L $(GBROOT)/{{.BuildDirPkg}}
+# gb: compile/link against GOPATH entries
+GOPATHSEP=:
+ifeq ($(GOHOSTOS),windows)
+GOPATHSEP=;
+endif
+GCIMPORTS=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+LDIMPORTS=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
 {{if .CopyLocal}}
 # gb: copy to local install
 $(GBROOT)/{{.BuildDirPkg}}/$(TARG).a: {{.BuildDirPkg}}/$(TARG).a
