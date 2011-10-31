@@ -32,18 +32,6 @@ var GCFLAGS, GLDFLAGS []string
 var GOPATH, GOPATH_SINGLE string
 var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
 
-var ValidGOARCHs = map[string]bool{
-	"amd64": true,
-	"386":   true,
-	"arm":   true,
-}
-
-var ValidGOOSs = map[string]bool{
-	"darwin":  true,
-	"linux":   true,
-	"windows": true,
-}
-
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
 	OSWD, oserr = os.Getwd()
