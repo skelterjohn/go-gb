@@ -595,7 +595,16 @@ func RunGB() (err os.Error) {
 }
 
 func CheckFlags() bool {
-	for _, arg := range os.Args[1:] {
+	for i, arg := range os.Args[1:] {
+		if arg == "--testargs" {
+			TestArgs = append(TestArgs, os.Args[i+2:]...)
+			os.Args = os.Args[:i+2]
+			if !Test {
+				ErrLog.Printf("Must be in test mode (-t) to use --testargs")
+				return false
+			}
+			break
+		}
 		if strings.HasPrefix(arg, "-test.") {
 			TestArgs = append(TestArgs, arg)
 			continue

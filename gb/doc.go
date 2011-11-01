@@ -173,5 +173,9 @@ Options:
  --gofmt
  		Run gofmt on all source for relevant targets.
 
+ --testargs
+ 		All command line arguments that follow --testargs will be
+ 		passed on to the test binaries, and otherwise ignored.
+
 */
 package documentation
