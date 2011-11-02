@@ -598,6 +598,13 @@ func (this *Package) GetTarget() (err error) {
 }
 
 func (this *Package) PrintScan() {
+	if this.IsCmd && !DoCmds {
+		return
+	}
+	if !this.IsCmd && !DoPkgs {
+		return
+	}
+
 	if this.scanned {
 		return
 	}
