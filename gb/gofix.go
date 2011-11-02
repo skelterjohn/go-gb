@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,10 @@
 package main
 
 import (
-	"os"
 	"fmt"
 )
 
-func RunGoFix(dir string, files []string) (err os.Error) {
+func RunGoFix(dir string, files []string) (err error) {
 	margs := append([]string{"gofix"}, files...)
 
 	if Verbose {

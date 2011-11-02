@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,8 @@ var ValidGOOSs = map[string]bool{
 	"windows": true,
 }
 
-func LoadCWD() (err os.Error) {
-	var oserr os.Error
+func LoadCWD() (err error) {
+	var oserr error
 	OSWD, oserr = os.Getwd()
 	rel, relerr := ReadOneLine("workspace.gb")
 

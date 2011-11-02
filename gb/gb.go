@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"path"
 	"log"
+	"errors"
 )
 
 // command line flags
@@ -103,7 +104,7 @@ var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
-func ScanDirectory(base, dir string) (err2 os.Error) {
+func ScanDirectory(base, dir string) (err2 error) {
 	_, basedir := path.Split(dir)
 	if basedir == "_obj" ||
 		basedir == "_test" ||
@@ -114,7 +115,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		return
 	}
 
-	var err os.Error
+	var err error
 
 	var pkg *Package
 	pkg, err = NewPackage(base, dir)
@@ -153,7 +154,7 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	}
 
 	if pkg.Target == "." {
-		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
+		err = errors.New("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
 
 	if base != "--" {
@@ -196,7 +197,7 @@ func IsListed(name string) bool {
 	return false
 }
 
-func MakeDist(ch chan string) (err os.Error) {
+func MakeDist(ch chan string) (err error) {
 	fmt.Printf("Removing _dist_\n")
 	if err = os.RemoveAll("_dist_"); err != nil {
 		return
@@ -241,7 +242,7 @@ func TryScan() {
 	}
 }
 
-func TryGoFMT() (err os.Error) {
+func TryGoFMT() (err error) {
 	if GoFMT {
 		for _, pkg := range ListedPkgs {
 			err = pkg.GoFMT()
@@ -253,7 +254,7 @@ func TryGoFMT() (err os.Error) {
 	return
 }
 
-func TryGoFix() (err os.Error) {
+func TryGoFix() (err error) {
 	if GoFix {
 		for _, pkg := range ListedPkgs {
 			err = pkg.GoFix()
@@ -265,7 +266,7 @@ func TryGoFix() (err os.Error) {
 	return
 }
 
-func TryGenMake() (err os.Error) {
+func TryGenMake() (err error) {
 	if GenMake {
 		_, ferr := os.Stat("build")
 
@@ -340,7 +341,7 @@ func TryGenMake() (err os.Error) {
 	return
 }
 
-func TryDistribution() (err os.Error) {
+func TryDistribution() (err error) {
 	if Distribution {
 		ch := make(chan string)
 		go func() {
@@ -407,7 +408,7 @@ func TryBuild() {
 	}
 }
 
-func TryTest() (err os.Error) {
+func TryTest() (err error) {
 	if Test {
 		for _, pkg := range ListedPkgs {
 			if len(pkg.TestSources) != 0 {
@@ -439,7 +440,7 @@ func TryInstall() {
 	}
 }
 
-func RunGB() (err os.Error) {
+func RunGB() (err error) {
 	Build = Build || (!Clean && !Scan) || (Makefiles && !Clean) || Install || Test
 
 	Build = Build && HardArgs == 0
@@ -499,13 +500,13 @@ func RunGB() (err os.Error) {
 
 	for lt := range ListedDirs {
 		if !ValidatedDirs[lt] {
-			err = os.NewError(fmt.Sprintf("Listed directory %q doesn't correspond to a known package", lt))
+			err = errors.New(fmt.Sprintf("Listed directory %q doesn't correspond to a known package", lt))
 			return
 		}
 	}
 
 	if len(ListedPkgs) == 0 {
-		err = os.NewError("No targets found in " + CWD)
+		err = errors.New("No targets found in " + CWD)
 		return
 	}
 
@@ -524,7 +525,7 @@ func RunGB() (err os.Error) {
 			for _, cp := range cycle {
 				targets = append(targets, cp.Target)
 			}
-			err = os.NewError(fmt.Sprintf("Cycle detected: %v", targets))
+			err = errors.New(fmt.Sprintf("Cycle detected: %v", targets))
 			return
 		}
 	}

@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
 package main
 
 import (
-	"os"
 	"bytes"
 	"bufio"
 	"strings"
@@ -26,7 +25,7 @@ import (
 	"go/ast"
 )
 
-func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err os.Error) {
+func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err error) {
 	isTest := strings.HasSuffix(source, "_test.go") && Test
 	var file *ast.File
 	flag := parser.ParseComments
