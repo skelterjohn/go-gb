@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,10 @@
 package main
 
 import (
-	"os"
 	"fmt"
 )
 
-func MakeBuild(pkg *Package) (err os.Error) {
+func MakeBuild(pkg *Package) (err error) {
 	if MakeCMD == "" {
 		fmt.Printf("(in %s) Can't use make to build %s\n", pkg.Dir, pkg.Target)
 		return
@@ -43,7 +42,7 @@ func MakeBuild(pkg *Package) (err os.Error) {
 	return
 }
 
-func MakeClean(pkg *Package) (err os.Error) {
+func MakeClean(pkg *Package) (err error) {
 	if MakeCMD == "" {
 		fmt.Printf("(in %s) Can't use make to clean %s\n", pkg.Dir, pkg.Target)
 		return
@@ -58,7 +57,7 @@ func MakeClean(pkg *Package) (err os.Error) {
 	return
 }
 
-func MakeTest(pkg *Package) (err os.Error) {
+func MakeTest(pkg *Package) (err error) {
 	margs := []string{"gomake", "test"}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)

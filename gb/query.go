@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +32,8 @@ var GCFLAGS, GLDFLAGS []string
 var GOPATH, GOPATH_SINGLE string
 var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
 
-func LoadCWD() (err os.Error) {
-	var oserr os.Error
+func LoadCWD() (err error) {
+	var oserr error
 	OSWD, oserr = os.Getwd()
 	rel, relerr := ReadOneLine("workspace.gb")
 

@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import (
 	"sort"
 	"fmt"
 	"os"
+	"errors"
 	"bufio"
 	"strings"
 	"path"
@@ -86,10 +87,10 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string) (this *Package, err os.Error) {
+func NewPackage(base, dir string) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
-		err = os.NewError("not a directory")
+		err = errors.New("not a directory")
 		return
 	}
 
@@ -140,12 +141,12 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	}
 
 	if !this.HasMakefile && this.IsInGOROOT {
-		err = os.NewError("GOROOT pkg without makefile - not meant to be built")
+		err = errors.New("GOROOT pkg without makefile - not meant to be built")
 		return
 	}
 
 	if len(this.Sources) == 0 {
-		err = os.NewError("no source")
+		err = errors.New("no source")
 		return
 	}
 
@@ -153,7 +154,7 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		var t int64
 		t, err = StatTime(path.Join(this.Dir, src))
 		if err != nil {
-			err = os.NewError(fmt.Sprintf("'%s' just disappeared.\n", path.Join(this.Dir, src)))
+			err = errors.New(fmt.Sprintf("'%s' just disappeared.\n", path.Join(this.Dir, src)))
 			return
 		}
 		if t > this.SourceTime {
@@ -169,28 +170,28 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	err = this.GetTarget()
 
 	if reqOS, ok := OSFiltersMust[this.Target]; ok && reqOS != GOOS {
-		err = os.NewError(fmt.Sprintf("%s can only build with GOOS=%s", this.Target, reqOS))
+		err = errors.New(fmt.Sprintf("%s can only build with GOOS=%s", this.Target, reqOS))
 	}
 
 	if !FilterPkg(this.Target) {
-		err = os.NewError("Filtered package based on GOOS/GOARCH")
+		err = errors.New("Filtered package based on GOOS/GOARCH")
 		return
 	}
 
 	if this.IsProtobuf && ProtocCMD == "" {
-		err = os.NewError(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
+		err = errors.New(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
 	if this.IsCGo && CGoCMD == "" {
-		err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
+		err = errors.New(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
 	if this.IsCmd && this.IsCGo {
-		err = os.NewError(fmt.Sprintf("(in %s) cannot have a cgo cmd", this.Dir))
+		err = errors.New(fmt.Sprintf("(in %s) cannot have a cgo cmd", this.Dir))
 		ErrLog.Println(err)
 		return
 	}
@@ -225,10 +226,10 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	return
 }
 
-func (this *Package) ScanForSource() (err os.Error) {
-	errch := make(chan os.Error)
+func (this *Package) ScanForSource() (err error) {
+	errch := make(chan error)
 	go func() {
-		wf := func(path string, info *os.FileInfo, err os.Error) os.Error {
+		wf := func(path string, info *os.FileInfo, err error) error {
 			if info.IsDirectory() {
 				if !this.VisitDir(path, info) {
 					return filepath.SkipDir
@@ -246,7 +247,7 @@ func (this *Package) ScanForSource() (err os.Error) {
 	}
 
 	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources) == 0 { //allsources
-		err = os.NewError("No source files in " + this.Dir)
+		err = errors.New("No source files in " + this.Dir)
 	}
 
 	/*
@@ -380,7 +381,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 
 }
 
-func (this *Package) GetSourceDeps() (err os.Error) {
+func (this *Package) GetSourceDeps() (err error) {
 	this.SrcDeps = make(map[string][]string)
 
 	var nonCGoSrc []string
@@ -392,7 +393,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		fpkg, ftarget, fdeps, _, cflags, ldflags, err = GetDeps(path.Join(this.Dir, src))
 
 		if err != nil {
-			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
+			BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.Error()))
 			continue
 		}
 
@@ -465,7 +466,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 			}
 			this.TestSrc[fpkg] = append(this.TestSrc[fpkg], src)
 			if err != nil {
-				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.String()))
+				BrokenMsg = append(BrokenMsg, fmt.Sprintf("(in %s) %s", this.Dir, err.Error()))
 				break
 			}
 			if ftarget != "" {
@@ -479,13 +480,13 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 	return
 }
 
-func (this *Package) GetTarget() (err os.Error) {
+func (this *Package) GetTarget() (err error) {
 	if !this.IsCmd && this.IsInGOROOT {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
 			if this.IsCGo {
-				err = os.NewError("gb can't compile the GOROOT c cmds")
+				err = errors.New("gb can't compile the GOROOT c cmds")
 				return
 			}
 			this.IsCmd = true
@@ -497,7 +498,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
 			//if _, ok := this.PkgSrc["documentation"]; !ok && len(this.PkgSrc)==1 {
-			err = os.NewError(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
+			err = errors.New(fmt.Sprintf("(in %s) GOROOT pkg is not in $GOROOT/src/pkg", this.Dir))
 			ErrLog.Println(err)
 			//}
 			return
@@ -507,7 +508,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		//this is a gopath target
 		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
-			err = os.NewError(fmt.Sprintf("(in %s) GOPATH pkg is not in $GOPATH/src/pkg for GOPATH=%s", this.Dir, this.IsInGOPATH))
+			err = errors.New(fmt.Sprintf("(in %s) GOPATH pkg is not in $GOPATH/src/pkg for GOPATH=%s", this.Dir, this.IsInGOPATH))
 			ErrLog.Println(err)
 			return
 		}
@@ -546,7 +547,7 @@ func (this *Package) GetTarget() (err os.Error) {
 			this.Target = strings.TrimSpace(this.Target)
 			this.Base = this.Target
 			if this.Target == "-" || this.Target == "--" {
-				err = os.NewError("directory opts-out")
+				err = errors.New("directory opts-out")
 				return
 			}
 		}
@@ -675,8 +676,8 @@ func (this *Package) CheckStatus() {
 	this.NeedsInstall = i || this.NeedsInstall
 }
 
-func (this *Package) ResolveDeps() (err os.Error) {
-	CheckDeps := func(deps []string, test bool) (err os.Error) {
+func (this *Package) ResolveDeps() (err error) {
+	CheckDeps := func(deps []string, test bool) (err error) {
 		for _, dep := range deps {
 			if dep == "\"C\"" {
 				this.IsCGo = true
@@ -698,7 +699,7 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				if !IsGoInstallable(dep) {
 					if !exists {
 						//fmt.Printf("in %s: can't resolve pkg %s (maybe you aren't in the root?)\n", this.Dir, dep)
-						err = os.NewError("unresolved packages")
+						err = errors.New("unresolved packages")
 					}
 				} else {
 					if GoInstallUpdate {
@@ -707,7 +708,7 @@ func (this *Package) ResolveDeps() (err os.Error) {
 					if !exists {
 						if !GoInstall {
 							//fmt.Printf("in %s: can't resolve pkg %s (try using -g)\n", this.Dir, dep)
-							err = os.NewError("unresolved packages")
+							err = errors.New("unresolved packages")
 						} else {
 							this.NeedsGoInstall = true
 							this.NeedsBuild = true
@@ -766,7 +767,7 @@ func (this *Package) Touched() (build, install bool) {
 	return
 }
 
-func (this *Package) Build() (err os.Error) {
+func (this *Package) Build() (err error) {
 	this.block <- true
 	defer func() {
 		<-this.block
@@ -780,7 +781,7 @@ func (this *Package) Build() (err os.Error) {
 	}()
 
 	if this.FailedToBuild {
-		err = os.NewError("Cannot build deps")
+		err = errors.New("Cannot build deps")
 		return
 	}
 	if !this.NeedsBuild {
@@ -882,7 +883,7 @@ func (this *Package) Build() (err os.Error) {
 
 	return
 }
-func (this *Package) Test() (err os.Error) {
+func (this *Package) Test() (err error) {
 	for _, pkg := range this.TestDepPkgs {
 		err = pkg.Build()
 		if err != nil {
@@ -1011,7 +1012,7 @@ func main() {
 
 */
 
-func (this *Package) CleanFiles() (err os.Error) {
+func (this *Package) CleanFiles() (err error) {
 	defer func() {
 		this.Stat()
 		this.NeedsBuild = true
@@ -1122,7 +1123,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 	return
 }
 
-func (this *Package) Clean() (err os.Error) {
+func (this *Package) Clean() (err error) {
 	if this.cleaned {
 		return
 	}
@@ -1145,7 +1146,7 @@ func (this *Package) Clean() (err os.Error) {
 
 	return
 }
-func (this *Package) Install() (err os.Error) {
+func (this *Package) Install() (err error) {
 	if !this.NeedsInstall {
 		return
 	}
@@ -1171,7 +1172,7 @@ func (this *Package) Install() (err os.Error) {
 	return
 }
 
-func (this *Package) ListSource() (err os.Error) {
+func (this *Package) ListSource() (err error) {
 	listFiles := func(files []string) {
 		sortedFiles := sort.StringSlice(files)
 		sortedFiles.Sort()
@@ -1204,7 +1205,7 @@ func (this *Package) ListSource() (err os.Error) {
 	return
 }
 
-func (this *Package) CollectDistributionFiles(ch chan string) (err os.Error) {
+func (this *Package) CollectDistributionFiles(ch chan string) (err error) {
 	if Exclusive && !ListedDirs[this.Dir] {
 		return
 	}
@@ -1254,7 +1255,7 @@ func (this *Package) CollectDistributionFiles(ch chan string) (err os.Error) {
 	return
 }
 
-func (this *Package) GenerateMakefile() (err os.Error) {
+func (this *Package) GenerateMakefile() (err error) {
 	if !this.Active {
 		return
 	}
@@ -1343,7 +1344,7 @@ func (this *Package) CollectGoInstall(gm map[string]bool) {
 	}
 }
 
-func (this *Package) AddToBuild(bfile *os.File) (err os.Error) {
+func (this *Package) AddToBuild(bfile *os.File) (err error) {
 	if this.addedToBuild {
 		return
 	}
@@ -1367,7 +1368,7 @@ func (this *Package) AddToBuild(bfile *os.File) (err os.Error) {
 	return
 }
 
-func (this *Package) GoFMT() (err os.Error) {
+func (this *Package) GoFMT() (err error) {
 	if this.gofmted || (Exclusive && !ListedDirs[this.Dir]) {
 		return
 	}
@@ -1416,7 +1417,7 @@ func (this *Package) GoFMT() (err os.Error) {
 	return
 }
 
-func (this *Package) GoFix() (err os.Error) {
+func (this *Package) GoFix() (err error) {
 	if this.gofixed || (Exclusive && !ListedDirs[this.Dir]) {
 		return
 	}

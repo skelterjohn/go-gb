@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,11 @@ import (
 	//"time"
 	"fmt"
 	"os"
+	"errors"
 	"path"
 )
 
-func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Error) {
+func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err error) {
 
 	argv := []string{GetCompilerName()}
 	if !pkg.IsInGOROOT {
@@ -42,7 +43,7 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Erro
 
 }
 
-func BuildPackage(pkg *Package) (err os.Error) {
+func BuildPackage(pkg *Package) (err error) {
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
 	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
@@ -120,7 +121,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 	return
 }
-func BuildTest(pkg *Package) (err os.Error) {
+func BuildTest(pkg *Package) (err error) {
 
 	reverseDots := ReverseDir(pkg.Dir)
 	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
@@ -129,7 +130,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
 
-	buildTestName := func(testName string) (err os.Error) {
+	buildTestName := func(testName string) (err error) {
 
 		testSrcs := pkg.TestSrc[testName]
 
@@ -154,7 +155,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 		//see if it was created
 		if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
-			return os.NewError("compile error")
+			return errors.New("compile error")
 		}
 		dst := path.Join("_test", "_obj", testName) + ".a"
 
@@ -241,7 +242,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	return
 }
-func InstallPackage(pkg *Package) (err os.Error) {
+func InstallPackage(pkg *Package) (err error) {
 	dstDir, _ := path.Split(pkg.InstallPath)
 	_, dstName := path.Split(pkg.ResultPath)
 	dstFile := path.Join(dstDir, dstName)

@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -163,7 +163,7 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 	return
 }
 
-func LineChan(f string, ch chan<- string) (err os.Error) {
+func LineChan(f string, ch chan<- string) (err error) {
 	var fin *os.File
 	if fin, err = os.Open(f); err == nil {
 		bfrd := bufio.NewReader(fin)
@@ -178,7 +178,7 @@ func LineChan(f string, ch chan<- string) (err os.Error) {
 	return
 }
 
-func ReadOneLine(file string) (line string, err os.Error) {
+func ReadOneLine(file string) (line string, err error) {
 	var fin *os.File
 	fin, err = os.Open(file)
 	if err == nil {
@@ -189,7 +189,7 @@ func ReadOneLine(file string) (line string, err os.Error) {
 	return
 }
 
-func DirTargetGB(dir string) (target string, err os.Error) {
+func DirTargetGB(dir string) (target string, err error) {
 	target, err = ReadOneLine(path.Join(dir, "target.gb"))
 	return
 }
@@ -212,7 +212,7 @@ func ReverseDirForwardSlash(dir string) (rev string) {
 	return
 }
 
-func StatTime(p string) (time int64, err os.Error) {
+func StatTime(p string) (time int64, err error) {
 	var info *os.FileInfo
 	info, err = os.Stat(p)
 	if err != nil {
@@ -222,7 +222,7 @@ func StatTime(p string) (time int64, err os.Error) {
 	return
 }
 
-func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
+func CopyTheHardWay(cwd, src, dst string) (err error) {
 	srcpath := path.Join(cwd, src)
 
 	if Verbose {
@@ -254,7 +254,7 @@ func CopyTheHardWay(cwd, src, dst string) (err os.Error) {
 	return
 }
 
-func Copy(cwd, src, dst string) (err os.Error) {
+func Copy(cwd, src, dst string) (err error) {
 	if CopyCMD == "" {
 		return CopyTheHardWay(cwd, src, dst)
 	}
