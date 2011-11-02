@@ -184,6 +184,19 @@ func NewPackage(base, dir string) (this *Package, err error) {
 		return
 	}
 
+	if this.IsCGo {
+		if GCCCMD == "" {
+			err = errors.New(fmt.Sprintf("(in %s) gcc not found for cgo target", this.Dir))
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
+		if CGoCMD == "" {
+			err = errors.New(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
+	}
+
 	if this.IsCGo && CGoCMD == "" {
 		err = errors.New(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
 		fmt.Fprintln(os.Stderr, err)

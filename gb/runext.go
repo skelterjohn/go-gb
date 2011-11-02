@@ -93,7 +93,7 @@ func FindExternals() (err error) {
 	}
 	GCCCMD, err2 = exec.LookPath("gcc")
 	if err2 != nil {
-		fmt.Printf("Could not find 'gcc' in path\n")
+		//fmt.Printf("Could not find 'gcc' in path\n")
 	}
 	CCMD, err2 = FindGobinExternal(GetCCompilerName())
 	if err2 != nil {
