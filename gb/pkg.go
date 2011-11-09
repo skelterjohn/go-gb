@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -183,6 +183,19 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 		return
 	}
 
+	if this.IsCGo {
+		if GCCCMD == "" {
+			err = os.NewError(fmt.Sprintf("(in %s) gcc not found for cgo target", this.Dir))
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
+		if CGoCMD == "" {
+			err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
+			fmt.Fprintln(os.Stderr, err)
+			return
+		}
+	}
+
 	if this.IsCGo && CGoCMD == "" {
 		err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
 		fmt.Fprintln(os.Stderr, err)
@@ -222,18 +235,6 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 		}
 	}
 
-	if Test {
-		for _, pkg := range this.TestDepPkgs {
-			if pkg == this {
-				continue
-			}
-			cycle = pkg.detectCycle(visited)
-			if cycle != nil {
-				return
-			}
-		}
-	}
-
 	return
 }
 
@@ -263,7 +264,13 @@ func (this *Package) ScanForSource() (err os.Error) {
 		err = os.NewError("No source files in " + this.Dir)
 	}
 
-	this.IsCGo = this.IsCGo || len(this.CSrcs) /*+len(this.AsmSrcs)*/ > 0
+	/*
+	this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
+
+	if this.IsCGo {
+		fmt.Println("CSrcs makes it CGo", this.CSrcs)
+	}
+	*/
 
 	return
 }
@@ -324,9 +331,15 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 		return
 	}
 
-	//only get these from .proto files
+	//only get these from .proto files, if the .proto file exists
 	if strings.HasSuffix(fpath, ".pb.go") {
-		return
+		dotProto := fpath[:len(fpath)-len(".pb.go")]+".proto"
+		absProto := filepath.Join(this.Dir, dotProto)
+		if _, err := os.Stat(absProto); err == nil {
+			//if there is a .proto file, the .pb.go is an intermediate object
+			return
+		}
+		//otherwise it's a regular go file
 	}
 
 	//skip files flagged for different OS/ARCH
@@ -599,6 +612,13 @@ func (this *Package) GetTarget() (err os.Error) {
 }
 
 func (this *Package) PrintScan() {
+	if this.IsCmd && !DoCmds {
+		return
+	}
+	if !this.IsCmd && !DoPkgs {
+		return
+	}
+
 	if this.scanned {
 		return
 	}

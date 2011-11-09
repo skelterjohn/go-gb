@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,7 @@ import (
 	"fmt"
 )
 /*
-CGOPKGPATH= cgo --  e1.go e2.go 
+CGOPKGPATH= cgo --  e1.go e2.go
 touch _cgo_run
 6g -I ../_obj -o _go_.6 e3.go e1.cgo1.go e2.cgo1.go _cgo_gotypes.go
 6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
@@ -30,7 +30,7 @@ gcc -m64 -g -fPIC -O2 -o _cgo_main.o -c   _cgo_main.c
 gcc -m64 -g -fPIC -O2 -o e1.cgo2.o -c   e1.cgo2.c
 gcc -m64 -g -fPIC -O2 -o e2.cgo2.o -c   e2.cgo2.c
 gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
-gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o  
+gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o
 cgo -dynimport _cgo1_.o >__cgo_import.c && mv -f __cgo_import.c _cgo_import.c
 6c -FVw _cgo_import.c
 rm -f _obj/e.a
@@ -93,7 +93,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	var cgobases []string
 
 	//first run cgo
-	//CGOPKGPATH= cgo --  e1.go e2.go 
+	//CGOPKGPATH= cgo --  e1.go e2.go
 	cgo_argv := []string{"cgo", "--", "-I.."}
 	for _, cgosrc := range pkg.CGoSources {
 		cgb := filepath.Base(cgosrc)
@@ -201,7 +201,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 
 	/* and link them
-	gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o  
+	gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o
 	*/
 	gcclargv := []string{"gcc"}
 	gcclargv = append(gcclargv, CFLAGS...)

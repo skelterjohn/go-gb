@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,18 +32,6 @@ var GCFLAGS, GLDFLAGS []string
 var GOPATH, GOPATH_SINGLE string
 var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []string
 
-var ValidGOARCHs = map[string]bool{
-	"amd64": true,
-	"386":   true,
-	"arm":   true,
-}
-
-var ValidGOOSs = map[string]bool{
-	"darwin":  true,
-	"linux":   true,
-	"windows": true,
-}
-
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
 	OSWD, oserr = os.Getwd()
@@ -55,10 +43,7 @@ func LoadCWD() (err os.Error) {
 		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
 		fmt.Printf("Running gb in workspace %s\n", CWD)
 	} else if GOPATH = os.Getenv("GOPATH"); GOPATH != "" {
-		gopaths := strings.Split(GOPATH, ":")
-		if GOOS == "windows" {
-			gopaths = strings.Split(GOPATH, ";")
-		}
+		gopaths := filepath.SplitList(GOPATH)
 		for _, gp := range gopaths {
 			gp = strings.TrimSpace(gp)
 			if gp == "" {
@@ -82,8 +67,9 @@ func LoadCWD() (err os.Error) {
 }
 
 func LoadEnvs() bool {
+	GOROOT = runtime.GOROOT()
 
-	GOOS, GOARCH, GOROOT, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOROOT"), os.Getenv("GOBIN")
+	GOOS, GOARCH, GOBIN = os.Getenv("GOOS"), os.Getenv("GOARCH"), os.Getenv("GOBIN")
 	if GOOS == "" {
 		GOOS = runtime.GOOS
 		os.Setenv("GOOS", GOOS)
@@ -91,10 +77,6 @@ func LoadEnvs() bool {
 	if GOARCH == "" {
 		GOARCH = runtime.GOARCH
 		os.Setenv("GOARCH", GOARCH)
-	}
-	if GOROOT == "" {
-		ErrLog.Printf("Environental variable GOROOT not set")
-		return false
 	}
 	if GOBIN == "" {
 		GOBIN = filepath.Join(GOROOT, "bin")
@@ -114,10 +96,7 @@ func LoadEnvs() bool {
 	GOPATH = os.Getenv("GOPATH")
 
 	if GOPATH != "" {
-		gopaths := strings.Split(GOPATH, ":")
-		if GOOS == "windows" {
-			gopaths = strings.Split(GOPATH, ";")
-		}
+		gopaths := filepath.SplitList(GOPATH)
 		for _, gp := range gopaths {
 			gp = strings.TrimSpace(gp)
 			if gp == "" {
@@ -214,5 +193,5 @@ func GetObjSuffix() (suffix string) {
 }
 
 func GetIBName() (name string) {
-	return "_go_" + GetObjSuffix()
+	return fmt.Sprintf("_go_%s", GetObjSuffix())
 }

@@ -11,6 +11,7 @@ gb/bin
 gb/push
 gb/add
 gb/commit
+gb/tag
 gb/_dist_
 _obj
 _cgo

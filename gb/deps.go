@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,10 @@
 package main
 
 import (
-	"os"
 	"bytes"
 	"bufio"
 	"strings"
+	"os"
 	"go/parser"
 	"go/token"
 	"go/ast"

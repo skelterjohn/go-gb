@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,7 +72,7 @@ var RunningInGOPATH string
 
 var Packages = make(map[string]*Package)
 
-var ErrLog = log.New(os.Stderr, "gb error: ", 0)
+var ErrLog = log.New(os.Stderr, "gb os.Error: ", 0)
 
 /*
  gb doesn't know how to build these packages
@@ -83,12 +83,19 @@ var ErrLog = log.New(os.Stderr, "gb error: ", 0)
  go/build has a source-generation step that uses make variables
 
  os has source generation
+
+ syscall has crazy pure go/asm versions
+
+ crypto/tls has a file root_stub.go which is excluded
 */
 var ForceMakePkgs = map[string]bool{
 	"math":       true,
 	"go/build":   true,
 	"os":         true,
 	"hash/crc32": true,
+	"syscall":    true,
+	"runtime":    true,
+	"crypto/tls": true,
 	"godoc":      true,
 }
 
@@ -588,7 +595,16 @@ func RunGB() (err os.Error) {
 }
 
 func CheckFlags() bool {
-	for _, arg := range os.Args[1:] {
+	for i, arg := range os.Args[1:] {
+		if arg == "--testargs" {
+			TestArgs = append(TestArgs, os.Args[i+2:]...)
+			os.Args = os.Args[:i+2]
+			if !Test {
+				ErrLog.Printf("Must be in test mode (-t) to use --testargs")
+				return false
+			}
+			break
+		}
 		if strings.HasPrefix(arg, "-test.") {
 			TestArgs = append(TestArgs, arg)
 			continue

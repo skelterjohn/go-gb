@@ -50,6 +50,8 @@ Options:
      generate standard makefiles without building
  --workspace
      create workspace.gb files in all directories
+ --testargs
+     all arguments following --testargs are passed to the test binary
 `
 
 func Usage() {

@@ -15,8 +15,6 @@
 */
 
 /*
-Overview
-
 gb is nearly configuration-free project builder for the go language.
 
 With gb, one only has to run the simple command line, gb, in order to bring
@@ -174,6 +172,10 @@ Options:
 
  --gofmt
  		Run gofmt on all source for relevant targets.
+
+ --testargs
+ 		All command line arguments that follow --testargs will be
+ 		passed on to the test binaries, and otherwise ignored.
 
 */
 package documentation

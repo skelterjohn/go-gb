@@ -1,4 +1,4 @@
-/* 
+/*
    Copyright 2011 John Asmuth
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -154,7 +154,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 		//see if it was created
 		if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
-			return os.NewError("compile error")
+			return os.NewError("compile os.Error")
 		}
 		dst := path.Join("_test", "_obj", testName) + ".a"
 
