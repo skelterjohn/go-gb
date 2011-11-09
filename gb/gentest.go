@@ -17,7 +17,7 @@
 package main
 
 import (
-	"template"
+	"text/template"
 )
 
 type TestPkg struct {
@@ -28,8 +28,71 @@ type TestPkg struct {
 type TestSuite struct {
 	TestPkgs []*TestPkg
 }
+<<<<<<< local
+=======
+/*
+var TestmainTemplate = func() *template.Template {
+	t := template.New(nil)
+	t.SetDelims("{{", "}}")
+	t.Parse(
+		`
+package main
+>>>>>>> other
+
+<<<<<<< local
 var TestmainTemplateExp = template.Must(template.New("testmain").Parse(
-`package main
+	`package main
+=======
+{{.repeated section TestPkgs}}
+import {{PkgAlias}} "{{PkgTarget}}"
+{{.end}}
+import "testing"
+import __os__ "os"
+import __regexp__ "regexp"
+
+var tests = []testing.InternalTest{
+{{.repeated section TestPkgs}}
+{{.repeated section TestFuncs}}
+	{"{{PkgName}}.{{@}}", {{PkgAlias}}.{{@}}},
+{{.end}}
+{{.end}}
+}
+
+var benchmarks = []testing.InternalBenchmark{
+{{.repeated section TestPkgs}}
+{{.repeated section TestBenchmarks}}
+	{"{{PkgName}}.{{@}}", {{PkgAlias}}.{{@}}},
+{{.end}}
+{{.end}}
+}
+
+var matchPat string
+var matchRe *__regexp__.Regexp
+
+func matchString(pat, str string) (result bool, err __os__.Error) {
+	if matchRe == nil || matchPat != pat {
+		matchPat = pat
+		matchRe, err = __regexp__.Compile(matchPat)
+		if err != nil {
+			return
+		}
+	}
+	return matchRe.MatchString(str), nil
+}
+
+func main() {
+	testing.Main(matchString, tests, benchmarks, []testing.InternalExamples{})
+}
+
+`)
+	return t
+}()
+*/
+var TestmainTemplateExp = func() *template.Template {
+	t := template.New("testmain")
+	t, err := t.Parse(
+		`package main
+>>>>>>> other
 
 {{range .TestPkgs}}import {{.PkgAlias}} "{{.PkgTarget}}"
 {{end}}
@@ -61,4 +124,14 @@ func matchString(pat, str string) (result bool, err error) {
 func main() {
 	testing.Main(matchString, tests, benchmarks, []testing.InternalExample{})
 }
+<<<<<<< local
 `))
+=======
+
+`)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}()
+>>>>>>> other
