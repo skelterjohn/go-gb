@@ -1002,7 +1002,7 @@ func (this *Package) Test() (err error) {
 		testSuite.TestPkgs = append(testSuite.TestPkgs, tpkg)
 	}
 
-	err = TestmainTemplateExp.Execute(file, testSuite)
+	err = TestmainTemplate.Execute(file, testSuite)
 	if err != nil {
 		return
 	}
