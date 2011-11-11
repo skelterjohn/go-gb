@@ -31,7 +31,6 @@ type MakeData struct {
 	BuildDirPkg string
 	BuildDirCmd string
 	CopyLocal   bool
-	GOPATHS     []string
 }
 
 var MakeCmdTemplate = template.Must(template.New("MakeCmd").Parse(

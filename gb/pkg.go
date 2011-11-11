@@ -1318,7 +1318,6 @@ func (this *Package) GenerateMakefile() (err error) {
 		CopyLocal:   reverseDots != ".",
 		BuildDirPkg: GetBuildDirPkg(),
 		BuildDirCmd: GetBuildDirCmd(),
-		GOPATHS:     GOPATHS,
 	}
 	for _, dep := range this.DepPkgs {
 		data.LocalDeps = append(data.LocalDeps, dep.Target)
