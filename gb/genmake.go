@@ -50,6 +50,7 @@ GBROOT={{.GBROOT}}
 # gb: compile/link against local install
 GCIMPORTS+= -I $(GBROOT)/_obj
 LDIMPORTS+= -L $(GBROOT)/_obj
+
 # gb: compile/link against GOPATH entries
 GOPATHSEP=:
 ifeq ($(GOHOSTOS),windows)
