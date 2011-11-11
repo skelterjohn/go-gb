@@ -17,14 +17,14 @@
 package main
 
 import (
-	"sort"
+	"bufio"
+	"errors"
 	"fmt"
 	"os"
-	"errors"
-	"bufio"
-	"strings"
 	"path"
 	"path/filepath"
+	"sort"
+	"strings"
 )
 
 type Package struct {
@@ -264,11 +264,11 @@ func (this *Package) ScanForSource() (err error) {
 	}
 
 	/*
-	this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
+		this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
 
-	if this.IsCGo {
-		fmt.Println("CSrcs makes it CGo", this.CSrcs)
-	}
+		if this.IsCGo {
+			fmt.Println("CSrcs makes it CGo", this.CSrcs)
+		}
 	*/
 
 	return
@@ -332,7 +332,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 
 	//only get these from .proto files, if the .proto file exists
 	if strings.HasSuffix(fpath, ".pb.go") {
-		dotProto := fpath[:len(fpath)-len(".pb.go")]+".proto"
+		dotProto := fpath[:len(fpath)-len(".pb.go")] + ".proto"
 		absProto := filepath.Join(this.Dir, dotProto)
 		if _, err := os.Stat(absProto); err == nil {
 			//if there is a .proto file, the .pb.go is an intermediate object

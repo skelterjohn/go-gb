@@ -18,12 +18,12 @@
 package main
 
 import (
-	"strings"
-	"os"
-	"fmt"
-	"path"
-	"log"
 	"errors"
+	"fmt"
+	"log"
+	"os"
+	"path"
+	"strings"
 )
 
 // command line flags

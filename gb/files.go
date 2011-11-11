@@ -17,12 +17,12 @@
 package main
 
 import (
-	"path"
-	"os"
-	"strings"
 	"bufio"
 	"fmt"
 	"io"
+	"os"
+	"path"
+	"strings"
 )
 
 var (

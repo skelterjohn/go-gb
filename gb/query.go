@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"runtime"
+	"strings"
 )
 
 var GOROOT, GOOS, GOARCH, GOBIN string

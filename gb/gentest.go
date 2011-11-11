@@ -30,7 +30,7 @@ type TestSuite struct {
 }
 
 var TestmainTemplate = template.Must(template.New("TestSource").Parse(
-		`package main
+	`package main
 
 {{range .TestPkgs}}import {{.PkgAlias}} "{{.PkgTarget}}"
 {{end}}

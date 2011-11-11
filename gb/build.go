@@ -18,9 +18,9 @@ package main
 
 import (
 	//"time"
+	"errors"
 	"fmt"
 	"os"
-	"errors"
 	"path"
 )
 

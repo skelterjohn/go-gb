@@ -17,13 +17,13 @@
 package main
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 type GATest struct {
 	path, cwd string
-	truth string
+	truth     string
 }
 
 func TestGetAbs(t *testing.T) {
