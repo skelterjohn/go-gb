@@ -6,6 +6,8 @@ or (to track release)
 > goinstall github.com/skelterjohn/go-gb/gb
 or (to track weekly)
 > goinstall go-gb.googlecode.com/hg/gb
+or (if you like arch linux packages) visit
+https://aur.archlinux.org/packages.php?ID=54051
 
 Overview
 
