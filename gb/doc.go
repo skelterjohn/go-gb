@@ -42,7 +42,7 @@ When gb is run, it first recursively scans all subdirectories from its
 working directory to identify targets. Any directory that contains .go 
 files or .c files will be identified as a target. Each target's name is then 
 determined by first looking at its relative path, but can be overridden by 
-either a target.gb file containing a new name, or a //target:<name> comment 
+either a gb.cfg file containing a new name, or a //target:<name> comment 
 in one of the source files, before the package statement. This renaming of 
 targets is primarily useful for projects that are intended to be installed 
 with goinstall, which requires that the target name match a URL.
@@ -51,10 +51,6 @@ If gb is run within a directory that has a valid target, the target's name
 will be taken from the containing directory, rather than the relative path,
 ".".
 
-If target.gb contains the text "-", no target is created from that
-directory. If it contains the text "--", no target is created from that
-directory nor from any of its subdirectories.
-
 gb will match target names with import statements found in the source to 
 determine the workspace dependency structure. It will use this structure to 
 do incremental building correctly.
@@ -62,6 +58,26 @@ do incremental building correctly.
 Packages are all built to the _obj directory in the root, and commands are 
 built to the bin directory in the root. If -i is on, they will be copied to 
 $GOROOT/pkg/$GOOS_$GOOARCH and $GOROOT/bin.
+
+
+gb.cfg
+
+If a directory has a file named "gb.cfg", gb will examine it for special
+settings. They are entered each on their own line, in the form "key=val".
+Currently valid keys are as follows.
+
+workspace=<relative path>
+  Running gb in the current directory will pretend the working directory
+  is the one specified by the relative path.
+target=<string>
+  Set the package's import path or the binaries name.
+makefile=true
+  Always build this target with a local makefile.
+ignore=true
+  Never try to build a package in this directory.
+ignoreall=true
+  Never try to build a package in this directory or any of its
+  subdirectories.
 
 
 Tips
