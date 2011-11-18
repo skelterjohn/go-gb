@@ -61,8 +61,8 @@ func LoadCWD() (err error) {
 	}
 
 	if !runningInGOPATH {
-		rel, relerr := ReadOneLine("workspace.gb")
-		if relerr == nil {
+		cfg := ReadConfig(".")
+		if rel, set := cfg.Workspace(); set {
 			CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
 			fmt.Printf("Running gb in workspace %s\n", CWD)
 		}

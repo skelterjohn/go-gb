@@ -115,10 +115,12 @@ func ScanDirectory(base, dir string) (err2 error) {
 		return
 	}
 
+	cfg := ReadConfig(dir)
+
 	var err error
 
 	var pkg *Package
-	pkg, err = NewPackage(base, dir)
+	pkg, err = NewPackage(base, dir, cfg)
 	if err == nil {
 
 		if Workspace {

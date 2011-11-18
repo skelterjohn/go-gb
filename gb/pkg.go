@@ -17,7 +17,7 @@
 package main
 
 import (
-	"bufio"
+	//"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -29,6 +29,8 @@ import (
 
 type Package struct {
 	Dir, Base string
+
+	Cfg Config
 
 	Name, Target string
 
@@ -87,7 +89,7 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string) (this *Package, err error) {
+func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
 		err = errors.New("not a directory")
@@ -95,6 +97,9 @@ func NewPackage(base, dir string) (this *Package, err error) {
 	}
 
 	this = new(Package)
+
+	this.Cfg = cfg
+
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
 	this.PkgSrc = make(map[string][]string)
@@ -552,6 +557,19 @@ func (this *Package) GetTarget() (err error) {
 			this.Base = this.Target
 		}
 
+		if cfgTarg, set := this.Cfg.Target(); set {
+			this.Target = cfgTarg
+			this.Base = this.Target
+			if this.Target == "-" || this.Target == "--" {
+				err = errors.New("directory opts-out")
+				return
+			}
+		}
+
+		if cfgMake, set := this.Cfg.AlwaysMakefile(); set {
+			this.MustUseMakefile = this.MustUseMakefile || cfgMake
+		}
+		/*
 		tpath := path.Join(this.Dir, "/target.gb")
 		fin, err2 := os.Open(tpath)
 		if err2 == nil {
@@ -564,6 +582,7 @@ func (this *Package) GetTarget() (err error) {
 				return
 			}
 		}
+		*/
 	}
 
 	this.Base = path.Clean(this.Base)
