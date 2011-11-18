@@ -29,6 +29,19 @@ func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
 	return
 }
 
+func (cfg Config) Write(dir string) (err error) {
+	path := filepath.Join(dir, "gb.cfg")
+	fout, err := os.Create(path)
+
+	for key, val := range cfg {
+		fmt.Fprintf(fout, "%s=%s\n", key, val)
+	}
+	
+	fout.Close()
+
+	return
+}
+
 func oneLiner(key, path string, cfg Config) {
 
 	val, err := ReadOneLine(path)

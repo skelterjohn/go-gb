@@ -117,21 +117,30 @@ func ScanDirectory(base, dir string) (err2 error) {
 
 	cfg := ReadConfig(dir)
 
+
+	if Workspace {
+		absdir := GetAbs(dir, CWD)
+		relworkspace := GetRelative(absdir, CWD, CWD)
+
+		cfg["workspace"] = relworkspace
+		cfg.Write(absdir)
+	}
+
 	var err error
 
 	var pkg *Package
 	pkg, err = NewPackage(base, dir, cfg)
 	if err == nil {
-
+		/*
 		if Workspace {
 			absdir := GetAbs(dir, CWD)
 			relworkspace := GetRelative(absdir, CWD, CWD)
-
 			var wfile *os.File
 			wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
 			wfile.WriteString(relworkspace + "\n")
-			wfile.Close()
+			wfile.Close()		
 		}
+		*/
 
 		key := "\"" + pkg.Target + "\""
 		if pkg.IsCmd {
