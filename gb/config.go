@@ -22,6 +22,26 @@ func (cfg Config) Target() (target string, set bool) {
 	return
 }
 
+func (cfg Config) Ignore() (ignore, set bool) {
+	vstr, set := cfg["ignore"]
+	vstr = strings.ToLower(vstr)
+	ignore = vstr == "true"
+	if t, s := cfg.Target(); s {
+		ignore = ignore || t == "-"
+	}
+	return	
+}
+
+func (cfg Config) IgnoreAll() (ignoreAll, set bool) {
+	vstr, set := cfg["ignoreall"]
+	vstr = strings.ToLower(vstr)
+	ignoreAll = vstr == "true"
+	if t, s := cfg.Target(); s {
+		ignoreAll = ignoreAll || t == "--"
+	}
+	return	
+}
+
 func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
 	amstr, set := cfg["makefile"]
 	amstr = strings.ToLower(amstr)
@@ -57,6 +77,8 @@ var knownKeys = map[string]bool {
 	"target": true,
 	"workspace": true,
 	"makefile": true,
+	"ignore": true,
+	"ignoreall": true,
 }
 
 func ReadConfig(dir string) (cfg Config) {
