@@ -23,6 +23,10 @@ func (cfg Config) Target() (target string, set bool) {
 }
 
 func (cfg Config) Ignore() (ignore, set bool) {
+	ignore, set = cfg.IgnoreAll()
+	if ignore && set {
+		return
+	}
 	vstr, set := cfg["ignore"]
 	vstr = strings.ToLower(vstr)
 	ignore = vstr == "true"
