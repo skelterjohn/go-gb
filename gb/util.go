@@ -17,9 +17,9 @@
 package main
 
 import (
-	"runtime"
-	"path/filepath"
 	"path"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 

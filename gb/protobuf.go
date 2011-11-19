@@ -1,9 +1,9 @@
 package main
 
 import (
-	"path/filepath"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func GoForProto(protosrc string) (gosrc string) {

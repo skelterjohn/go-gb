@@ -17,13 +17,13 @@
 package main
 
 import (
-	"bytes"
 	"bufio"
 	"strings"
 	"os"
+	"bytes"
+	"go/ast"
 	"go/parser"
 	"go/token"
-	"go/ast"
 )
 
 func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err os.Error) {

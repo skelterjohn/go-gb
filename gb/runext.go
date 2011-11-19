@@ -16,11 +16,11 @@
 package main
 
 import (
-	"os"
 	"exec"
 	"fmt"
-	"strings"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 var MakeCMD,

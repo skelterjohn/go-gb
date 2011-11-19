@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"runtime"
+	"strings"
 )
 
 var GOROOT, GOOS, GOARCH, GOBIN string
@@ -35,14 +35,12 @@ var GOPATHS, GOPATH_SRCROOTS, GOPATH_OBJDSTS, GOPATH_CFLAGS, GOPATH_LDFLAGS []st
 func LoadCWD() (err os.Error) {
 	var oserr os.Error
 	OSWD, oserr = os.Getwd()
-	rel, relerr := ReadOneLine("workspace.gb")
 
 	CWD, err = OSWD, oserr
 
-	if relerr == nil {
-		CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
-		fmt.Printf("Running gb in workspace %s\n", CWD)
-	} else if GOPATH = os.Getenv("GOPATH"); GOPATH != "" {
+	runningInGOPATH := false
+
+	if GOPATH = os.Getenv("GOPATH"); GOPATH != "" {
 		gopaths := filepath.SplitList(GOPATH)
 		for _, gp := range gopaths {
 			gp = strings.TrimSpace(gp)
@@ -56,13 +54,21 @@ func LoadCWD() (err os.Error) {
 				if CWD != gpsrc {
 					CWD = gpsrc
 					fmt.Printf("Running gb in GOPATH workspace %s\n", CWD)
-					os.Chdir(CWD)
+					runningInGOPATH = true
 				}
 			}
 		}
 	}
 
+	if !runningInGOPATH {
+		cfg := ReadConfig(".")
+		if rel, set := cfg.Workspace(); set {
+			CWD = GetAbs(filepath.Join(OSWD, rel), OSWD)
+			fmt.Printf("Running gb in workspace %s\n", CWD)
+		}
+	}
 	os.Chdir(CWD)
+
 	return
 }
 

@@ -7,6 +7,7 @@ TARG=gb
 GOFILES=\
 	build.go\
 	cgo.go\
+	config.go\
 	deps.go\
 	files.go\
 	gb.go\

@@ -18,11 +18,11 @@
 package main
 
 import (
-	"strings"
-	"os"
 	"fmt"
-	"path"
 	"log"
+	"os"
+	"path"
+	"strings"
 )
 
 // command line flags
@@ -116,47 +116,67 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 
 	var err os.Error
 
-	var pkg *Package
-	pkg, err = NewPackage(base, dir)
-	if err == nil {
+	cfg := ReadConfig(dir)
 
-		if Workspace {
-			absdir := GetAbs(dir, CWD)
-			relworkspace := GetRelative(absdir, CWD, CWD)
 
-			var wfile *os.File
-			wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
-			wfile.WriteString(relworkspace + "\n")
-			wfile.Close()
-		}
+	if Workspace {
+		absdir := GetAbs(dir, CWD)
+		relworkspace := GetRelative(absdir, CWD, CWD)
 
-		key := "\"" + pkg.Target + "\""
-		if pkg.IsCmd {
-			key += "-cmd"
-		}
-		if dup, exists := Packages[key]; exists {
-			if GetAbs(dup.Dir, CWD) != GetAbs(pkg.Dir, CWD) {
-				ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
-			}
-		} else {
-			Packages[key] = pkg
-		}
-		base = pkg.Base
-	} else {
-		if tbase, terr := DirTargetGB(dir); terr == nil {
-			base = tbase
-		}
+		cfg["workspace"] = relworkspace
+		cfg.Write(absdir)
 	}
 
+
+
+	var pkg *Package
+
+	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
+		pkg, err = NewPackage(base, dir, cfg)
+		if err == nil {
+			/*
+			if Workspace {
+				absdir := GetAbs(dir, CWD)
+				relworkspace := GetRelative(absdir, CWD, CWD)
+				var wfile *os.File
+				wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
+				wfile.WriteString(relworkspace + "\n")
+				wfile.Close()		
+			}
+			*/
+
+			key := "\"" + pkg.Target + "\""
+			if pkg.IsCmd {
+				key += "-cmd"
+			}
+			if dup, exists := Packages[key]; exists {
+				if GetAbs(dup.Dir, CWD) != GetAbs(pkg.Dir, CWD) {
+					ErrLog.Printf("Duplicate target: %s\n in %s\n in %s\n", pkg.Target, dup.Dir, pkg.Dir)
+				}
+			} else {
+				Packages[key] = pkg
+			}
+			base = pkg.Base
+		} else {
+			if tbase, terr := DirTargetGB(dir); terr == nil {
+				base = tbase
+			}
+		}
+	} else {
+		fmt.Println(dir, "ignored")
+	}
+
+	/*
 	if pkg == nil {
 		return
 	}
+	*/
 
-	if pkg.Target == "." {
+	if pkg != nil && pkg.Target == "." {
 		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
 
-	if base != "--" {
+	if ignoreAll, ok := cfg.IgnoreAll(); !(ignoreAll && ok) {
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
 			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))

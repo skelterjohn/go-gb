@@ -65,10 +65,7 @@ func matchString(pat, str string) (result bool, err os.Error) {
 func main() {
 	testing.Main(matchString, tests, benchmarks)
 }
-
 `)
-	if err != nil {
-		panic(err)
-	}
+	if err != nil { panic(err) }
 	return t
 }()

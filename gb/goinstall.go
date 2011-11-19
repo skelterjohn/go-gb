@@ -17,9 +17,9 @@
 package main
 
 import (
-	"regexp"
 	"fmt"
 	"path"
+	"regexp"
 	"strings"
 )
 

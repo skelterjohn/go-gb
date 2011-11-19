@@ -17,17 +17,19 @@
 package main
 
 import (
-	"sort"
+	//"bufio"
 	"fmt"
 	"os"
-	"bufio"
 	"strings"
 	"path"
 	"path/filepath"
+	"sort"
 )
 
 type Package struct {
 	Dir, Base string
+
+	Cfg Config
 
 	Name, Target string
 
@@ -86,7 +88,7 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string) (this *Package, err os.Error) {
+func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
 		err = os.NewError("not a directory")
@@ -94,6 +96,9 @@ func NewPackage(base, dir string) (this *Package, err os.Error) {
 	}
 
 	this = new(Package)
+
+	this.Cfg = cfg
+
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
 	this.PkgSrc = make(map[string][]string)
@@ -265,11 +270,11 @@ func (this *Package) ScanForSource() (err os.Error) {
 	}
 
 	/*
-	this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
+		this.IsCGo = this.IsCGo || len(this.CSrcs) > 0
 
-	if this.IsCGo {
-		fmt.Println("CSrcs makes it CGo", this.CSrcs)
-	}
+		if this.IsCGo {
+			fmt.Println("CSrcs makes it CGo", this.CSrcs)
+		}
 	*/
 
 	return
@@ -333,7 +338,7 @@ func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
 
 	//only get these from .proto files, if the .proto file exists
 	if strings.HasSuffix(fpath, ".pb.go") {
-		dotProto := fpath[:len(fpath)-len(".pb.go")]+".proto"
+		dotProto := fpath[:len(fpath)-len(".pb.go")] + ".proto"
 		absProto := filepath.Join(this.Dir, dotProto)
 		if _, err := os.Stat(absProto); err == nil {
 			//if there is a .proto file, the .pb.go is an intermediate object
@@ -553,6 +558,19 @@ func (this *Package) GetTarget() (err os.Error) {
 			this.Base = this.Target
 		}
 
+		if cfgTarg, set := this.Cfg.Target(); set {
+			this.Target = cfgTarg
+			this.Base = this.Target
+			if this.Target == "-" || this.Target == "--" {
+				err = os.NewError("directory opts-out")
+				return
+			}
+		}
+
+		if cfgMake, set := this.Cfg.AlwaysMakefile(); set {
+			this.MustUseMakefile = this.MustUseMakefile || cfgMake
+		}
+		/*
 		tpath := path.Join(this.Dir, "/target.gb")
 		fin, err2 := os.Open(tpath)
 		if err2 == nil {
@@ -565,6 +583,7 @@ func (this *Package) GetTarget() (err os.Error) {
 				return
 			}
 		}
+		*/
 	}
 
 	this.Base = path.Clean(this.Base)
@@ -1319,7 +1338,6 @@ func (this *Package) GenerateMakefile() (err os.Error) {
 		CopyLocal:   reverseDots != ".",
 		BuildDirPkg: GetBuildDirPkg(),
 		BuildDirCmd: GetBuildDirCmd(),
-		GOPATHS:     GOPATHS,
 	}
 	for _, dep := range this.DepPkgs {
 		data.LocalDeps = append(data.LocalDeps, dep.Target)

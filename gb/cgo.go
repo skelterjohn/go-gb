@@ -17,9 +17,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
-	"fmt"
 )
 /*
 CGOPKGPATH= cgo --  e1.go e2.go
