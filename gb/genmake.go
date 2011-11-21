@@ -55,8 +55,8 @@ GOPATHSEP=:
 ifeq ($(GOHOSTOS),windows)
 GOPATHSEP=;
 endif
-GCIMPORTS=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
-LDIMPORTS=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+GCIMPORTS+=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+LDIMPORTS+=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
 
 # gb: default target is in GBROOT this way
 command:
@@ -70,7 +70,7 @@ command: $(GBROOT)/bin/$(TARG)
 {{if .LocalDeps}}
 # gb: local dependencies{{if $BuildDirPkg=.BuildDirPkg}}
 {{range .LocalDeps}}$(TARG): $(GBROOT)/{{$BuildDirPkg}}/{{.}}.a
-<<<<<<< local
+
 {{end}}{{end}}{{end}}`))
 
 var MakePkgTemplate = template.Must(template.New("MakePkg").Parse(
@@ -104,13 +104,14 @@ GBROOT={{.GBROOT}}
 # gb: compile/link against local install
 GCIMPORTS+= -I $(GBROOT)/{{.BuildDirPkg}}
 LDIMPORTS+= -L $(GBROOT)/{{.BuildDirPkg}}
+
 # gb: compile/link against GOPATH entries
 GOPATHSEP=:
 ifeq ($(GOHOSTOS),windows)
 GOPATHSEP=;
 endif
-GCIMPORTS=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
-LDIMPORTS=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+GCIMPORTS+=-I $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -I , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
+LDIMPORTS+=-L $(subst $(GOPATHSEP),/pkg/$(GOOS)_$(GOARCH) -L , $(GOPATH))/pkg/$(GOOS)_$(GOARCH)
 {{if .CopyLocal}}
 # gb: copy to local install
 $(GBROOT)/{{.BuildDirPkg}}/$(TARG).a: {{.BuildDirPkg}}/$(TARG).a
