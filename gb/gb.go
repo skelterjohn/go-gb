@@ -85,7 +85,7 @@ var ErrLog = log.New(os.Stderr, "gb error: ", 0)
 
  os has source generation
 
- syscall has crazy pure go/asm versions
+ syscall has crazy pure go/asm versions and unused source files
 
  crypto/tls has a file root_stub.go which is excluded
 */
