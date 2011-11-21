@@ -227,14 +227,16 @@ func (this *Package) DetectCycles() (cycle []*Package) {
 func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	for i, p := range visited {
 		if p == this {
-			cycle = visited[:i+1]
+			_ = i
+			fmt.Println("zzz party is", this.Target)
+			cycle = visited
 			return
 		}
 	}
 
-	visited = append([]*Package{this}, visited...)
+	visited = append(visited, this)
 
-	for _, pkg := range this.DepPkgs {
+	for _, pkg := range this.DepPkgs {		
 		cycle = pkg.detectCycle(visited)
 		if cycle != nil {
 			return
@@ -434,7 +436,7 @@ func (this *Package) GetSourceDeps() (err error) {
 				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
 		}
-		if isCGoSrc {
+		if isCGoSrc && !(this.IsInGOROOT && this.Name == "syscall") {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
