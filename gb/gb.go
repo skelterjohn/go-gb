@@ -40,16 +40,16 @@ var Install, //-i
 	GoInstallUpdate, //-G
 	Concurrent, //-p
 	Verbose, //-v
-	GenMake, //-M
+	GenMake, //--makefiles
 	Build, //-b
 	Force, //-f
 	Makefiles, //-m
-	GoFMT, //-F
-	GoFix,
+	GoFMT, //--gofmt
+	GoFix, //--gofix
 	DoPkgs, //-P
 	DoCmds, //-C
-	Distribution, //-D
-	Workspace bool //-W
+	Distribution, //--dist
+	Workspace bool //--workspace
 
 var IncludeDir string
 var GCArgs []string
