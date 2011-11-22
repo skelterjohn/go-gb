@@ -129,6 +129,10 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 		//return
 	}
 
+	if this.Name != "runtime" {
+		this.Deps = append(this.Deps, "\"runtime\"")
+	}
+
 	this.FilterDeadSource()
 
 	this.Base = base
@@ -718,6 +722,7 @@ func (this *Package) CheckStatus() {
 }
 
 func (this *Package) ResolveDeps() (err error) {
+	
 	CheckDeps := func(deps []string, test bool) (err error) {
 		for _, dep := range deps {
 			if dep == "\"C\"" {
@@ -732,6 +737,7 @@ func (this *Package) ResolveDeps() (err error) {
 				}
 			} else {
 				exists, when := PkgExistsInGOROOT(dep)
+				
 				if exists {
 					if this.GOROOTPkgTime < when {
 						this.GOROOTPkgTime = when
