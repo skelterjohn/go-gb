@@ -232,7 +232,6 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	for i, p := range visited {
 		if p == this {
 			_ = i
-			fmt.Println("zzz party is", this.Target)
 			cycle = visited
 			return
 		}
@@ -1040,24 +1039,6 @@ func (this *Package) Test() (err error) {
 
 	return
 }
-/*
-package main
-
-import "go-glue.googlecode.com/hg/rlglue"
-import "testing"
-import __regexp__ "regexp"
-
-var tests = []testing.InternalTest{
-	{"rlglue.TestTaskSpec", rlglue.TestTaskSpec},
-}
-var benchmarks = []testing.InternalBenchmark{}
-
-func main() {
-	testing.Main(__regexp__.MatchString, tests)
-	testing.RunBenchmarks(__regexp__.MatchString, benchmarks)
-}
-
-*/
 
 func (this *Package) CleanFiles() (err error) {
 	defer func() {

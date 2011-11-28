@@ -580,6 +580,12 @@ func RunGB() (err error) {
 	}
 
 	TryInstall()
+	
+	if len(BrokenMsg) != 0 {
+		for _, msg := range BrokenMsg {
+			fmt.Printf("%s\n", msg)
+		}
+	}
 
 	if !Clean {
 		if PackagesBuilt > 1 {
@@ -599,11 +605,6 @@ func RunGB() (err error) {
 			fmt.Printf("%d broken targets\n", BrokenPackages)
 		} else if BrokenPackages == 1 {
 			fmt.Println("1 broken target")
-		}
-		if len(BrokenMsg) != 0 {
-			for _, msg := range BrokenMsg {
-				fmt.Printf("%s\n", msg)
-			}
 		}
 	} else {
 		if PackagesBuilt == 0 {
