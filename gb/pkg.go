@@ -112,11 +112,17 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 
 	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 		this.IsInGOROOT = true
+		if _, set := this.Cfg.Target(); set {
+			WarnLog.Printf("(in %s) Cannot override target inside GOROOT", this.Dir)
+		}
 	}
 
 	for _, gp := range GOPATHS {
 		if rel := GetRelative(filepath.Join(gp, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 			this.IsInGOPATH = gp //say which gopath we're in
+			if _, set := this.Cfg.Target(); set {
+				WarnLog.Printf("(in %s) Cannot override target inside GOPATH", this.Dir)
+			}
 		}
 	}
 
@@ -189,26 +195,26 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 
 	if this.IsProtobuf && ProtocCMD == "" {
 		err = errors.New(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
-		fmt.Fprintln(os.Stderr, err)
+		ErrLog.Println(err)
 		return
 	}
 
 	if this.IsCGo {
 		if GCCCMD == "" {
 			err = errors.New(fmt.Sprintf("(in %s) gcc not found for cgo target", this.Dir))
-			fmt.Fprintln(os.Stderr, err)
+			ErrLog.Println(err)
 			return
 		}
 		if CGoCMD == "" {
 			err = errors.New(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
-			fmt.Fprintln(os.Stderr, err)
+			ErrLog.Println(err)
 			return
 		}
 	}
 
 	if this.IsCGo && CGoCMD == "" {
 		err = errors.New(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
-		fmt.Fprintln(os.Stderr, err)
+		ErrLog.Println(err)
 		return
 	}
 
@@ -423,7 +429,13 @@ func (this *Package) GetSourceDeps() (err error) {
 		this.SrcDeps[src] = fdeps
 
 		if ftarget != "" {
-			this.Target = ftarget
+			if this.IsInGOROOT {
+				WarnLog.Printf("(in %s) Cannot override target inside GOROOT", this.Dir)
+			} else if this.IsInGOROOT {
+				WarnLog.Printf("(in %s) Cannot override target inside GOPATH", this.Dir)
+			} else {
+				this.Target = ftarget
+			}
 		}
 		if fpkg != "documentation" {
 			if fpkg != "main" || this.Name == "" {

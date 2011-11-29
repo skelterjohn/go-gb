@@ -74,6 +74,7 @@ var RunningInGOPATH string
 var Packages = make(map[string]*Package)
 
 var ErrLog = log.New(os.Stderr, "gb error: ", 0)
+var WarnLog = log.New(os.Stderr, "gb warning: ", 0)
 
 /*
  gb doesn't know how to build these packages
