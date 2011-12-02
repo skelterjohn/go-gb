@@ -740,6 +740,9 @@ func (this *Package) ResolveDeps() (err error) {
 				this.IsCGo = true
 				continue
 			}
+			if strings.HasPrefix(dep, "\"./") {
+				WarnLog.Printf("(in %s) gb does not support relative import %s", this.Dir, dep)
+			}
 			if pkg, ok := Packages[dep]; ok {
 				if test {
 					this.TestDepPkgs = append(this.TestDepPkgs, pkg)
