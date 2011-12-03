@@ -91,7 +91,7 @@ type Package struct {
 
 func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
-	if err != nil || !finfo.IsDirectory() {
+	if err != nil || !finfo.IsDir() {
 		err = errors.New("not a directory")
 		return
 	}
@@ -245,7 +245,7 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 
 	visited = append(visited, this)
 
-	for _, pkg := range this.DepPkgs {		
+	for _, pkg := range this.DepPkgs {
 		cycle = pkg.detectCycle(visited)
 		if cycle != nil {
 			return
@@ -258,8 +258,8 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 func (this *Package) ScanForSource() (err error) {
 	errch := make(chan error)
 	go func() {
-		wf := func(path string, info *os.FileInfo, err error) error {
-			if info.IsDirectory() {
+		wf := func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() {
 				if !this.VisitDir(path, info) {
 					return filepath.SkipDir
 				}
@@ -318,10 +318,10 @@ func (this *Package) FilterDeadSource() {
 
 }
 
-func (this *Package) VisitDir(dpath string, f *os.FileInfo) bool {
+func (this *Package) VisitDir(dpath string, f os.FileInfo) bool {
 	return dpath == this.Dir // || strings.HasPrefix(dpath, path.Join(this.Dir, "src"))
 }
-func (this *Package) VisitFile(fpath string, f *os.FileInfo) {
+func (this *Package) VisitFile(fpath string, f os.FileInfo) {
 	//ignore hidden and temporary files
 	if strings.HasPrefix(fpath, ".") {
 		return
@@ -587,18 +587,18 @@ func (this *Package) GetTarget() (err error) {
 			this.MustUseMakefile = this.MustUseMakefile || cfgMake
 		}
 		/*
-		tpath := path.Join(this.Dir, "/target.gb")
-		fin, err2 := os.Open(tpath)
-		if err2 == nil {
-			bfrd := bufio.NewReader(fin)
-			this.Target, err = bfrd.ReadString('\n')
-			this.Target = strings.TrimSpace(this.Target)
-			this.Base = this.Target
-			if this.Target == "-" || this.Target == "--" {
-				err = errors.New("directory opts-out")
-				return
+			tpath := path.Join(this.Dir, "/target.gb")
+			fin, err2 := os.Open(tpath)
+			if err2 == nil {
+				bfrd := bufio.NewReader(fin)
+				this.Target, err = bfrd.ReadString('\n')
+				this.Target = strings.TrimSpace(this.Target)
+				this.Base = this.Target
+				if this.Target == "-" || this.Target == "--" {
+					err = errors.New("directory opts-out")
+					return
+				}
 			}
-		}
 		*/
 	}
 
@@ -733,7 +733,7 @@ func (this *Package) CheckStatus() {
 }
 
 func (this *Package) ResolveDeps() (err error) {
-	
+
 	CheckDeps := func(deps []string, test bool) (err error) {
 		for _, dep := range deps {
 			if dep == "\"C\"" {
@@ -751,7 +751,7 @@ func (this *Package) ResolveDeps() (err error) {
 				}
 			} else {
 				exists, when := PkgExistsInGOROOT(dep)
-				
+
 				if exists {
 					if this.GOROOTPkgTime < when {
 						this.GOROOTPkgTime = when

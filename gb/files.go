@@ -138,8 +138,8 @@ func GetSubDirs(dir string) (subdirs []string) {
 		return
 	}
 	for _, info := range infos {
-		if info.IsDirectory() {
-			subdirs = append(subdirs, info.Name)
+		if info.IsDir() {
+			subdirs = append(subdirs, info.Name())
 		}
 	}
 	return
@@ -213,12 +213,12 @@ func ReverseDirForwardSlash(dir string) (rev string) {
 }
 
 func StatTime(p string) (time int64, err error) {
-	var info *os.FileInfo
+	var info os.FileInfo
 	info, err = os.Stat(p)
 	if err != nil {
 		return
 	}
-	time = info.Mtime_ns
+	time = info.ModTime().UnixNano()
 	return
 }
 

@@ -113,10 +113,10 @@ func BuildPackage(pkg *Package) (err error) {
 		}
 	}
 
-	var resInfo *os.FileInfo
+	var resInfo os.FileInfo
 	resInfo, err2 := os.Stat(pkg.ResultPath)
 	if err2 == nil {
-		pkg.BinTime = resInfo.Mtime_ns
+		pkg.BinTime = resInfo.ModTime().UnixNano()
 	}
 
 	return
