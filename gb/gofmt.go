@@ -16,16 +16,8 @@
 
 package main
 
-import (
-	"fmt"
-)
-
 func RunGoFMT(dir, file string) (err error) {
 	margs := []string{"gofmt", "-w", file}
-
-	if Verbose {
-		fmt.Printf("%v\n", margs)
-	}
 	err = RunExternal(GoFMTCMD, dir, margs)
 	return
 }

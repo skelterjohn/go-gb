@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path/filepath"
 )
 
@@ -14,9 +13,7 @@ func GoForProto(protosrc string) (gosrc string) {
 func GenerateProtobufSource(this *Package) (err error) {
 	for _, pbs := range this.ProtoSrcs {
 		args := []string{"protoc", "--go_out=.", pbs}
-		if Verbose {
-			fmt.Println(args)
-		}
+
 		err = RunExternal(ProtocCMD, this.Dir, args)
 		if err != nil {
 			return

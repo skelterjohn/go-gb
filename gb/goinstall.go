@@ -63,9 +63,9 @@ func GoInstallPkg(target string) (touched int64) {
 	if GoInstallUpdate {
 		argv = []string{"goinstall", "-u", "-clean", target}
 	}
-	//if Verbose {
+
 	fmt.Printf("%v\n", argv)
-	//}
+	
 	err := RunExternal(GoInstallCMD, ".", argv)
 	if err != nil {
 		return

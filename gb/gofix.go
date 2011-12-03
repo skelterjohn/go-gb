@@ -16,16 +16,8 @@
 
 package main
 
-import (
-	"fmt"
-)
-
 func RunGoFix(dir string, files []string) (err error) {
 	margs := append([]string{"gofix"}, files...)
-
-	if Verbose {
-		fmt.Printf("%v\n", margs)
-	}
 	err = RunExternal(GoFixCMD, dir, margs)
 	return
 }
