@@ -135,7 +135,7 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 		//return
 	}
 
-	if this.Name != "runtime" {
+	if this.IsCmd {
 		this.Deps = append(this.Deps, "\"runtime\"")
 	}
 
@@ -807,6 +807,7 @@ func (this *Package) Touched() (build, install bool) {
 			inTime = pkg.BinTime
 		}
 	}
+
 	if this.GOROOTPkgTime > inTime {
 		inTime = this.GOROOTPkgTime
 	}
@@ -814,6 +815,7 @@ func (this *Package) Touched() (build, install bool) {
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
+
 	if inTime > this.BinTime {
 		build = true
 	}
