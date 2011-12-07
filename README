@@ -97,9 +97,6 @@ comment.
 If you are working on something in $GOROOT/src and something outside at the 
 same time, you can run gb -R to build dependencies in $GOROOT.
 
-To include extra files in a distribution, create a file 'dist.gb' that lists
-the additional files to copy.
-
 gb passes any command line arguments that begin with "-test." to testing
 binaries, when you run gb -t.
 
@@ -173,12 +170,6 @@ Options:
  		Create workspace.gb files for all listed targets. Doing this
  		allows you to run gb from within the target directories as if
  		you were running gb from the directory you ran --workspace in.
-
- --dist
- 		Create a distribution directory for the relevant targets in a
-		new directory "_dist_". All source files, including "*.go", "*.c",
-		"*.s", and build files, including "makefile" and a top level
-		"build" script, will be copied to this directory.
 
  --gofmt
  		Run gofmt on all source for relevant targets.

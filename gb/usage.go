@@ -42,8 +42,6 @@ Options:
  -S scan and list targets and their dependencies without building
  -t run tests
  -v verbose
- --dist
-     create distribution directory
  --gofmt
      run gofmt on source files in targeted directories
  --makefiles

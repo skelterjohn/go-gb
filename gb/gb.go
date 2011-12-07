@@ -363,33 +363,7 @@ func TryGenMake() (err error) {
 
 func TryDistribution() (err error) {
 	if Distribution {
-		ch := make(chan string)
-		go func() {
-			tryFile := func(name string) bool {
-				_, ferr := os.Stat(name)
-				if ferr == nil {
-					ch <- name
-					return true
-				}
-				return false
-			}
-			tryFile("build")
-			tryFile("README")
-
-			LineChan("dist.gb", ch)
-
-			for _, pkg := range ListedPkgs {
-				err = pkg.CollectDistributionFiles(ch)
-				if err != nil {
-					return
-				}
-			}
-			close(ch)
-		}()
-		err = MakeDist(ch)
-		if err != nil {
-			return
-		}
+		err = errors.New("the '--dist' feature has been removed - use your version control's archive utility")
 	}
 	return
 }
