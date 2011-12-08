@@ -28,6 +28,11 @@ import (
 
 type Config map[string]string
 
+func (cfg Config) ProtobufPlugin() (plugin string, set bool) {
+	plugin, set = cfg["proto"]
+	return
+}
+
 func (cfg Config) Workspace() (dir string, set bool) {
 	dir, set = cfg["workspace"]
 	return
@@ -94,6 +99,7 @@ func oneLiner(key, path string, cfg Config) {
 }
 
 var knownKeys = map[string]bool {
+	"proto": true,
 	"target": true,
 	"workspace": true,
 	"makefile": true,
