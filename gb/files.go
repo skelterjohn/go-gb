@@ -153,7 +153,7 @@ func PkgExistsInGOROOT(target string) (exists bool, time int64) {
 		target = target[0 : len(target)-1]
 	}
 
-	pkgbin := path.Join(GetInstallDirPkg(), target)
+	pkgbin := path.Join(GetGOROOTDirPkg(), target)
 	pkgbin += ".a"
 
 	time, err := StatTime(pkgbin)
@@ -260,9 +260,7 @@ func Copy(cwd, src, dst string) (err os.Error) {
 	}
 
 	argv := append([]string{"cp", "-f", src, dst})
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
+	
 	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
 		return
 	}

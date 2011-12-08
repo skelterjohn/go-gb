@@ -119,6 +119,10 @@ func SplitArgs(args []string) (sargs []string) {
 func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error) {
 	argv = SplitArgs(argv)
 
+	if Verbose {
+		fmt.Printf("%s\n", argv)
+	}
+
 	c := exec.Command(cmd, argv[1:]...)
 	c.Dir = wd
 	c.Env = os.Environ()

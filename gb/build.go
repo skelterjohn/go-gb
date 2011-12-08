@@ -33,9 +33,7 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Erro
 	}
 	argv = append(argv, "-o", obj)
 	argv = append(argv, src...)
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
+	
 	err = RunExternal(CompileCMD, pkg.Dir, argv)
 	return
 
@@ -56,9 +54,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		asmObj := base + GetObjSuffix()
 		asmObjs = append(asmObjs, asmObj)
 		sargv := []string{GetAssemblerName(), asm}
-		if Verbose {
-			fmt.Printf("%v\n", sargv)
-		}
+		
 		err = RunExternal(AsmCMD, pkg.Dir, sargv)
 		if err != nil {
 			return
@@ -81,9 +77,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 		//largs = append(largs, "-o", dst, GetIBName())
 		largs = append(largs, "-o", pkg.Target, GetIBName())
-		if Verbose {
-			fmt.Printf("%v\n", largs)
-		}
+		
 		//startLink := time.Nanoseconds()
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 		//durLink := time.Nanoseconds()-startLink
@@ -103,9 +97,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 		argv := []string{"gopack", "grc", dst, GetIBName()}
 		argv = append(argv, asmObjs...)
-		if Verbose {
-			fmt.Printf("%v\n", argv)
-		}
+		
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -144,9 +136,6 @@ func BuildTest(pkg *Package) (err os.Error) {
 		}
 		argv = append(argv, testSrcs...)
 
-		if Verbose {
-			fmt.Printf("%v\n", argv)
-		}
 		if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -166,9 +155,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, testIB}
-		if Verbose {
-			fmt.Printf("%v\n", argv)
-		}
+		
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -202,9 +189,6 @@ func BuildTest(pkg *Package) (err os.Error) {
 	argv = append(argv, "-o", testmainib)
 	argv = append(argv, path.Join("_test", "_testmain.go"))
 
-	if Verbose {
-		fmt.Printf("%v\n", argv)
-	}
 	if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
 		return
 	}
@@ -221,18 +205,14 @@ func BuildTest(pkg *Package) (err os.Error) {
 		largs = append(largs, GLDFLAGS...)
 	}
 	largs = append(largs, "-o", testBinary, testmainib)
-	if Verbose {
-		fmt.Printf("%v\n", largs)
-	}
+	
 	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
 	var testBinaryAbs string
 	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), CWD)
 	testargs := append([]string{testBinary}, TestArgs...)
-	if Verbose {
-		fmt.Printf("%v\n", testargs)
-	}
+	
 	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
 		ReturnFailCode = true
 		return

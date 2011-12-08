@@ -16,17 +16,10 @@
 
 package main
 
-import (
-	"fmt"
-   "os"
-)
+import "os"
 
 func RunGoFix(dir string, files []string) (err os.Error) {
 	margs := append([]string{"gofix"}, files...)
-
-	if Verbose {
-		fmt.Printf("%v\n", margs)
-	}
 	err = RunExternal(GoFixCMD, dir, margs)
 	return
 }

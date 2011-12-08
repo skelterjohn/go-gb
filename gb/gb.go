@@ -39,16 +39,16 @@ var Install, //-i
 	GoInstallUpdate, //-G
 	Concurrent, //-p
 	Verbose, //-v
-	GenMake, //-M
+	GenMake, //--makefiles
 	Build, //-b
 	Force, //-f
 	Makefiles, //-m
-	GoFMT, //-F
-	GoFix,
+	GoFMT, //--gofmt
+	GoFix, //--gofix
 	DoPkgs, //-P
 	DoCmds, //-C
-	Distribution, //-D
-	Workspace bool //-W
+	Distribution, //--dist
+	Workspace bool //--workspace
 
 var IncludeDir string
 var GCArgs []string
@@ -72,7 +72,8 @@ var RunningInGOPATH string
 
 var Packages = make(map[string]*Package)
 
-var ErrLog = log.New(os.Stderr, "gb os.Error: ", 0)
+var ErrLog = log.New(os.Stderr, "gb error: ", 0)
+var WarnLog = log.New(os.Stderr, "gb warning: ", 0)
 
 /*
  gb doesn't know how to build these packages
@@ -84,7 +85,7 @@ var ErrLog = log.New(os.Stderr, "gb os.Error: ", 0)
 
  os has source generation
 
- syscall has crazy pure go/asm versions
+ syscall has crazy pure go/asm versions and unused source files
 
  crypto/tls has a file root_stub.go which is excluded
 */
@@ -108,7 +109,6 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 	if basedir == "_obj" ||
 		basedir == "_test" ||
 		basedir == "_cgo" ||
-		basedir == "_dist_" ||
 		basedir == "bin" ||
 		(basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
@@ -214,34 +214,6 @@ func IsListed(name string) bool {
 		}
 	}
 	return false
-}
-
-func MakeDist(ch chan string) (err os.Error) {
-	fmt.Printf("Removing _dist_\n")
-	if err = os.RemoveAll("_dist_"); err != nil {
-		return
-	}
-
-	if err = os.MkdirAll("_dist_", 0755); err != nil {
-		return
-	}
-
-	fmt.Printf("Copying distribution files to _dist_\n")
-	for file := range ch {
-		if _, err = os.Stat(file); err != nil {
-			ErrLog.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
-			return
-		}
-		nfile := path.Join("_dist_", file)
-		npdir, _ := path.Split(nfile)
-		if err = os.MkdirAll(npdir, 0755); err != nil {
-			ErrLog.Printf("Couldn't create directory '%s'.\n", npdir)
-			return
-		}
-		Copy(".", file, nfile)
-	}
-
-	return
 }
 
 func TryScan() {
@@ -362,33 +334,7 @@ func TryGenMake() (err os.Error) {
 
 func TryDistribution() (err os.Error) {
 	if Distribution {
-		ch := make(chan string)
-		go func() {
-			tryFile := func(name string) bool {
-				_, ferr := os.Stat(name)
-				if ferr == nil {
-					ch <- name
-					return true
-				}
-				return false
-			}
-			tryFile("build")
-			tryFile("README")
-
-			LineChan("dist.gb", ch)
-
-			for _, pkg := range ListedPkgs {
-				err = pkg.CollectDistributionFiles(ch)
-				if err != nil {
-					return
-				}
-			}
-			close(ch)
-		}()
-		err = MakeDist(ch)
-		if err != nil {
-			return
-		}
+		err = os.NewError("the '--dist' feature has been removed - use your version control's archive utility")
 	}
 	return
 }
@@ -580,8 +526,9 @@ func RunGB() (err os.Error) {
 	}
 
 	TryInstall()
+	
 
-	if !Clean {
+	if Build {
 		if PackagesBuilt > 1 {
 			fmt.Printf("Built %d targets\n", PackagesBuilt)
 		} else if PackagesBuilt == 1 {
@@ -605,7 +552,8 @@ func RunGB() (err os.Error) {
 				fmt.Printf("%s\n", msg)
 			}
 		}
-	} else {
+	} 
+	if Clean {
 		if PackagesBuilt == 0 {
 			fmt.Printf("No mess to clean\n")
 		}

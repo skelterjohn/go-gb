@@ -104,7 +104,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
-		fmt.Printf("%v\n", cgo_argv)
 	}
 	err = RunExternal(CGoCMD, cgodir, cgo_argv)
 	if err != nil {
@@ -140,7 +139,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
-		fmt.Printf("%v\n", cdefargv)
 	}
 	err = RunExternal(CCMD, cgodir, cdefargv)
 	if err != nil {
@@ -162,7 +160,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		gccargv = append(gccargv, src)
 		if Verbose {
 			fmt.Printf("%s:", cgodir)
-			fmt.Printf("%v\n", gccargv)
 		}
 		err = RunExternal(GCCCMD, cgodir, gccargv)
 		return
@@ -212,7 +209,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
-		fmt.Printf("%v\n", gcclargv)
 	}
 	err = RunExternal(GCCCMD, cgodir, gcclargv)
 	if err != nil {
@@ -223,7 +219,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	dynargv := []string{"cgo", "-dynimport", "_cgo1_.o"}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
-		fmt.Printf("%v > %s\n", dynargv, "__cgo_import.c")
+		fmt.Printf("writing to %s\n", "__cgo_import.c")
 	}
 
 	var dump *os.File
@@ -253,7 +249,6 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	ccargv := []string{GetCCompilerName(), "-FVw", "_cgo_import.c"}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
-		fmt.Printf("%v\n", ccargv)
 	}
 	err = RunExternal(CCMD, cgodir, ccargv)
 	if err != nil {
@@ -287,9 +282,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		filepath.Join("_cgo", "_cgo_defun"+GetObjSuffix()),
 		filepath.Join("_cgo", "_cgo_import"+GetObjSuffix())}
 	packargv = append(packargv, relobjs...)
-	if Verbose {
-		fmt.Printf("%v\n", packargv)
-	}
+	
 	err = RunExternal(PackCMD, pkg.Dir, packargv)
 	return
 }

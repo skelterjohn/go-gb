@@ -111,11 +111,17 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 
 	if rel := GetRelative(filepath.Join(GOROOT, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 		this.IsInGOROOT = true
+		if _, set := this.Cfg.Target(); set {
+			WarnLog.Printf("(in %s) Cannot override target inside GOROOT", this.Dir)
+		}
 	}
 
 	for _, gp := range GOPATHS {
 		if rel := GetRelative(filepath.Join(gp, "src"), dir, CWD); !strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel) {
 			this.IsInGOPATH = gp //say which gopath we're in
+			if _, set := this.Cfg.Target(); set {
+				WarnLog.Printf("(in %s) Cannot override target inside GOPATH", this.Dir)
+			}
 		}
 	}
 
@@ -126,6 +132,10 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 	err = this.GetSourceDeps()
 	if err != nil {
 		//return
+	}
+
+	if this.IsCmd {
+		this.Deps = append(this.Deps, "\"runtime\"")
 	}
 
 	this.FilterDeadSource()
@@ -184,26 +194,26 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 
 	if this.IsProtobuf && ProtocCMD == "" {
 		err = os.NewError(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
-		fmt.Fprintln(os.Stderr, err)
+		ErrLog.Println(err)
 		return
 	}
 
 	if this.IsCGo {
 		if GCCCMD == "" {
 			err = os.NewError(fmt.Sprintf("(in %s) gcc not found for cgo target", this.Dir))
-			fmt.Fprintln(os.Stderr, err)
+			ErrLog.Println(err)
 			return
 		}
 		if CGoCMD == "" {
 			err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
-			fmt.Fprintln(os.Stderr, err)
+			ErrLog.Println(err)
 			return
 		}
 	}
 
 	if this.IsCGo && CGoCMD == "" {
 		err = os.NewError(fmt.Sprintf("(in %s) cgo not found for cgo target", this.Dir))
-		fmt.Fprintln(os.Stderr, err)
+		ErrLog.Println(err)
 		return
 	}
 
@@ -226,12 +236,13 @@ func (this *Package) DetectCycles() (cycle []*Package) {
 func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	for i, p := range visited {
 		if p == this {
-			cycle = visited[:i+1]
+			_ = i
+			cycle = visited
 			return
 		}
 	}
 
-	visited = append([]*Package{this}, visited...)
+	visited = append(visited, this)
 
 	for _, pkg := range this.DepPkgs {
 		cycle = pkg.detectCycle(visited)
@@ -419,7 +430,13 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 		this.SrcDeps[src] = fdeps
 
 		if ftarget != "" {
-			this.Target = ftarget
+			if this.IsInGOROOT {
+				WarnLog.Printf("(in %s) Cannot override target inside GOROOT", this.Dir)
+			} else if this.IsInGOROOT {
+				WarnLog.Printf("(in %s) Cannot override target inside GOPATH", this.Dir)
+			} else {
+				this.Target = ftarget
+			}
 		}
 		if fpkg != "documentation" {
 			if fpkg != "main" || this.Name == "" {
@@ -435,7 +452,7 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
 		}
-		if isCGoSrc {
+		if isCGoSrc && !(this.IsInGOROOT && this.Name == "syscall") {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
@@ -570,20 +587,7 @@ func (this *Package) GetTarget() (err os.Error) {
 		if cfgMake, set := this.Cfg.AlwaysMakefile(); set {
 			this.MustUseMakefile = this.MustUseMakefile || cfgMake
 		}
-		/*
-		tpath := path.Join(this.Dir, "/target.gb")
-		fin, err2 := os.Open(tpath)
-		if err2 == nil {
-			bfrd := bufio.NewReader(fin)
-			this.Target, err = bfrd.ReadString('\n')
-			this.Target = strings.TrimSpace(this.Target)
-			this.Base = this.Target
-			if this.Target == "-" || this.Target == "--" {
-				err = os.NewError("directory opts-out")
-				return
-			}
-		}
-		*/
+
 	}
 
 	this.Base = path.Clean(this.Base)
@@ -723,6 +727,9 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				this.IsCGo = true
 				continue
 			}
+			if strings.HasPrefix(dep, "\"./") {
+				WarnLog.Printf("(in %s) gb does not support relative import %s", this.Dir, dep)
+			}
 			if pkg, ok := Packages[dep]; ok {
 				if test {
 					this.TestDepPkgs = append(this.TestDepPkgs, pkg)
@@ -731,6 +738,7 @@ func (this *Package) ResolveDeps() (err os.Error) {
 				}
 			} else {
 				exists, when := PkgExistsInGOROOT(dep)
+
 				if exists {
 					if this.GOROOTPkgTime < when {
 						this.GOROOTPkgTime = when
@@ -786,6 +794,7 @@ func (this *Package) Touched() (build, install bool) {
 			inTime = pkg.BinTime
 		}
 	}
+
 	if this.GOROOTPkgTime > inTime {
 		inTime = this.GOROOTPkgTime
 	}
@@ -793,6 +802,7 @@ func (this *Package) Touched() (build, install bool) {
 	if this.SourceTime > inTime {
 		inTime = this.SourceTime
 	}
+
 	if inTime > this.BinTime {
 		build = true
 	}
@@ -1033,24 +1043,6 @@ func (this *Package) Test() (err os.Error) {
 
 	return
 }
-/*
-package main
-
-import "go-glue.googlecode.com/hg/rlglue"
-import "testing"
-import __regexp__ "regexp"
-
-var tests = []testing.InternalTest{
-	{"rlglue.TestTaskSpec", rlglue.TestTaskSpec},
-}
-var benchmarks = []testing.InternalBenchmark{}
-
-func main() {
-	testing.Main(__regexp__.MatchString, tests)
-	testing.RunBenchmarks(__regexp__.MatchString, benchmarks)
-}
-
-*/
 
 func (this *Package) CleanFiles() (err os.Error) {
 	defer func() {

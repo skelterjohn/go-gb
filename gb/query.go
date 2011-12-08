@@ -147,11 +147,15 @@ func GetBuildDirPkg() (dir string) {
 	return "_obj"
 }
 
+func GetGOROOTDirPkg() (dir string) {
+	return filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
+}
+
 func GetInstallDirPkg() (dir string) {
 	if GOPATH_SINGLE != "" {
 		return filepath.Join(GOPATH_SINGLE, "pkg", GOOS+"_"+GOARCH)
 	}
-	return filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
+	return GetGOROOTDirPkg()
 }
 
 func GetBuildDirCmd() (dir string) {
@@ -199,5 +203,5 @@ func GetObjSuffix() (suffix string) {
 }
 
 func GetIBName() (name string) {
-	return fmt.Sprintf("_go_%s", GetObjSuffix())
+	return fmt.Sprintf("_%s_%s_%s", GOOS, GOARCH, GetObjSuffix())
 }
