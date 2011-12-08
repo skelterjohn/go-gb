@@ -101,17 +101,21 @@ var ForceMakePkgs = map[string]bool{
 	"godoc":      true,
 }
 
+var DisallowedSourceDirectories = map[string]bool {
+	"_obj": true,
+	"_test": true,
+	"_cgo": true,
+	"bin": true,
+	"testdata": true,
+}
+
 var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
 func ScanDirectory(base, dir string) (err2 error) {
 	_, basedir := path.Split(dir)
-	if basedir == "_obj" ||
-		basedir == "_test" ||
-		basedir == "_cgo" ||
-		basedir == "bin" ||
-		(basedir != "." && strings.HasPrefix(basedir, ".")) {
+	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
 	}
 
