@@ -275,7 +275,7 @@ func (this *Package) ScanForSource() (err error) {
 		ErrLog.Printf("Error while scanning: %s", fperr)
 	}
 
-	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources) == 0 { //allsources
+	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources)+len(this.ProtoGoSrcs) == 0 { //allsources
 		err = errors.New("No source files in " + this.Dir)
 	}
 
