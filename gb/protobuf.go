@@ -14,9 +14,9 @@ func GoForProto(protosrc string) (gosrc string) {
 func GenerateProtobufSource(this *Package) (err error) {
 	plugin, isSet := this.Cfg.ProtobufPlugin()
 	if !isSet {
-		plugin = "go_out"
+		plugin = "go"
 	}
-	pluginArg := fmt.Sprintf("--%s=.", plugin)
+	pluginArg := fmt.Sprintf("--%s_out=.", plugin)
 
 	
 	for _, pbs := range this.ProtoSrcs {
