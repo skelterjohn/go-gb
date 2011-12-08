@@ -139,17 +139,6 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
 		pkg, err = NewPackage(base, dir, cfg)
 		if err == nil {
-			/*
-				if Workspace {
-					absdir := GetAbs(dir, CWD)
-					relworkspace := GetRelative(absdir, CWD, CWD)
-					var wfile *os.File
-					wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
-					wfile.WriteString(relworkspace + "\n")
-					wfile.Close()		
-				}
-			*/
-
 			key := "\"" + pkg.Target + "\""
 			if pkg.IsCmd {
 				key += "-cmd"
@@ -171,18 +160,8 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 		fmt.Println(dir, "ignored")
 	}
 
-	/*
-		if pkg == nil {
-			return
-		}
-	*/
-
 	if pkg != nil {
 		pkg.IsTestData = isTestData
-	}
-
-	if pkg != nil && pkg.Target == "." {
-		err = errors.New("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
 
 	if ignoreAll, ok := cfg.IgnoreAll(); !(ignoreAll && ok) {
