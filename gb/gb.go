@@ -102,21 +102,24 @@ var ForceMakePkgs = map[string]bool{
 }
 
 var DisallowedSourceDirectories = map[string]bool{
-	"_obj":     true,
-	"_test":    true,
-	"_cgo":     true,
-	"bin":      true,
-	"testdata": true,
+	"_obj":  true,
+	"_test": true,
+	"_cgo":  true,
+	"bin":   true,
 }
 
 var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
-func ScanDirectory(base, dir string) (err2 error) {
+func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 	_, basedir := path.Split(dir)
 	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
+	}
+
+	if basedir == "testdata" {
+		isTestData = true
 	}
 
 	cfg := ReadConfig(dir)
@@ -174,6 +177,10 @@ func ScanDirectory(base, dir string) (err2 error) {
 		}
 	*/
 
+	if pkg != nil {
+		pkg.IsTestData = isTestData
+	}
+
 	if pkg != nil && pkg.Target == "." {
 		err = errors.New("Package has no name specified. Either create 'target.gb' or run gb from above.")
 	}
@@ -181,7 +188,7 @@ func ScanDirectory(base, dir string) (err2 error) {
 	if ignoreAll, ok := cfg.IgnoreAll(); !(ignoreAll && ok) {
 		subdirs := GetSubDirs(dir)
 		for _, subdir := range subdirs {
-			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
+			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), isTestData)
 		}
 	}
 
@@ -419,17 +426,17 @@ func RunGB() (err error) {
 
 	args := os.Args[1:len(os.Args)]
 
-	err = ScanDirectory(".", ".")
+	err = ScanDirectory(".", ".", false)
 	if err != nil {
 		return
 	}
 	if BuildGOROOT {
 		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
-		ScanDirectory("", path.Join(GOROOT, "src"))
+		ScanDirectory("", path.Join(GOROOT, "src"), false)
 		fmt.Printf("done\n")
 		for _, gp := range GOPATHS {
 			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
-			ScanDirectory("", path.Join(gp, "src"))
+			ScanDirectory("", path.Join(gp, "src"), false)
 			fmt.Printf("done\n")
 		}
 	}

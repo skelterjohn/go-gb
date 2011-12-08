@@ -80,6 +80,7 @@ type Package struct {
 	MustUseMakefile bool
 	IsInGOROOT      bool
 	IsInGOPATH      string
+	IsTestData      bool
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
