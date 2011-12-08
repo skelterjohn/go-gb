@@ -110,7 +110,6 @@ func ScanDirectory(base, dir string) (err2 error) {
 	if basedir == "_obj" ||
 		basedir == "_test" ||
 		basedir == "_cgo" ||
-		basedir == "_dist_" ||
 		basedir == "bin" ||
 		(basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
@@ -215,34 +214,6 @@ func IsListed(name string) bool {
 		}
 	}
 	return false
-}
-
-func MakeDist(ch chan string) (err error) {
-	fmt.Printf("Removing _dist_\n")
-	if err = os.RemoveAll("_dist_"); err != nil {
-		return
-	}
-
-	if err = os.MkdirAll("_dist_", 0755); err != nil {
-		return
-	}
-
-	fmt.Printf("Copying distribution files to _dist_\n")
-	for file := range ch {
-		if _, err = os.Stat(file); err != nil {
-			ErrLog.Printf("Couldn't find '%s' for copy to _dist_.\n", file)
-			return
-		}
-		nfile := path.Join("_dist_", file)
-		npdir, _ := path.Split(nfile)
-		if err = os.MkdirAll(npdir, 0755); err != nil {
-			ErrLog.Printf("Couldn't create directory '%s'.\n", npdir)
-			return
-		}
-		Copy(".", file, nfile)
-	}
-
-	return
 }
 
 func TryScan() {
