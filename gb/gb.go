@@ -119,7 +119,14 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 	}
 
 	if basedir == "testdata" {
+		// if gb isn't actually run from within here, abort
+		if !HasPathPrefix(OSWD, GetAbs(dir, CWD)) {
+			return
+		}
+		// all stuff within is for testing
 		isTestData = true
+		// and starts from scratch with the target name
+		base = "."
 	}
 
 	cfg := ReadConfig(dir)

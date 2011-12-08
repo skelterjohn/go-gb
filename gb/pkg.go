@@ -682,6 +682,9 @@ func (this *Package) PrintScan() {
 	if this.IsCGo && !this.IsCmd {
 		label = "cgo"
 	}
+	if this.IsTestData {
+		label = "test " + label
+	}
 	if this.IsInGOROOT {
 		label = "GOROOT " + label
 	} else if this.IsInGOPATH != "" {
