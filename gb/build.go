@@ -35,7 +35,7 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err error) 
 	}
 	argv = append(argv, "-o", obj)
 	argv = append(argv, src...)
-	
+
 	err = RunExternal(CompileCMD, pkg.Dir, argv)
 	return
 
@@ -56,7 +56,7 @@ func BuildPackage(pkg *Package) (err error) {
 		asmObj := base + GetObjSuffix()
 		asmObjs = append(asmObjs, asmObj)
 		sargv := []string{GetAssemblerName(), asm}
-		
+
 		err = RunExternal(AsmCMD, pkg.Dir, sargv)
 		if err != nil {
 			return
@@ -79,7 +79,7 @@ func BuildPackage(pkg *Package) (err error) {
 
 		//largs = append(largs, "-o", dst, GetIBName())
 		largs = append(largs, "-o", pkg.Target, GetIBName())
-		
+
 		//startLink := time.Nanoseconds()
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 		//durLink := time.Nanoseconds()-startLink
@@ -99,7 +99,7 @@ func BuildPackage(pkg *Package) (err error) {
 
 		argv := []string{"gopack", "grc", dst, GetIBName()}
 		argv = append(argv, asmObjs...)
-		
+
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -157,7 +157,7 @@ func BuildTest(pkg *Package) (err error) {
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, testIB}
-		
+
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -207,14 +207,14 @@ func BuildTest(pkg *Package) (err error) {
 		largs = append(largs, GLDFLAGS...)
 	}
 	largs = append(largs, "-o", testBinary, testmainib)
-	
+
 	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
 	var testBinaryAbs string
 	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), CWD)
 	testargs := append([]string{testBinary}, TestArgs...)
-	
+
 	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
 		ReturnFailCode = true
 		return

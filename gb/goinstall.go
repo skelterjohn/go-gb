@@ -65,7 +65,7 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 
 	fmt.Printf("%v\n", argv)
-	
+
 	err := RunExternal(GoInstallCMD, ".", argv)
 	if err != nil {
 		return

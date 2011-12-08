@@ -282,7 +282,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 		filepath.Join("_cgo", "_cgo_defun"+GetObjSuffix()),
 		filepath.Join("_cgo", "_cgo_import"+GetObjSuffix())}
 	packargv = append(packargv, relobjs...)
-	
+
 	err = RunExternal(PackCMD, pkg.Dir, packargv)
 	return
 }

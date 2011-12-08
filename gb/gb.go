@@ -101,11 +101,11 @@ var ForceMakePkgs = map[string]bool{
 	"godoc":      true,
 }
 
-var DisallowedSourceDirectories = map[string]bool {
-	"_obj": true,
-	"_test": true,
-	"_cgo": true,
-	"bin": true,
+var DisallowedSourceDirectories = map[string]bool{
+	"_obj":     true,
+	"_test":    true,
+	"_cgo":     true,
+	"bin":      true,
 	"testdata": true,
 }
 
@@ -121,7 +121,6 @@ func ScanDirectory(base, dir string) (err2 error) {
 
 	cfg := ReadConfig(dir)
 
-
 	if Workspace {
 		absdir := GetAbs(dir, CWD)
 		relworkspace := GetRelative(absdir, CWD, CWD)
@@ -132,21 +131,20 @@ func ScanDirectory(base, dir string) (err2 error) {
 
 	var err error
 
-
 	var pkg *Package
 
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
 		pkg, err = NewPackage(base, dir, cfg)
 		if err == nil {
 			/*
-			if Workspace {
-				absdir := GetAbs(dir, CWD)
-				relworkspace := GetRelative(absdir, CWD, CWD)
-				var wfile *os.File
-				wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
-				wfile.WriteString(relworkspace + "\n")
-				wfile.Close()		
-			}
+				if Workspace {
+					absdir := GetAbs(dir, CWD)
+					relworkspace := GetRelative(absdir, CWD, CWD)
+					var wfile *os.File
+					wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
+					wfile.WriteString(relworkspace + "\n")
+					wfile.Close()		
+				}
 			*/
 
 			key := "\"" + pkg.Target + "\""
@@ -171,9 +169,9 @@ func ScanDirectory(base, dir string) (err2 error) {
 	}
 
 	/*
-	if pkg == nil {
-		return
-	}
+		if pkg == nil {
+			return
+		}
 	*/
 
 	if pkg != nil && pkg.Target == "." {
@@ -530,7 +528,6 @@ func RunGB() (err error) {
 	}
 
 	TryInstall()
-	
 
 	if Build {
 		if PackagesBuilt > 1 {
@@ -556,7 +553,7 @@ func RunGB() (err error) {
 				fmt.Printf("%s\n", msg)
 			}
 		}
-	} 
+	}
 	if Clean {
 		if PackagesBuilt == 0 {
 			fmt.Printf("No mess to clean\n")

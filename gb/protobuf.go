@@ -18,7 +18,6 @@ func GenerateProtobufSource(this *Package) (err error) {
 	}
 	pluginArg := fmt.Sprintf("--%s_out=.", plugin)
 
-	
 	for _, pbs := range this.ProtoSrcs {
 		args := []string{"protoc", pluginArg, pbs}
 
