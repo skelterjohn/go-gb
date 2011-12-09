@@ -90,7 +90,7 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
+func NewPackage(base, dir string, isTestData bool, cfg Config) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDir() {
 		err = errors.New("not a directory")
@@ -103,6 +103,7 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
+	this.IsTestData = isTestData
 	this.PkgSrc = make(map[string][]string)
 	this.PkgCGoSrc = make(map[string][]string)
 	this.TestSrc = make(map[string][]string)
@@ -131,6 +132,7 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err error) {
 	if err != nil {
 		return
 	}
+
 	err = this.GetSourceDeps()
 	if err != nil {
 		//return
@@ -517,7 +519,7 @@ func (this *Package) GetSourceDeps() (err error) {
 }
 
 func (this *Package) GetTarget() (err error) {
-	if !this.IsCmd && this.IsInGOROOT {
+	if !this.IsCmd && this.IsInGOROOT && !this.IsTestData {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
@@ -529,7 +531,7 @@ func (this *Package) GetTarget() (err error) {
 			this.MustUseMakefile = true
 		}
 	}
-	if !this.IsCmd && this.IsInGOROOT {
+	if !this.IsCmd && this.IsInGOROOT && !this.IsTestData {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -540,7 +542,7 @@ func (this *Package) GetTarget() (err error) {
 			return
 		}
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
-	} else if !this.IsCmd && this.IsInGOPATH != "" {
+	} else if !this.IsCmd && this.IsInGOPATH != "" && !this.IsTestData {
 		//this is a gopath target
 		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -587,20 +589,6 @@ func (this *Package) GetTarget() (err error) {
 		if cfgMake, set := this.Cfg.AlwaysMakefile(); set {
 			this.MustUseMakefile = this.MustUseMakefile || cfgMake
 		}
-		/*
-			tpath := path.Join(this.Dir, "/target.gb")
-			fin, err2 := os.Open(tpath)
-			if err2 == nil {
-				bfrd := bufio.NewReader(fin)
-				this.Target, err = bfrd.ReadString('\n')
-				this.Target = strings.TrimSpace(this.Target)
-				this.Base = this.Target
-				if this.Target == "-" || this.Target == "--" {
-					err = errors.New("directory opts-out")
-					return
-				}
-			}
-		*/
 	}
 
 	this.Base = path.Clean(this.Base)

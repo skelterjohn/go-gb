@@ -119,13 +119,13 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 	}
 
 	if basedir == "testdata" {
-		// if gb isn't actually run from within here, abort
+		// if gb isn't actually run from within here, ignore it all
 		if !HasPathPrefix(OSWD, GetAbs(dir, CWD)) {
 			return
 		}
 		// all stuff within is for testing
 		isTestData = true
-		// and starts from scratch with the target name
+		// and it starts from scratch with the target name
 		base = "."
 	}
 
@@ -139,12 +139,16 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 		cfg.Write(absdir)
 	}
 
+	if ignoreAll, ok := cfg.IgnoreAll(); ignoreAll && ok {
+		return
+	}
+
 	var err error
 
 	var pkg *Package
 
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
-		pkg, err = NewPackage(base, dir, cfg)
+		pkg, err = NewPackage(base, dir, isTestData, cfg)
 		if err == nil {
 			key := "\"" + pkg.Target + "\""
 			if pkg.IsCmd {
@@ -167,15 +171,9 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 		fmt.Println(dir, "ignored")
 	}
 
-	if pkg != nil {
-		pkg.IsTestData = isTestData
-	}
-
-	if ignoreAll, ok := cfg.IgnoreAll(); !(ignoreAll && ok) {
-		subdirs := GetSubDirs(dir)
-		for _, subdir := range subdirs {
-			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), isTestData)
-		}
+	subdirs := GetSubDirs(dir)
+	for _, subdir := range subdirs {
+		ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), isTestData)
 	}
 
 	return
