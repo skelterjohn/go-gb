@@ -681,7 +681,7 @@ func (this *Package) PrintScan() {
 		label = "cgo"
 	}
 	if this.InTestData != "" {
-		label = "test " + label
+		label = "testdata " + label
 	}
 	if this.IsInGOROOT {
 		label = "GOROOT " + label
