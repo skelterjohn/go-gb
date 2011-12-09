@@ -1068,7 +1068,7 @@ func (this *Package) CleanFiles() (err error) {
 
 	if Makefiles && this.HasMakefile {
 		MakeClean(this)
-		PackagesBuilt++
+		PackagesCleaned++
 		return
 	}
 
@@ -1129,6 +1129,7 @@ func (this *Package) CleanFiles() (err error) {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
+	PackagesCleaned++
 	for _, obj := range this.Objects {
 		if Verbose {
 			fmt.Printf(" Removing %s\n", obj)
@@ -1139,6 +1140,7 @@ func (this *Package) CleanFiles() (err error) {
 		fmt.Printf(" Removing %s\n", this.ResultPath)
 	}
 	err = os.Remove(this.ResultPath)
+
 	if this.IsCmd {
 		_, bres := path.Split(this.ResultPath)
 		bres = path.Join(this.Dir, bres)

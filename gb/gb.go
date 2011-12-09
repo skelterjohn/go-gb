@@ -55,6 +55,7 @@ var IncludeDir string
 var GCArgs []string
 var GLArgs []string
 var PackagesBuilt int
+var PackagesCleaned int
 var PackagesInstalled int
 var BrokenPackages int
 var ListedTargets int
@@ -553,7 +554,7 @@ func RunGB() (err error) {
 		}
 	}
 	if Clean {
-		if PackagesBuilt == 0 {
+		if PackagesCleaned == 0 {
 			fmt.Printf("No mess to clean\n")
 		}
 	}
