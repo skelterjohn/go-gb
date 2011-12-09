@@ -1189,8 +1189,6 @@ func (this *Package) Clean() (err error) {
 
 	err = this.CleanFiles()
 
-	PackagesBuilt++
-
 	return
 }
 func (this *Package) Install() (err error) {
