@@ -24,21 +24,4 @@ GOFILES=\
 	usage.go\
 	util.go\
 
-
-# gb: this is the local install
-GBROOT=.
-
-# gb: compile/link against local install
-GC+= -I $(GBROOT)/_obj
-LD+= -L $(GBROOT)/_obj
-
-# gb: default target is in GBROOT this way
-command:
-
 include $(GOROOT)/src/Make.cmd
-
-# gb: copy to local install
-$(GBROOT)/bin/$(TARG): $(TARG)
-	mkdir -p $(dir $@); cp -f $< $@
-command: $(GBROOT)/bin/$(TARG)
-

@@ -6,7 +6,7 @@ gb/gb
 _go_.6
 _test
 _testmain
-gb/bin
+_bin
 gb/push
 gb/add
 gb/commit
@@ -14,7 +14,6 @@ gb/tag
 gb/_dist_
 _obj
 _cgo
-bin
 *.cgo1.go
 *.cgo2.c
 example/a/Makefile
