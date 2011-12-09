@@ -101,18 +101,25 @@ var ForceMakePkgs = map[string]bool{
 	"godoc":      true,
 }
 
+const (
+	ObjDir  = "_obj"
+	TestDir = "_test"
+	CGoDir  = "_cgo"
+	BinDir  = "_bin"
+)
+
 var DisallowedSourceDirectories = map[string]bool{
-	"_obj":  true,
-	"_test": true,
-	"_cgo":  true,
-	"bin":   true,
+	ObjDir:  true,
+	TestDir: true,
+	CGoDir:  true,
+	BinDir:  true,
 }
 
 var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
-func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
+func ScanDirectory(base, dir string, inTestData string) (err2 error) {
 	_, basedir := path.Split(dir)
 	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
@@ -124,7 +131,7 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 			return
 		}
 		// all stuff within is for testing
-		isTestData = true
+		inTestData = dir
 		// and it starts from scratch with the target name
 		base = "."
 	}
@@ -148,7 +155,7 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 	var pkg *Package
 
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
-		pkg, err = NewPackage(base, dir, isTestData, cfg)
+		pkg, err = NewPackage(base, dir, inTestData, cfg)
 		if err == nil {
 			key := "\"" + pkg.Target + "\""
 			if pkg.IsCmd {
@@ -173,7 +180,7 @@ func ScanDirectory(base, dir string, isTestData bool) (err2 error) {
 
 	subdirs := GetSubDirs(dir)
 	for _, subdir := range subdirs {
-		ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), isTestData)
+		ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), inTestData)
 	}
 
 	return
@@ -410,17 +417,17 @@ func RunGB() (err error) {
 
 	args := os.Args[1:len(os.Args)]
 
-	err = ScanDirectory(".", ".", false)
+	err = ScanDirectory(".", ".", "")
 	if err != nil {
 		return
 	}
 	if BuildGOROOT {
 		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
-		ScanDirectory("", path.Join(GOROOT, "src"), false)
+		ScanDirectory("", path.Join(GOROOT, "src"), "")
 		fmt.Printf("done\n")
 		for _, gp := range GOPATHS {
 			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
-			ScanDirectory("", path.Join(gp, "src"), false)
+			ScanDirectory("", path.Join(gp, "src"), "")
 			fmt.Printf("done\n")
 		}
 	}

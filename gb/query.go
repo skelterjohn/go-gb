@@ -144,7 +144,7 @@ func LoadEnvs() bool {
 }
 
 func GetBuildDirPkg() (dir string) {
-	return "_obj"
+	return ObjDir
 }
 
 func GetGOROOTDirPkg() (dir string) {
@@ -159,7 +159,7 @@ func GetInstallDirPkg() (dir string) {
 }
 
 func GetBuildDirCmd() (dir string) {
-	return "bin"
+	return BinDir
 }
 
 func GetInstallDirCmd() (dir string) {

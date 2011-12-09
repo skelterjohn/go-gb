@@ -80,7 +80,7 @@ type Package struct {
 	MustUseMakefile bool
 	IsInGOROOT      bool
 	IsInGOPATH      string
-	IsTestData      bool
+	InTestData      string
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -90,7 +90,7 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string, isTestData bool, cfg Config) (this *Package, err error) {
+func NewPackage(base, dir string, inTestData string, cfg Config) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDir() {
 		err = errors.New("not a directory")
@@ -103,7 +103,7 @@ func NewPackage(base, dir string, isTestData bool, cfg Config) (this *Package, e
 
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
-	this.IsTestData = isTestData
+	this.InTestData = inTestData
 	this.PkgSrc = make(map[string][]string)
 	this.PkgCGoSrc = make(map[string][]string)
 	this.TestSrc = make(map[string][]string)
@@ -519,7 +519,7 @@ func (this *Package) GetSourceDeps() (err error) {
 }
 
 func (this *Package) GetTarget() (err error) {
-	if !this.IsCmd && this.IsInGOROOT && !this.IsTestData {
+	if !this.IsCmd && this.IsInGOROOT && this.InTestData == "" {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
@@ -531,7 +531,7 @@ func (this *Package) GetTarget() (err error) {
 			this.MustUseMakefile = true
 		}
 	}
-	if !this.IsCmd && this.IsInGOROOT && !this.IsTestData {
+	if !this.IsCmd && this.IsInGOROOT && this.InTestData == "" {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -542,7 +542,7 @@ func (this *Package) GetTarget() (err error) {
 			return
 		}
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
-	} else if !this.IsCmd && this.IsInGOPATH != "" && !this.IsTestData {
+	} else if !this.IsCmd && this.IsInGOPATH != "" && this.InTestData == "" {
 		//this is a gopath target
 		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -602,14 +602,14 @@ func (this *Package) GetTarget() (err error) {
 		}
 	}
 
-	if this.IsInGOROOT {
+	if this.IsInGOROOT && this.InTestData == "" {
 		if this.IsCmd {
 			this.InstallPath = filepath.Join(GOBIN, this.Target)
 		} else {
 			this.InstallPath = filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH, this.Target+".a")
 		}
 		this.ResultPath = this.InstallPath
-	} else if this.IsInGOPATH != "" {
+	} else if this.IsInGOPATH != "" && this.InTestData == "" {
 		if this.IsCmd {
 			this.InstallPath = filepath.Join(this.IsInGOPATH, "bin", this.Target)
 		} else {
@@ -618,11 +618,21 @@ func (this *Package) GetTarget() (err error) {
 		this.ResultPath = this.InstallPath
 	} else {
 		if this.IsCmd {
-			this.InstallPath = path.Join(GetInstallDirCmd(), this.Target)
-			this.ResultPath = path.Join(GetBuildDirCmd(), this.Target)
+			this.InstallPath = filepath.Join(GetInstallDirCmd(), this.Target)
+			if this.InTestData != "" {
+				buildDirTest := filepath.Join(this.InTestData, GetBuildDirCmd())
+				this.ResultPath = filepath.Join(buildDirTest, this.Target)
+			} else {
+				this.ResultPath = filepath.Join(GetBuildDirCmd(), this.Target)
+			}
 		} else {
-			this.InstallPath = path.Join(GetInstallDirPkg(), this.Target+".a")
-			this.ResultPath = path.Join(GetBuildDirPkg(), this.Target+".a")
+			this.InstallPath = filepath.Join(GetInstallDirPkg(), this.Target+".a")
+			if this.InTestData != "" {
+				buildDirTest := filepath.Join(this.InTestData, GetBuildDirPkg())
+				this.ResultPath = filepath.Join(buildDirTest, this.Target+".a")
+			} else {
+				this.ResultPath = filepath.Join(GetBuildDirPkg(), this.Target+".a")
+			}
 		}
 	}
 
@@ -670,7 +680,7 @@ func (this *Package) PrintScan() {
 	if this.IsCGo && !this.IsCmd {
 		label = "cgo"
 	}
-	if this.IsTestData {
+	if this.InTestData != "" {
 		label = "test " + label
 	}
 	if this.IsInGOROOT {
@@ -1184,6 +1194,11 @@ func (this *Package) Clean() (err error) {
 	return
 }
 func (this *Package) Install() (err error) {
+	if this.InTestData != "" {
+		err = errors.New(fmt.Sprintf("Can't install testdata target %s", this.Target))
+		ErrLog.Println(err)
+		return
+	}
 	if !this.NeedsInstall {
 		return
 	}
