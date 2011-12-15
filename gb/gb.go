@@ -142,7 +142,7 @@ func ScanDirectory(base, dir string, inTestData string) (err2 error) {
 	if Workspace {
 		absdir := GetAbs(dir, CWD)
 		relworkspace := GetRelative(absdir, CWD, CWD)
-		
+
 		cfg["workspace"] = relworkspace
 		if err := cfg.Write(absdir); err != nil {
 			ErrLog.Println(err)

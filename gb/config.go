@@ -90,7 +90,7 @@ func (cfg Config) Write(dir string) (err error) {
 
 	os.Remove(filepath.Join(dir, "target.gb"))
 	os.Remove(filepath.Join(dir, "workspace.gb"))
-	
+
 	return
 }
 
