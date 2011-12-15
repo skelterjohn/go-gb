@@ -76,7 +76,11 @@ func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
 
 func (cfg Config) Write(dir string) (err error) {
 	path := filepath.Join(dir, "gb.cfg")
-	fout, err := os.Create(path)
+	var fout *os.File
+	fout, err = os.Create(path)
+	if err != nil {
+		return
+	}
 
 	for key, val := range cfg {
 		fmt.Fprintf(fout, "%s=%s\n", key, val)
@@ -84,6 +88,9 @@ func (cfg Config) Write(dir string) (err error) {
 
 	fout.Close()
 
+	os.Remove(filepath.Join(dir, "target.gb"))
+	os.Remove(filepath.Join(dir, "workspace.gb"))
+	
 	return
 }
 
