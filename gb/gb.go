@@ -80,14 +80,11 @@ var WarnLog = log.New(os.Stderr, "gb warning: ", 0)
 /*
  gb doesn't know how to build these packages
 
- math has both pure go and asm versions of many functions, and which is used depends
- on the architexture
-
  go/build has a source-generation step that uses make variables
 
  os has source generation
 
- syscall has crazy pure go/asm versions and unused source files
+ syscall has files type_$(GOOS).go that aren't build, but can't reasonably be filtered
 
  crypto/tls has a file root_stub.go which is excluded
 */
@@ -95,11 +92,34 @@ var ForceMakePkgs = map[string]bool{
 	//"math":       true,
 	"go/build":   true,
 	"os":         true,
+	"os/user":    true,
+	"net":        true,
 	"hash/crc32": true,
 	"syscall":    true,
 	"runtime":    true,
 	"crypto/tls": true,
 	"godoc":      true,
+}
+
+var DoNotBuildGOROOT = map[string]bool{
+	"src/cmd/5a":     true,
+	"src/cmd/5c":     true,
+	"src/cmd/5g":     true,
+	"src/cmd/5l":     true,
+	"src/cmd/6a":     true,
+	"src/cmd/6c":     true,
+	"src/cmd/6g":     true,
+	"src/cmd/6l":     true,
+	"src/cmd/8a":     true,
+	"src/cmd/8c":     true,
+	"src/cmd/8g":     true,
+	"src/cmd/8l":     true,
+	"src/cmd/cc":     true,
+	"src/cmd/gc":     true,
+	"src/cmd/cov":    true,
+	"src/cmd/gopack": true,
+	"src/cmd/nm":     true,
+	"src/cmd/prof":   true,
 }
 
 const (

@@ -163,6 +163,11 @@ func NewPackage(base, dir string, inTestData string, cfg Config) (this *Package,
 		return
 	}
 
+	if this.IsInGOROOT && DoNotBuildGOROOT[GetRelative(GOROOT, this.Dir, CWD)] {
+		err = errors.New("can't build GOROOT core tools")
+		return
+	}
+
 	if len(this.Sources) == 0 {
 		err = errors.New("no source")
 		return
