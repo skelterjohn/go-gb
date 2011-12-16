@@ -9,7 +9,7 @@ import (
 #include <stdlib.h>
 
 void myprint(char* s) {
-	printf("%s", s);
+	fprintf(stdout, "%s", s);
 }
 */
 import "C"
