@@ -969,10 +969,12 @@ func (this *Package) Test() (err error) {
 	}
 
 	testdir := path.Join(this.Dir, "_test")
-	if Verbose {
-		fmt.Printf(" Removing %s\n", testdir)
-	}
-	err = os.RemoveAll(testdir)
+	defer func() {
+		if Verbose {
+			fmt.Printf(" Removing %s\n", testdir)
+		}
+		err = os.RemoveAll(testdir)
+	}()
 
 	fmt.Printf("(in %s) testing \"%s\"\n", this.Dir, this.Target)
 
