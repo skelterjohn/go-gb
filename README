@@ -5,7 +5,7 @@ go-gb/gb> make install
 or
 > goinstall github.com/skelterjohn/go-gb/gb
 or
-> goinstall http://code.google.com/p/go-gb
+> goinstall code.google.com/p/go-gb
 or (if you like arch linux packages) visit
 https://aur.archlinux.org/packages.php?ID=54051
 
