@@ -203,5 +203,5 @@ func GetObjSuffix() (suffix string) {
 }
 
 func GetIBName() (name string) {
-	return fmt.Sprintf("_%s_%s_%s", GOOS, GOARCH, GetObjSuffix())
+	return fmt.Sprintf("_go_%s", GetObjSuffix())
 }

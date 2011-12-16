@@ -24,11 +24,14 @@ import (
 	"path/filepath"
 )
 
-func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err error) {
+func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {
 
 	argv := []string{GetCompilerName()}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
+	}
+	if testDest != "" {
+		argv = append(argv, "-I", testDest)
 	}
 	if len(GCFLAGS) > 0 {
 		argv = append(argv, GCFLAGS...)
@@ -51,11 +54,20 @@ func BuildPackage(pkg *Package) (err error) {
 		testDest = GetRelative(pkg.Dir, tdBuildDir, CWD)
 	}
 
-	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
+	ibname := GetIBName()
+
+	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], ibname, pkgDest, testDest)
 
 	if err != nil {
 		return
 	}
+
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
+		}
+		os.Remove(filepath.Join(pkg.Dir, ibname))
+	}()
 
 	asmObjs := []string{}
 	for _, asm := range pkg.AsmSrcs {

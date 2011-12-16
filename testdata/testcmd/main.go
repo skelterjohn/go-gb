@@ -1,7 +1,11 @@
 package main
 
-import "testpkg"
+import (
+	"testpkg"
+	"testcgo"
+)
 
 func main() {
 	testpkg.Foo()
+	testcgo.Foo()
 }

@@ -90,6 +90,13 @@ func BuildCgoPackage(pkg *Package) (err error) {
 		return
 	}
 
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing directory %s\n", cgodir)
+		}
+		os.RemoveAll(cgodir)
+	}()
+
 	var cgobases []string
 
 	//first run cgo
@@ -119,11 +126,26 @@ func BuildCgoPackage(pkg *Package) (err error) {
 
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
+	var testDest string
+	if pkg.InTestData != "" {
+		tdBuildDir := filepath.Join(pkg.InTestData, GetBuildDirPkg())
+		testDest = GetRelative(pkg.Dir, tdBuildDir, CWD)
+	}
+
+	ibname := GetIBName()
+
 	// 6g -I ../_obj -o _go_.6 e3.go e1.cgo1.go e2.cgo1.go _cgo_gotypes.go
-	err = CompilePkgSrc(pkg, allsrc, GetIBName(), pkgDest)
+	err = CompilePkgSrc(pkg, allsrc, ibname, pkgDest, testDest)
 	if err != nil {
 		return
 	}
+
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
+		}
+		os.Remove(filepath.Join(pkg.Dir, ibname))
+	}()
 
 	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
 
