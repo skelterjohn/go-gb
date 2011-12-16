@@ -92,7 +92,7 @@ var WarnLog = log.New(os.Stderr, "gb warning: ", 0)
  crypto/tls has a file root_stub.go which is excluded
 */
 var ForceMakePkgs = map[string]bool{
-	"math":       true,
+	//"math":       true,
 	"go/build":   true,
 	"os":         true,
 	"hash/crc32": true,
