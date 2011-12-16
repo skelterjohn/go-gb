@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -121,7 +121,7 @@ var OSFiltersMust = map[string]string{
 }
 
 func ScanDirectory(base, dir string, inTestData string) (err2 error) {
-	_, basedir := path.Split(dir)
+	_, basedir := filepath.Split(dir)
 	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
 	}
@@ -183,7 +183,7 @@ func ScanDirectory(base, dir string, inTestData string) (err2 error) {
 
 	subdirs := GetSubDirs(dir)
 	for _, subdir := range subdirs {
-		ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir), inTestData)
+		ScanDirectory(filepath.Join(base, subdir), filepath.Join(dir, subdir), inTestData)
 	}
 
 	return
@@ -348,6 +348,23 @@ func TryClean() {
 		os.RemoveAll(GetBuildDirPkg())
 		fmt.Println("Removing " + GetBuildDirCmd())
 		os.RemoveAll(GetBuildDirCmd())
+		PackagesCleaned++
+	}
+	if Clean && len(ListedDirs) == 1 {
+		var dir string
+		for d := range ListedDirs {
+			dir = d
+		}
+		base := filepath.Base(dir)
+		if base == "testdata" {
+			testObj := filepath.Join(dir, "_obj")
+			testBin := filepath.Join(dir, "_bin")
+			fmt.Println("Removing " + testObj)
+			os.RemoveAll(testObj)
+			fmt.Println("Removing " + testBin)
+			os.RemoveAll(testBin)
+			PackagesCleaned++
+		}
 	}
 
 	if Clean {
@@ -425,19 +442,19 @@ func RunGB() (err error) {
 		return
 	}
 	if BuildGOROOT {
-		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
-		ScanDirectory("", path.Join(GOROOT, "src"), "")
+		fmt.Printf("Scanning %s...", filepath.Join("GOROOT", "src"))
+		ScanDirectory("", filepath.Join(GOROOT, "src"), "")
 		fmt.Printf("done\n")
 		for _, gp := range GOPATHS {
-			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
-			ScanDirectory("", path.Join(gp, "src"), "")
+			fmt.Printf("Scanning %s...", filepath.Join(gp, "src"))
+			ScanDirectory("", filepath.Join(gp, "src"), "")
 			fmt.Printf("done\n")
 		}
 	}
 
 	for _, arg := range args {
 		if arg[0] != '-' {
-			carg := path.Clean(arg)
+			carg := filepath.Clean(arg)
 			rel := GetRelative(CWD, carg, OSWD)
 			ListedDirs[rel] = true
 			ListedTargets++
