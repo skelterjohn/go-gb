@@ -17,6 +17,22 @@
 /*
 gb is nearly configuration-free project builder for the go language.
 
+Jumpstart
+
+For a single target which produces a command "X", make a directory called
+X and put all your source files in it. Have no subdirectories with other
+source. From within this directory you can run gb and it will build a
+binary named X.
+
+For a multiple target project, first create a workspace directory W (call
+it whatever you want, but it will be referred to as W here). In the
+directory W/x/y/z you can put the source files for a package that will be
+imported with the path "x/y/z" by any other target built within W. In the
+directory W/anything/c you can put the source files for a command that will
+be named c. To build everything, cd into W and run gb.
+
+Overview
+
 With gb, one only has to run the simple command line, gb, in order to bring
 all binaries up to date. To clean, gb -c. To install, gb -i. There are a
 few other options to do other tasks, but never should one have to write 
