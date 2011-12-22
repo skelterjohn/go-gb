@@ -18,11 +18,11 @@ package main
 
 import (
 	//"time"
-	"strings"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {

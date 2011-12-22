@@ -94,6 +94,8 @@ ignore=true
 ignoreall=true
   Never try to build a package in this directory or any of its
   subdirectories.
+gcflags=<flag1> <flag2>...
+  Include these flags on the compile line.
 
 
 Tips
