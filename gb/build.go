@@ -18,6 +18,7 @@ package main
 
 import (
 	//"time"
+	"strings"
 	"errors"
 	"fmt"
 	"os"
@@ -37,6 +38,9 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (e
 		argv = append(argv, GCFLAGS...)
 	}
 	argv = append(argv, "-o", obj)
+	if gcflags, set := pkg.Cfg.GCFlags(); set {
+		argv = append(argv, strings.Fields(gcflags)...)
+	}
 	argv = append(argv, src...)
 
 	err = RunExternal(CompileCMD, pkg.Dir, argv)

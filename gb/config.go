@@ -74,6 +74,11 @@ func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
 	return
 }
 
+func (cfg Config) GCFlags() (gcflags string, set bool) {
+	gcflags, set = cfg["gcflags"]
+	return
+}
+
 func (cfg Config) Write(dir string) (err error) {
 	path := filepath.Join(dir, "gb.cfg")
 	var fout *os.File
@@ -112,6 +117,7 @@ var knownKeys = map[string]bool{
 	"makefile":  true,
 	"ignore":    true,
 	"ignoreall": true,
+	"gcflags":   true,
 }
 
 func ReadConfig(dir string) (cfg Config) {
