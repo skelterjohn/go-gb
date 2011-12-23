@@ -127,7 +127,7 @@ func LoadEnvs() bool {
 		}
 	}
 
-	gcFlagsStr, gldFlagsStr := os.Getenv("GB_GCFLAGS"), os.Getenv("GB_GLDFLAGS")
+	gcFlagsStr, gldFlagsStr := os.Getenv("GCFLAGS"), os.Getenv("GB_GLDFLAGS")
 	if gcFlagsStr != "" {
 		GCFLAGS = append(GCFLAGS, strings.Fields(gcFlagsStr)...)
 	}
