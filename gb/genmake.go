@@ -66,7 +66,7 @@ include $(GOROOT)/src/Make.cmd
 # gb: copy to local install
 $(GBROOT)/{{.BuildDirCmd}}/$(TARG): $(TARG)
 	mkdir -p $(dir $@); cp -f $< $@
-command: $(GBROOT)/bin/$(TARG)
+command: $(GBROOT)/_bin/$(TARG)
 {{if .LocalDeps}}
 # gb: local dependencies{{if $BuildDirPkg=.BuildDirPkg}}
 {{range .LocalDeps}}$(TARG): $(GBROOT)/{{$BuildDirPkg}}/{{.}}.a
