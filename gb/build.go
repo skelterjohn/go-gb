@@ -17,6 +17,8 @@
 package main
 
 import (
+	//"time"
+	//"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -137,7 +139,7 @@ func BuildPackage(pkg *Package) (err error) {
 
 	return
 }
-func BuildTest(pkg *Package) (err os.Error) {
+func BuildTest(pkg *Package) (err error) {
 
 	reverseDots := ReverseDir(pkg.Dir)
 	pkgDest := filepath.Join(reverseDots, GetBuildDirPkg())
@@ -146,7 +148,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
 
-	buildTestName := func(testName string) (err os.Error) {
+	buildTestName := func(testName string) (err error) {
 
 		testSrcs := pkg.TestSrc[testName]
 

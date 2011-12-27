@@ -48,7 +48,7 @@ _CGO_LDFLAGS_windows=-shared -lm -mthreads
 */
 var TestCGO = true
 
-func BuildCgoPackage(pkg *Package) (err os.Error) {
+func BuildCgoPackage(pkg *Package) (err error) {
 	//defer fmt.Println(err)
 
 	/*
@@ -182,7 +182,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		gcc -m64 -g -fPIC -O2 -o e2.cgo2.o -c   e2.cgo2.c
 		gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
 	*/
-	gccCompile := func(src, obj string) (err os.Error) {
+	gccCompile := func(src, obj string) (err error) {
 		gccargv := []string{"gcc", "-I..", "-I."}
 		gccargv = append(gccargv, CFLAGS...)
 		gccargv = append(gccargv, []string{"-g", "-fPIC", "-O2", "-o", obj, "-c"}...)
@@ -317,7 +317,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 	return
 }
 
-func CleanCGoPackage(pkg *Package) (err os.Error) {
+func CleanCGoPackage(pkg *Package) (err error) {
 	if !TestCGO {
 		err = MakeClean(pkg)
 		return

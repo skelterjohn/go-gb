@@ -16,9 +16,7 @@
 
 package main
 
-import "os"
-
-func RunGoFMT(dir, file string) (err os.Error) {
+func RunGoFMT(dir, file string) (err error) {
 	margs := []string{"gofmt", "-w", file}
 	err = RunExternal(GoFMTCMD, dir, margs)
 	return

@@ -18,15 +18,14 @@ package main
 
 import (
 	"bufio"
-	"strings"
-	"os"
 	"bytes"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"strings"
 )
 
-func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err os.Error) {
+func GetDeps(source string) (pkg, target string, deps, funcs, cflags, ldflags []string, err error) {
 	isTest := strings.HasSuffix(source, "_test.go") && Test
 	var file *ast.File
 	flag := parser.ParseComments

@@ -29,15 +29,13 @@ type TestSuite struct {
 	TestPkgs []*TestPkg
 }
 
-var TestmainTemplate = func() *template.Template {
-	t := template.New("testmain")
-	t, err := t.Parse(
-		`package main
+var TestmainTemplate = template.Must(template.New("TestSource").Parse(
+	`package main
 
 {{range .TestPkgs}}import {{.PkgAlias}} "{{.PkgTarget}}"
 {{end}}
-import "os"
 import "testing"
+import "os"
 import __regexp__ "regexp"
 
 var tests = []testing.InternalTest{
@@ -65,7 +63,4 @@ func matchString(pat, str string) (result bool, err os.Error) {
 func main() {
 	testing.Main(matchString, tests, benchmarks)
 }
-`)
-	if err != nil { panic(err) }
-	return t
-}()
+`))

@@ -16,9 +16,7 @@
 
 package main
 
-import "os"
-
-func RunGoFix(dir string, files []string) (err os.Error) {
+func RunGoFix(dir string, files []string) (err error) {
 	margs := append([]string{"gofix"}, files...)
 	err = RunExternal(GoFixCMD, dir, margs)
 	return

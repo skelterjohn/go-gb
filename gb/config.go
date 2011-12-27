@@ -19,7 +19,7 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"errors"
+	//"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -135,7 +135,7 @@ func ReadConfig(dir string) (cfg Config) {
 				break
 			}
 			if isPrefix {
-				ErrLog.Println(os.NewError(fmt.Sprintf("config line too long: %s", path)))
+				ErrLog.Println(errors.New(fmt.Sprintf("config line too long: %s", path)))
 				break
 			}
 

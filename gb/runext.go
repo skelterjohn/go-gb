@@ -16,9 +16,10 @@
 package main
 
 import (
-	"exec"
+	//"errors"
 	"fmt"
 	"os"
+	"exec"
 	"path/filepath"
 	"strings"
 )
@@ -37,7 +38,7 @@ var MakeCMD,
 	GCCCMD,
 	ProtocCMD string
 
-func FindGobinExternal(name string) (path string, err os.Error) {
+func FindGobinExternal(name string) (path string, err error) {
 	path, err = exec.LookPath(name)
 	if err != nil {
 		path = filepath.Join(GOBIN, name)
@@ -46,7 +47,7 @@ func FindGobinExternal(name string) (path string, err os.Error) {
 	return
 }
 
-func FindExternals() (err os.Error) {
+func FindExternals() (err error) {
 
 	CompileCMD, err = FindGobinExternal(GetCompilerName())
 	if err != nil {
@@ -69,7 +70,7 @@ func FindExternals() (err os.Error) {
 		return
 	}
 
-	var err2 os.Error
+	var err2 error
 	CGoCMD, err2 = FindGobinExternal("cgo")
 	if err2 != nil {
 		fmt.Printf("Could not find 'cgo' in path\n")
@@ -116,7 +117,7 @@ func SplitArgs(args []string) (sargs []string) {
 	return
 }
 
-func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error) {
+func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err error) {
 	argv = SplitArgs(argv)
 
 	if Verbose {
@@ -134,13 +135,13 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err os.Error
 
 	if wmsg, ok := err.(*os.Waitmsg); ok {
 		if wmsg.ExitStatus() != 0 {
-			err = os.NewError(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
+			err = errors.New(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
 		} else {
 			err = nil
 		}
 	}
 	return
 }
-func RunExternal(cmd, wd string, argv []string) (err os.Error) {
+func RunExternal(cmd, wd string, argv []string) (err error) {
 	return RunExternalDump(cmd, wd, argv, os.Stdout)
 }

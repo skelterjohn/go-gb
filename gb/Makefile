@@ -9,6 +9,7 @@ GOFILES=\
 	cgo.go\
 	config.go\
 	deps.go\
+	errors.go\
 	files.go\
 	gb.go\
 	genmake.go\

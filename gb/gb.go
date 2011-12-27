@@ -18,6 +18,7 @@
 package main
 
 import (
+	//"errors"
 	"fmt"
 	"log"
 	"os"
@@ -255,7 +256,7 @@ func TryScan() {
 	}
 }
 
-func TryGoFMT() (err os.Error) {
+func TryGoFMT() (err error) {
 	if GoFMT {
 		for _, pkg := range ListedPkgs {
 			err = pkg.GoFMT()
@@ -267,7 +268,7 @@ func TryGoFMT() (err os.Error) {
 	return
 }
 
-func TryGoFix() (err os.Error) {
+func TryGoFix() (err error) {
 	if GoFix {
 		for _, pkg := range ListedPkgs {
 			err = pkg.GoFix()
@@ -279,7 +280,7 @@ func TryGoFix() (err os.Error) {
 	return
 }
 
-func TryGenMake() (err os.Error) {
+func TryGenMake() (err error) {
 	if GenMake {
 		_, ferr := os.Stat("build")
 
@@ -354,9 +355,9 @@ func TryGenMake() (err os.Error) {
 	return
 }
 
-func TryDistribution() (err os.Error) {
+func TryDistribution() (err error) {
 	if Distribution {
-		err = os.NewError("the '--dist' feature has been removed - use your version control's archive utility")
+		err = errors.New("the '--dist' feature has been removed - use your version control's archive utility")
 	}
 	return
 }
@@ -412,7 +413,7 @@ func TryBuild() {
 	}
 }
 
-func TryTest() (err os.Error) {
+func TryTest() (err error) {
 	if Test {
 		for _, pkg := range ListedPkgs {
 			if len(pkg.TestSources) != 0 {
@@ -444,7 +445,7 @@ func TryInstall() {
 	}
 }
 
-func RunGB() (err os.Error) {
+func RunGB() (err error) {
 	Build = Build || (!Clean && !Scan) || (Makefiles && !Clean) || Install || Test
 
 	Build = Build && HardArgs == 0
@@ -504,13 +505,13 @@ func RunGB() (err os.Error) {
 
 	for lt := range ListedDirs {
 		if !ValidatedDirs[lt] {
-			err = os.NewError(fmt.Sprintf("Listed directory %q doesn't correspond to a known package", lt))
+			err = errors.New(fmt.Sprintf("Listed directory %q doesn't correspond to a known package", lt))
 			return
 		}
 	}
 
 	if len(ListedPkgs) == 0 {
-		err = os.NewError("No targets found in " + CWD)
+		err = errors.New("No targets found in " + CWD)
 		return
 	}
 
@@ -529,7 +530,7 @@ func RunGB() (err os.Error) {
 			for _, cp := range cycle {
 				targets = append(targets, cp.Target)
 			}
-			err = os.NewError(fmt.Sprintf("Cycle detected: %v", targets))
+			err = errors.New(fmt.Sprintf("Cycle detected: %v", targets))
 			return
 		}
 	}
