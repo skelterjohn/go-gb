@@ -246,7 +246,7 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	for i, p := range visited {
 		if p == this {
 			_ = i
-			cycle = visited
+			cycle = append(visited, this)
 			return
 		}
 	}
@@ -459,7 +459,10 @@ func (this *Package) GetSourceDeps() (err error) {
 				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
 		}
-		if isCGoSrc && !(this.IsInGOROOT && this.Name == "syscall") {
+		if isCGoSrc && !(this.IsInGOROOT &&
+			(this.Name == "syscall" ||
+				this.Name == "runtime" ||
+				this.Name == "cgo")) {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
