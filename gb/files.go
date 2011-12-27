@@ -30,6 +30,7 @@ var (
 		"windows": true,
 		"darwin":  true,
 		"freebsd": true,
+		"openbsd": true,
 		"linux":   true,
 		"plan9":   true,
 	}
@@ -53,7 +54,7 @@ func CheckCGOFlag(flag string) bool {
 		return true
 	}
 	if flag == "bsd" &&
-		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd") {
+		(GOOS == "darwin" || GOOS == "freebsd" || GOOS == "bsd" || GOOS == "openbsd") {
 		return true
 	}
 	return false
@@ -260,7 +261,7 @@ func Copy(cwd, src, dst string) (err os.Error) {
 	}
 
 	argv := append([]string{"cp", "-f", src, dst})
-	
+
 	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
 		return
 	}

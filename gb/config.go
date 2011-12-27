@@ -17,11 +17,12 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"bufio"
-	"bytes"
 	"strings"
 )
 
@@ -53,7 +54,7 @@ func (cfg Config) Ignore() (ignore, set bool) {
 	if t, s := cfg.Target(); s {
 		ignore = ignore || t == "-"
 	}
-	return	
+	return
 }
 
 func (cfg Config) IgnoreAll() (ignoreAll, set bool) {
@@ -63,7 +64,7 @@ func (cfg Config) IgnoreAll() (ignoreAll, set bool) {
 	if t, s := cfg.Target(); s {
 		ignoreAll = ignoreAll || t == "--"
 	}
-	return	
+	return
 }
 
 func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
@@ -73,15 +74,27 @@ func (cfg Config) AlwaysMakefile() (alwaysMakefile, set bool) {
 	return
 }
 
-func (cfg Config) Write(dir string) (err os.Error) {
+func (cfg Config) GCFlags() (gcflags string, set bool) {
+	gcflags, set = cfg["gcflags"]
+	return
+}
+
+func (cfg Config) Write(dir string) (err error) {
 	path := filepath.Join(dir, "gb.cfg")
-	fout, err := os.Create(path)
+	var fout *os.File
+	fout, err = os.Create(path)
+	if err != nil {
+		return
+	}
 
 	for key, val := range cfg {
 		fmt.Fprintf(fout, "%s=%s\n", key, val)
 	}
-	
+
 	fout.Close()
+
+	os.Remove(filepath.Join(dir, "target.gb"))
+	os.Remove(filepath.Join(dir, "workspace.gb"))
 
 	return
 }
@@ -89,7 +102,7 @@ func (cfg Config) Write(dir string) (err os.Error) {
 func oneLiner(key, path string, cfg Config) {
 
 	val, err := ReadOneLine(path)
-	
+
 	if err == nil && val != "" {
 		cfg[key] = val
 	}
@@ -97,13 +110,14 @@ func oneLiner(key, path string, cfg Config) {
 	return
 }
 
-var knownKeys = map[string]bool {
-	"proto": true,
-	"target": true,
+var knownKeys = map[string]bool{
+	"proto":     true,
+	"target":    true,
 	"workspace": true,
-	"makefile": true,
-	"ignore": true,
+	"makefile":  true,
+	"ignore":    true,
 	"ignoreall": true,
+	"gcflags":   true,
 }
 
 func ReadConfig(dir string) (cfg Config) {
@@ -132,8 +146,8 @@ func ReadConfig(dir string) (cfg Config) {
 
 			split := bytes.Index(line, []byte("="))
 			if split == -1 {
-				ErrLog.Println(os.NewError(fmt.Sprintf("config line malformed: %s", path)))
-				break	
+				ErrLog.Println(errors.New(fmt.Sprintf("config line malformed: %s", path)))
+				break
 			}
 			key, val := line[:split], line[split+1:]
 			key = bytes.ToLower(bytes.TrimSpace(key))
@@ -147,6 +161,6 @@ func ReadConfig(dir string) (cfg Config) {
 
 	oneLiner("target", filepath.Join(dir, "target.gb"), cfg)
 	oneLiner("workspace", filepath.Join(dir, "workspace.gb"), cfg)
-	
+
 	return
 }

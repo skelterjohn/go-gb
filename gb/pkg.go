@@ -79,6 +79,7 @@ type Package struct {
 	MustUseMakefile bool
 	IsInGOROOT      bool
 	IsInGOPATH      string
+	InTestData      string
 
 	SourceTime, BinTime, InstTime, GOROOTPkgTime int64
 
@@ -88,7 +89,7 @@ type Package struct {
 	block chan bool
 }
 
-func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
+func NewPackage(base, dir string, inTestData string, cfg Config) (this *Package, err error) {
 	finfo, err := os.Stat(dir)
 	if err != nil || !finfo.IsDirectory() {
 		err = os.NewError("not a directory")
@@ -101,6 +102,7 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 
 	this.block = make(chan bool, 1)
 	this.Dir = path.Clean(dir)
+	this.InTestData = inTestData
 	this.PkgSrc = make(map[string][]string)
 	this.PkgCGoSrc = make(map[string][]string)
 	this.TestSrc = make(map[string][]string)
@@ -129,6 +131,7 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 	if err != nil {
 		return
 	}
+
 	err = this.GetSourceDeps()
 	if err != nil {
 		//return
@@ -156,6 +159,11 @@ func NewPackage(base, dir string, cfg Config) (this *Package, err os.Error) {
 
 	if !this.HasMakefile && this.IsInGOROOT {
 		err = os.NewError("GOROOT pkg without makefile - not meant to be built")
+		return
+	}
+
+	if this.IsInGOROOT && DoNotBuildGOROOT[GetRelative(GOROOT, this.Dir, CWD)] {
+		err = errors.New("can't build GOROOT core tools")
 		return
 	}
 
@@ -237,7 +245,7 @@ func (this *Package) detectCycle(visited []*Package) (cycle []*Package) {
 	for i, p := range visited {
 		if p == this {
 			_ = i
-			cycle = visited
+			cycle = append(visited, this)
 			return
 		}
 	}
@@ -276,8 +284,8 @@ func (this *Package) ScanForSource() (err os.Error) {
 		ErrLog.Printf("Error while scanning: %s", fperr)
 	}
 
-	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources) == 0 { //allsources
-		err = os.NewError("No source files in " + this.Dir)
+	if len(this.AsmSrcs)+len(this.GoSources)+len(this.TestSources)+len(this.ProtoGoSrcs) == 0 { //allsources
+		err = errors.New("No source files in " + this.Dir)
 	}
 
 	/*
@@ -452,7 +460,10 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 				this.CGoLDFlags[fpkg] = append(this.CGoLDFlags[fpkg], ldflags...)
 			}
 		}
-		if isCGoSrc && !(this.IsInGOROOT && this.Name == "syscall") {
+		if isCGoSrc && !(this.IsInGOROOT &&
+			(this.Name == "syscall" ||
+				this.Name == "runtime" ||
+				this.Name == "cgo")) {
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"runtime/cgo\"")
 			this.SrcDeps[src] = append(this.SrcDeps[src], "\"cgo\"-cmd")
 			this.CGoSources = append(this.CGoSources, src)
@@ -516,8 +527,8 @@ func (this *Package) GetSourceDeps() (err os.Error) {
 	return
 }
 
-func (this *Package) GetTarget() (err os.Error) {
-	if !this.IsCmd && this.IsInGOROOT {
+func (this *Package) GetTarget() (err error) {
+	if !this.IsCmd && this.IsInGOROOT && this.InTestData == "" {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "cmd"), this.Dir, CWD)
 		if !strings.HasPrefix(this.Target, "..") {
@@ -529,7 +540,7 @@ func (this *Package) GetTarget() (err os.Error) {
 			this.MustUseMakefile = true
 		}
 	}
-	if !this.IsCmd && this.IsInGOROOT {
+	if !this.IsCmd && this.IsInGOROOT && this.InTestData == "" {
 		//always the relative path
 		this.Target = GetRelative(path.Join(GOROOT, "src", "pkg"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -540,7 +551,7 @@ func (this *Package) GetTarget() (err os.Error) {
 			return
 		}
 		//fmt.Printf("found goroot relative path for %s = %s\n", this.Dir, this.Target)
-	} else if !this.IsCmd && this.IsInGOPATH != "" {
+	} else if !this.IsCmd && this.IsInGOPATH != "" && this.InTestData == "" {
 		//this is a gopath target
 		this.Target = GetRelative(path.Join(this.IsInGOPATH, "src"), this.Dir, CWD)
 		if strings.HasPrefix(this.Target, "..") {
@@ -587,7 +598,6 @@ func (this *Package) GetTarget() (err os.Error) {
 		if cfgMake, set := this.Cfg.AlwaysMakefile(); set {
 			this.MustUseMakefile = this.MustUseMakefile || cfgMake
 		}
-
 	}
 
 	this.Base = path.Clean(this.Base)
@@ -601,14 +611,14 @@ func (this *Package) GetTarget() (err os.Error) {
 		}
 	}
 
-	if this.IsInGOROOT {
+	if this.IsInGOROOT && this.InTestData == "" {
 		if this.IsCmd {
 			this.InstallPath = filepath.Join(GOBIN, this.Target)
 		} else {
 			this.InstallPath = filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH, this.Target+".a")
 		}
 		this.ResultPath = this.InstallPath
-	} else if this.IsInGOPATH != "" {
+	} else if this.IsInGOPATH != "" && this.InTestData == "" {
 		if this.IsCmd {
 			this.InstallPath = filepath.Join(this.IsInGOPATH, "bin", this.Target)
 		} else {
@@ -617,11 +627,21 @@ func (this *Package) GetTarget() (err os.Error) {
 		this.ResultPath = this.InstallPath
 	} else {
 		if this.IsCmd {
-			this.InstallPath = path.Join(GetInstallDirCmd(), this.Target)
-			this.ResultPath = path.Join(GetBuildDirCmd(), this.Target)
+			this.InstallPath = filepath.Join(GetInstallDirCmd(), this.Target)
+			if this.InTestData != "" {
+				buildDirTest := filepath.Join(this.InTestData, GetBuildDirCmd())
+				this.ResultPath = filepath.Join(buildDirTest, this.Target)
+			} else {
+				this.ResultPath = filepath.Join(GetBuildDirCmd(), this.Target)
+			}
 		} else {
-			this.InstallPath = path.Join(GetInstallDirPkg(), this.Target+".a")
-			this.ResultPath = path.Join(GetBuildDirPkg(), this.Target+".a")
+			this.InstallPath = filepath.Join(GetInstallDirPkg(), this.Target+".a")
+			if this.InTestData != "" {
+				buildDirTest := filepath.Join(this.InTestData, GetBuildDirPkg())
+				this.ResultPath = filepath.Join(buildDirTest, this.Target+".a")
+			} else {
+				this.ResultPath = filepath.Join(GetBuildDirPkg(), this.Target+".a")
+			}
 		}
 	}
 
@@ -668,6 +688,9 @@ func (this *Package) PrintScan() {
 	}
 	if this.IsCGo && !this.IsCmd {
 		label = "cgo"
+	}
+	if this.InTestData != "" {
+		label = "testdata " + label
 	}
 	if this.IsInGOROOT {
 		label = "GOROOT " + label
@@ -954,10 +977,12 @@ func (this *Package) Test() (err os.Error) {
 	}
 
 	testdir := path.Join(this.Dir, "_test")
-	if Verbose {
-		fmt.Printf(" Removing %s\n", testdir)
-	}
-	err = os.RemoveAll(testdir)
+	defer func() {
+		if Verbose {
+			fmt.Printf(" Removing %s\n", testdir)
+		}
+		err = os.RemoveAll(testdir)
+	}()
 
 	fmt.Printf("(in %s) testing \"%s\"\n", this.Dir, this.Target)
 
@@ -1053,7 +1078,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 
 	if Makefiles && this.HasMakefile {
 		MakeClean(this)
-		PackagesBuilt++
+		PackagesCleaned++
 		return
 	}
 
@@ -1114,6 +1139,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 		return
 	}
 	fmt.Printf("Cleaning %s\n", this.Dir)
+	PackagesCleaned++
 	for _, obj := range this.Objects {
 		if Verbose {
 			fmt.Printf(" Removing %s\n", obj)
@@ -1124,6 +1150,7 @@ func (this *Package) CleanFiles() (err os.Error) {
 		fmt.Printf(" Removing %s\n", this.ResultPath)
 	}
 	err = os.Remove(this.ResultPath)
+
 	if this.IsCmd {
 		_, bres := path.Split(this.ResultPath)
 		bres = path.Join(this.Dir, bres)
@@ -1174,11 +1201,14 @@ func (this *Package) Clean() (err os.Error) {
 
 	err = this.CleanFiles()
 
-	PackagesBuilt++
-
 	return
 }
-func (this *Package) Install() (err os.Error) {
+func (this *Package) Install() (err error) {
+	if this.InTestData != "" {
+		err = errors.New(fmt.Sprintf("Can't install testdata target %s", this.Target))
+		ErrLog.Println(err)
+		return
+	}
 	if !this.NeedsInstall {
 		return
 	}

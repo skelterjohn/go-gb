@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,6 +54,7 @@ var IncludeDir string
 var GCArgs []string
 var GLArgs []string
 var PackagesBuilt int
+var PackagesCleaned int
 var PackagesInstalled int
 var BrokenPackages int
 var ListedTargets int
@@ -78,21 +79,20 @@ var WarnLog = log.New(os.Stderr, "gb warning: ", 0)
 /*
  gb doesn't know how to build these packages
 
- math has both pure go and asm versions of many functions, and which is used depends
- on the architexture
-
  go/build has a source-generation step that uses make variables
 
  os has source generation
 
- syscall has crazy pure go/asm versions and unused source files
+ syscall has files type_$(GOOS).go that aren't build, but can't reasonably be filtered
 
  crypto/tls has a file root_stub.go which is excluded
 */
 var ForceMakePkgs = map[string]bool{
-	"math":       true,
+	//"math":       true,
 	"go/build":   true,
 	"os":         true,
+	"os/user":    true,
+	"net":        true,
 	"hash/crc32": true,
 	"syscall":    true,
 	"runtime":    true,
@@ -100,51 +100,85 @@ var ForceMakePkgs = map[string]bool{
 	"godoc":      true,
 }
 
+var DoNotBuildGOROOT = map[string]bool{
+	"src/cmd/5a":     true,
+	"src/cmd/5c":     true,
+	"src/cmd/5g":     true,
+	"src/cmd/5l":     true,
+	"src/cmd/6a":     true,
+	"src/cmd/6c":     true,
+	"src/cmd/6g":     true,
+	"src/cmd/6l":     true,
+	"src/cmd/8a":     true,
+	"src/cmd/8c":     true,
+	"src/cmd/8g":     true,
+	"src/cmd/8l":     true,
+	"src/cmd/cc":     true,
+	"src/cmd/gc":     true,
+	"src/cmd/cov":    true,
+	"src/cmd/gopack": true,
+	"src/cmd/nm":     true,
+	"src/cmd/prof":   true,
+}
+
+const (
+	ObjDir  = "_obj"
+	TestDir = "_test"
+	CGoDir  = "_cgo"
+	BinDir  = "_bin"
+)
+
+var DisallowedSourceDirectories = map[string]bool{
+	ObjDir:  true,
+	TestDir: true,
+	CGoDir:  true,
+	BinDir:  true,
+}
+
 var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
-func ScanDirectory(base, dir string) (err2 os.Error) {
-	_, basedir := path.Split(dir)
-	if basedir == "_obj" ||
-		basedir == "_test" ||
-		basedir == "_cgo" ||
-		basedir == "bin" ||
-		(basedir != "." && strings.HasPrefix(basedir, ".")) {
+func ScanDirectory(base, dir string, inTestData string) (err2 error) {
+	_, basedir := filepath.Split(dir)
+	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
 	}
 
-	var err os.Error
+	if basedir == "testdata" {
+		// if gb isn't actually run from within here, ignore it all
+		if !HasPathPrefix(OSWD, GetAbs(dir, CWD)) {
+			return
+		}
+		// all stuff within is for testing
+		inTestData = dir
+		// and it starts from scratch with the target name
+		base = "."
+	}
 
 	cfg := ReadConfig(dir)
-
 
 	if Workspace {
 		absdir := GetAbs(dir, CWD)
 		relworkspace := GetRelative(absdir, CWD, CWD)
 
 		cfg["workspace"] = relworkspace
-		cfg.Write(absdir)
+		if err := cfg.Write(absdir); err != nil {
+			ErrLog.Println(err)
+		}
 	}
 
+	if ignoreAll, ok := cfg.IgnoreAll(); ignoreAll && ok {
+		return
+	}
 
+	var err error
 
 	var pkg *Package
 
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
-		pkg, err = NewPackage(base, dir, cfg)
+		pkg, err = NewPackage(base, dir, inTestData, cfg)
 		if err == nil {
-			/*
-			if Workspace {
-				absdir := GetAbs(dir, CWD)
-				relworkspace := GetRelative(absdir, CWD, CWD)
-				var wfile *os.File
-				wfile, err = os.Create(path.Join(absdir, "workspace.gb"))
-				wfile.WriteString(relworkspace + "\n")
-				wfile.Close()		
-			}
-			*/
-
 			key := "\"" + pkg.Target + "\""
 			if pkg.IsCmd {
 				key += "-cmd"
@@ -166,21 +200,9 @@ func ScanDirectory(base, dir string) (err2 os.Error) {
 		fmt.Println(dir, "ignored")
 	}
 
-	/*
-	if pkg == nil {
-		return
-	}
-	*/
-
-	if pkg != nil && pkg.Target == "." {
-		err = os.NewError("Package has no name specified. Either create 'target.gb' or run gb from above.")
-	}
-
-	if ignoreAll, ok := cfg.IgnoreAll(); !(ignoreAll && ok) {
-		subdirs := GetSubDirs(dir)
-		for _, subdir := range subdirs {
-			ScanDirectory(path.Join(base, subdir), path.Join(dir, subdir))
-		}
+	subdirs := GetSubDirs(dir)
+	for _, subdir := range subdirs {
+		ScanDirectory(filepath.Join(base, subdir), filepath.Join(dir, subdir), inTestData)
 	}
 
 	return
@@ -345,6 +367,23 @@ func TryClean() {
 		os.RemoveAll(GetBuildDirPkg())
 		fmt.Println("Removing " + GetBuildDirCmd())
 		os.RemoveAll(GetBuildDirCmd())
+		PackagesCleaned++
+	}
+	if Clean && len(ListedDirs) == 1 {
+		var dir string
+		for d := range ListedDirs {
+			dir = d
+		}
+		base := filepath.Base(dir)
+		if base == "testdata" {
+			testObj := filepath.Join(dir, "_obj")
+			testBin := filepath.Join(dir, "_bin")
+			fmt.Println("Removing " + testObj)
+			os.RemoveAll(testObj)
+			fmt.Println("Removing " + testBin)
+			os.RemoveAll(testBin)
+			PackagesCleaned++
+		}
 	}
 
 	if Clean {
@@ -417,24 +456,24 @@ func RunGB() (err os.Error) {
 
 	args := os.Args[1:len(os.Args)]
 
-	err = ScanDirectory(".", ".")
+	err = ScanDirectory(".", ".", "")
 	if err != nil {
 		return
 	}
 	if BuildGOROOT {
-		fmt.Printf("Scanning %s...", path.Join("GOROOT", "src"))
-		ScanDirectory("", path.Join(GOROOT, "src"))
+		fmt.Printf("Scanning %s...", filepath.Join("GOROOT", "src"))
+		ScanDirectory("", filepath.Join(GOROOT, "src"), "")
 		fmt.Printf("done\n")
 		for _, gp := range GOPATHS {
-			fmt.Printf("Scanning %s...", path.Join(gp, "src"))
-			ScanDirectory("", path.Join(gp, "src"))
+			fmt.Printf("Scanning %s...", filepath.Join(gp, "src"))
+			ScanDirectory("", filepath.Join(gp, "src"), "")
 			fmt.Printf("done\n")
 		}
 	}
 
 	for _, arg := range args {
 		if arg[0] != '-' {
-			carg := path.Clean(arg)
+			carg := filepath.Clean(arg)
 			rel := GetRelative(CWD, carg, OSWD)
 			ListedDirs[rel] = true
 			ListedTargets++
@@ -526,7 +565,6 @@ func RunGB() (err os.Error) {
 	}
 
 	TryInstall()
-	
 
 	if Build {
 		if PackagesBuilt > 1 {
@@ -552,9 +590,9 @@ func RunGB() (err os.Error) {
 				fmt.Printf("%s\n", msg)
 			}
 		}
-	} 
+	}
 	if Clean {
-		if PackagesBuilt == 0 {
+		if PackagesCleaned == 0 {
 			fmt.Printf("No mess to clean\n")
 		}
 	}

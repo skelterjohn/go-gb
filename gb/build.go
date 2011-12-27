@@ -19,34 +19,57 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 )
 
-func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest string) (err os.Error) {
+func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {
 
 	argv := []string{GetCompilerName()}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
 	}
+	if testDest != "" {
+		argv = append(argv, "-I", testDest)
+	}
 	if len(GCFLAGS) > 0 {
 		argv = append(argv, GCFLAGS...)
 	}
 	argv = append(argv, "-o", obj)
+	if gcflags, set := pkg.Cfg.GCFlags(); set {
+		argv = append(argv, strings.Fields(gcflags)...)
+	}
 	argv = append(argv, src...)
-	
+
 	err = RunExternal(CompileCMD, pkg.Dir, argv)
 	return
 
 }
 
-func BuildPackage(pkg *Package) (err os.Error) {
+func BuildPackage(pkg *Package) (err error) {
+
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
-	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], GetIBName(), pkgDest)
+	var testDest string
+	if pkg.InTestData != "" {
+		tdBuildDir := filepath.Join(pkg.InTestData, GetBuildDirPkg())
+		testDest = GetRelative(pkg.Dir, tdBuildDir, CWD)
+	}
+
+	ibname := GetIBName()
+
+	err = CompilePkgSrc(pkg, pkg.PkgSrc[pkg.Name], ibname, pkgDest, testDest)
 
 	if err != nil {
 		return
 	}
+
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
+		}
+		os.Remove(filepath.Join(pkg.Dir, ibname))
+	}()
 
 	asmObjs := []string{}
 	for _, asm := range pkg.AsmSrcs {
@@ -54,7 +77,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		asmObj := base + GetObjSuffix()
 		asmObjs = append(asmObjs, asmObj)
 		sargv := []string{GetAssemblerName(), asm}
-		
+
 		err = RunExternal(AsmCMD, pkg.Dir, sargv)
 		if err != nil {
 			return
@@ -74,22 +97,25 @@ func BuildPackage(pkg *Package) (err os.Error) {
 		if !pkg.IsInGOROOT {
 			largs = append(largs, "-L", pkgDest)
 		}
+		if testDest != "" {
+			largs = append(largs, "-L", testDest)
+		}
 
 		//largs = append(largs, "-o", dst, GetIBName())
 		largs = append(largs, "-o", pkg.Target, GetIBName())
-		
+
 		//startLink := time.Nanoseconds()
 		err = RunExternal(LinkCMD, pkg.Dir, largs)
 		//durLink := time.Nanoseconds()-startLink
 		//fmt.Printf("link took %f\n", float64(durLink)/1e9)
-		dstDir, _ := path.Split(pkg.ResultPath)
+		dstDir, _ := filepath.Split(pkg.ResultPath)
 		if Verbose {
 			fmt.Printf("Creating directory %s\n", dstDir)
 		}
 		os.MkdirAll(dstDir, 0755)
 		Copy(pkg.Dir, pkg.Target, dst)
 	} else {
-		dstDir, _ := path.Split(pkg.ResultPath)
+		dstDir, _ := filepath.Split(pkg.ResultPath)
 		if Verbose {
 			fmt.Printf("Creating directory %s\n", dstDir)
 		}
@@ -97,7 +123,7 @@ func BuildPackage(pkg *Package) (err os.Error) {
 
 		argv := []string{"gopack", "grc", dst, GetIBName()}
 		argv = append(argv, asmObjs...)
-		
+
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -114,9 +140,9 @@ func BuildPackage(pkg *Package) (err os.Error) {
 func BuildTest(pkg *Package) (err os.Error) {
 
 	reverseDots := ReverseDir(pkg.Dir)
-	pkgDest := path.Join(reverseDots, GetBuildDirPkg())
+	pkgDest := filepath.Join(reverseDots, GetBuildDirPkg())
 
-	testIB := path.Join("_test", "_gotest_"+GetObjSuffix())
+	testIB := filepath.Join("_test", "_gotest_"+GetObjSuffix())
 
 	//fmt.Printf("%v %v\n", pkg.TestSrc, pkg.Name)
 
@@ -125,7 +151,7 @@ func BuildTest(pkg *Package) (err os.Error) {
 		testSrcs := pkg.TestSrc[testName]
 
 		argv := []string{GetCompilerName()}
-		argv = append(argv, "-I", path.Join("_test", "_obj"))
+		argv = append(argv, "-I", filepath.Join("_test", "_obj"))
 		argv = append(argv, "-I", pkgDest)
 		if GCFLAGS != nil {
 			argv = append(argv, GCFLAGS...)
@@ -141,21 +167,21 @@ func BuildTest(pkg *Package) (err os.Error) {
 		}
 
 		//see if it was created
-		if _, err = os.Stat(path.Join(pkg.Dir, testIB)); err != nil {
-			return os.NewError("compile os.Error")
+		if _, err = os.Stat(filepath.Join(pkg.Dir, testIB)); err != nil {
+			return errors.New("compile error")
 		}
-		dst := path.Join("_test", "_obj", testName) + ".a"
+		dst := filepath.Join("_test", "_obj", testName) + ".a"
 
 		if testName == pkg.Name {
-			dst = path.Join("_test", "_obj", pkg.Target) + ".a"
+			dst = filepath.Join("_test", "_obj", pkg.Target) + ".a"
 		}
 
-		mkdirdst := path.Join(pkg.Dir, dst)
-		dstDir, _ := path.Split(mkdirdst)
+		mkdirdst := filepath.Join(pkg.Dir, dst)
+		dstDir, _ := filepath.Split(mkdirdst)
 		os.MkdirAll(dstDir, 0755)
 
 		argv = []string{"gopack", "grc", dst, testIB}
-		
+
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
 		}
@@ -178,41 +204,41 @@ func BuildTest(pkg *Package) (err os.Error) {
 		}
 	}
 
-	testmainib := path.Join("_test", "_testmain"+GetObjSuffix())
+	testmainib := filepath.Join("_test", "_testmain"+GetObjSuffix())
 
 	argv := []string{GetCompilerName()}
-	argv = append(argv, "-I", path.Join("_test", "_obj"))
+	argv = append(argv, "-I", filepath.Join("_test", "_obj"))
 	argv = append(argv, "-I", pkgDest)
 	if GCFLAGS != nil {
 		argv = append(argv, GCFLAGS...)
 	}
 	argv = append(argv, "-o", testmainib)
-	argv = append(argv, path.Join("_test", "_testmain.go"))
+	argv = append(argv, filepath.Join("_test", "_testmain.go"))
 
 	if err = RunExternal(CompileCMD, pkg.Dir, argv); err != nil {
 		return
 	}
 
-	testBinary := path.Join("_test", "_testmain")
+	testBinary := filepath.Join("_test", "_testmain")
 	if GOOS == "windows" {
 		testBinary += ".exe"
 	}
 
 	largs := []string{GetLinkerName()}
-	largs = append(largs, "-L", path.Join("_test", "_obj"))
+	largs = append(largs, "-L", filepath.Join("_test", "_obj"))
 	largs = append(largs, "-L", pkgDest)
 	if len(GLDFLAGS) > 0 {
 		largs = append(largs, GLDFLAGS...)
 	}
 	largs = append(largs, "-o", testBinary, testmainib)
-	
+
 	if err = RunExternal(LinkCMD, pkg.Dir, largs); err != nil {
 		return
 	}
 	var testBinaryAbs string
-	testBinaryAbs = GetAbs(path.Join(pkg.Dir, testBinary), CWD)
+	testBinaryAbs = GetAbs(filepath.Join(pkg.Dir, testBinary), CWD)
 	testargs := append([]string{testBinary}, TestArgs...)
-	
+
 	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
 		ReturnFailCode = true
 		return
@@ -220,10 +246,10 @@ func BuildTest(pkg *Package) (err os.Error) {
 
 	return
 }
-func InstallPackage(pkg *Package) (err os.Error) {
-	dstDir, _ := path.Split(pkg.InstallPath)
-	_, dstName := path.Split(pkg.ResultPath)
-	dstFile := path.Join(dstDir, dstName)
+func InstallPackage(pkg *Package) (err error) {
+	dstDir, _ := filepath.Split(pkg.InstallPath)
+	_, dstName := filepath.Split(pkg.ResultPath)
+	dstFile := filepath.Join(dstDir, dstName)
 	err = os.MkdirAll(dstDir, 0755)
 	if err != nil {
 		return

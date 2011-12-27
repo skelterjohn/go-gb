@@ -110,7 +110,7 @@ func FindExternals() (err os.Error) {
 
 func SplitArgs(args []string) (sargs []string) {
 	for _, arg := range args {
-		sarg := strings.Split(arg, " ")
+		sarg := strings.Fields(arg)
 		sargs = append(sargs, sarg...)
 	}
 	return

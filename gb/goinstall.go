@@ -23,9 +23,12 @@ import (
 	"strings"
 )
 
+var disabledGCRE = regexp.MustCompile(`^([a-z0-9\-]+\.googlecode\.com/(svn|hg))(/[a-z0-9A-Z_.\-/]*)?$`)
+
 //taken from goinstall source
 var goinstallables = []*regexp.Regexp{
 	regexp.MustCompile(`^([a-z0-9\-]+\.googlecode\.com/(svn|hg))(/[a-z0-9A-Z_.\-/]*)?$`),
+	regexp.MustCompile(`^code\.google\.com/p/([a-z0-9\-]+(\.[a-z0-9\-]+)?)(/[a-z0-9A-Z_.\-/]+)?$`),
 	regexp.MustCompile(`^(github\.com/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`),
 	regexp.MustCompile(`^(bitbucket\.org/[a-z0-9A-Z_.\-]+/[a-z0-9A-Z_.\-]+)(/[a-z0-9A-Z_.\-/]*)?$`),
 	regexp.MustCompile(`^(launchpad\.net/([a-z0-9A-Z_.\-]+(/[a-z0-9A-Z_.\-]+)?|~[a-z0-9A-Z_.\-]+/(\+junk|[a-z0-9A-Z_.\-]+)/[a-z0-9A-Z_.\-]+))(/[a-z0-9A-Z_.\-/]+)?$`),
@@ -53,6 +56,11 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 	goinstalledAlready[target] = true
 
+	if disabledGCRE.FindStringSubmatch(target) != nil {
+		WarnLog.Printf("Googlecode format \"%s\" is no longer accepted - use gofix")
+		return
+	}
+
 	if !IsGoInstallable(target) {
 		return
 	}
@@ -65,7 +73,7 @@ func GoInstallPkg(target string) (touched int64) {
 	}
 
 	fmt.Printf("%v\n", argv)
-	
+
 	err := RunExternal(GoInstallCMD, ".", argv)
 	if err != nil {
 		return

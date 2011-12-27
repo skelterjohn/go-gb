@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 )
+
 /*
 CGOPKGPATH= cgo --  e1.go e2.go
 touch _cgo_run
@@ -50,9 +51,11 @@ var TestCGO = true
 func BuildCgoPackage(pkg *Package) (err os.Error) {
 	//defer fmt.Println(err)
 
-	if pkg.IsInGOROOT {
-		return MakeBuild(pkg)
-	}
+	/*
+		if pkg.IsInGOROOT {
+			return MakeBuild(pkg)
+		}
+	*/
 
 	if !TestCGO {
 		return MakeBuild(pkg)
@@ -90,6 +93,13 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		return
 	}
 
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing directory %s\n", cgodir)
+		}
+		os.RemoveAll(cgodir)
+	}()
+
 	var cgobases []string
 
 	//first run cgo
@@ -102,15 +112,20 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		err = Copy(pkg.Dir, cgosrc, cgd)
 		cgo_argv = append(cgo_argv, cgb)
 	}
-	if Verbose {
-		fmt.Printf("%s:", cgodir)
-	}
-	err = RunExternal(CGoCMD, cgodir, cgo_argv)
-	if err != nil {
-		return
+	if len(pkg.CGoSources) != 0 {
+		if Verbose {
+			fmt.Printf("%s:", cgodir)
+		}
+		err = RunExternal(CGoCMD, cgodir, cgo_argv)
+		if err != nil {
+			return
+		}
 	}
 
-	var allsrc = []string{filepath.Join("_cgo", "_obj", "_cgo_gotypes.go")}
+	var allsrc []string
+	if len(pkg.CGoSources) != 0 {
+		allsrc = append(allsrc, filepath.Join("_cgo", "_obj", "_cgo_gotypes.go"))
+	}
 	for _, src := range cgobases {
 		gs := src[:len(src)-3] + ".cgo1.go"
 		allsrc = append(allsrc, filepath.Join("_cgo", "_obj", gs))
@@ -119,11 +134,26 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 
 	pkgDest := GetRelative(pkg.Dir, GetBuildDirPkg(), CWD)
 
+	var testDest string
+	if pkg.InTestData != "" {
+		tdBuildDir := filepath.Join(pkg.InTestData, GetBuildDirPkg())
+		testDest = GetRelative(pkg.Dir, tdBuildDir, CWD)
+	}
+
+	ibname := GetIBName()
+
 	// 6g -I ../_obj -o _go_.6 e3.go e1.cgo1.go e2.cgo1.go _cgo_gotypes.go
-	err = CompilePkgSrc(pkg, allsrc, GetIBName(), pkgDest)
+	err = CompilePkgSrc(pkg, allsrc, ibname, pkgDest, testDest)
 	if err != nil {
 		return
 	}
+
+	defer func() {
+		if Verbose {
+			fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
+		}
+		os.Remove(filepath.Join(pkg.Dir, ibname))
+	}()
 
 	//6c -FVw -I/Users/jasmuth/Documents/userland/go/pkg/darwin_amd64 _cgo_defun.c
 
@@ -282,7 +312,7 @@ func BuildCgoPackage(pkg *Package) (err os.Error) {
 		filepath.Join("_cgo", "_cgo_defun"+GetObjSuffix()),
 		filepath.Join("_cgo", "_cgo_import"+GetObjSuffix())}
 	packargv = append(packargv, relobjs...)
-	
+
 	err = RunExternal(PackCMD, pkg.Dir, packargv)
 	return
 }

@@ -127,7 +127,7 @@ func LoadEnvs() bool {
 		}
 	}
 
-	gcFlagsStr, gldFlagsStr := os.Getenv("GB_GCFLAGS"), os.Getenv("GB_GLDFLAGS")
+	gcFlagsStr, gldFlagsStr := os.Getenv("GCFLAGS"), os.Getenv("GB_GLDFLAGS")
 	if gcFlagsStr != "" {
 		GCFLAGS = append(GCFLAGS, strings.Fields(gcFlagsStr)...)
 	}
@@ -144,7 +144,7 @@ func LoadEnvs() bool {
 }
 
 func GetBuildDirPkg() (dir string) {
-	return "_obj"
+	return ObjDir
 }
 
 func GetGOROOTDirPkg() (dir string) {
@@ -159,7 +159,7 @@ func GetInstallDirPkg() (dir string) {
 }
 
 func GetBuildDirCmd() (dir string) {
-	return "bin"
+	return BinDir
 }
 
 func GetInstallDirCmd() (dir string) {
@@ -203,5 +203,5 @@ func GetObjSuffix() (suffix string) {
 }
 
 func GetIBName() (name string) {
-	return fmt.Sprintf("_%s_%s_%s", GOOS, GOARCH, GetObjSuffix())
+	return fmt.Sprintf("_go_%s", GetObjSuffix())
 }
