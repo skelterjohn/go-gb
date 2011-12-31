@@ -579,7 +579,7 @@ func (this *Package) GetTarget() (err error) {
 					}
 					return false
 				}
-				_ = tryFixPrefix(path.Join("src", "pkg")) || tryFixPrefix("src") || tryFixPrefix("src")
+				_ = tryFixPrefix(path.Join("src", "pkg")) || tryFixPrefix("pkg") || tryFixPrefix("src")
 			}
 		} else {
 			this.Base = this.Target
