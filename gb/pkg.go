@@ -357,7 +357,7 @@ func (this *Package) VisitFile(fpath string, f os.FileInfo) {
 	//only get these from .proto files, if the .proto file exists
 	if strings.HasSuffix(fpath, ".pb.go") {
 		dotProto := fpath[:len(fpath)-len(".pb.go")] + ".proto"
-		absProto := filepath.Join(this.Dir, dotProto)
+		absProto := filepath.Join(this.Dir, filepath.Base(dotProto))
 		if _, err := os.Stat(absProto); err == nil {
 			//if there is a .proto file, the .pb.go is an intermediate object
 			return
