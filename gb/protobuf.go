@@ -35,6 +35,10 @@ func GenerateProtobufSource(this *Package) (err error) {
 		}
 
 		this.PkgSrc[protopkg] = append(this.PkgSrc[protopkg], gosrc)
+
+		if this.Name == "" {
+			this.Name = protopkg
+		}
 	}
 	return
 }

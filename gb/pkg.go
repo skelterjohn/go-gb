@@ -419,6 +419,7 @@ func (this *Package) VisitFile(fpath string, f os.FileInfo) {
 }
 
 func (this *Package) GetSourceDeps() (err error) {
+
 	this.SrcDeps = make(map[string][]string)
 
 	var nonCGoSrc []string
@@ -523,6 +524,7 @@ func (this *Package) GetSourceDeps() (err error) {
 		}
 		this.TestDeps = RemoveDups(this.TestDeps)
 	}
+
 	return
 }
 
