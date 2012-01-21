@@ -1065,6 +1065,7 @@ func (this *Package) Test() (err error) {
 	if err != nil {
 		return
 	}
+	file.Close()
 
 	err = BuildTest(this)
 
