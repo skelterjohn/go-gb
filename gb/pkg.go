@@ -979,12 +979,14 @@ func (this *Package) Test() (err error) {
 	}
 
 	testdir := path.Join(this.Dir, "_test")
-	defer func() {
-		if Verbose {
-			fmt.Printf(" Removing %s\n", testdir)
-		}
-		err = os.RemoveAll(testdir)
-	}()
+	if !MakeAMess {
+		defer func() {
+			if Verbose {
+				fmt.Printf(" Removing %s\n", testdir)
+			}
+			err = os.RemoveAll(testdir)
+		}()
+	}
 
 	fmt.Printf("(in %s) testing \"%s\"\n", this.Dir, this.Target)
 

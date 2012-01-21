@@ -93,12 +93,14 @@ func BuildCgoPackage(pkg *Package) (err error) {
 		return
 	}
 
-	defer func() {
-		if Verbose {
-			fmt.Printf("Removing directory %s\n", cgodir)
-		}
-		os.RemoveAll(cgodir)
-	}()
+	if !MakeAMess {
+		defer func() {
+			if Verbose {
+				fmt.Printf("Removing directory %s\n", cgodir)
+			}
+			os.RemoveAll(cgodir)
+		}()
+	}
 
 	var cgobases []string
 

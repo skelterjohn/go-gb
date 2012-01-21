@@ -48,6 +48,8 @@ Options:
      generate standard makefiles without building
  --workspace
      create workspace.gb files in all directories
+ --make-a-mess
+     don't clean up intermediate files
  --testargs
      all arguments following --testargs are passed to the test binary
 `

@@ -198,6 +198,10 @@ Options:
  --gofmt
  		Run gofmt on all source for relevant targets.
 
+ --make-a-mess
+ 		Do not clean up intermediate files, such as .6/.8, the _cgo
+ 		directory and the _test directory.
+
  --testargs
  		All command line arguments that follow --testargs will be
  		passed on to the test binaries, and otherwise ignored.

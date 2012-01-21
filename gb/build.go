@@ -65,13 +65,14 @@ func BuildPackage(pkg *Package) (err error) {
 	if err != nil {
 		return
 	}
-
-	defer func() {
-		if Verbose {
-			fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
-		}
-		os.Remove(filepath.Join(pkg.Dir, ibname))
-	}()
+	if !MakeAMess {
+		defer func() {
+			if Verbose {
+				fmt.Printf("Removing %s\n", filepath.Join(pkg.Dir, ibname))
+			}
+			os.Remove(filepath.Join(pkg.Dir, ibname))
+		}()
+	}
 
 	asmObjs := []string{}
 	for _, asm := range pkg.AsmSrcs {

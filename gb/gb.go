@@ -48,8 +48,9 @@ var Install, //-i
 	GoFix, //--gofix
 	DoPkgs, //-P
 	DoCmds, //-C
-	Distribution, //--dist
-	Workspace bool //--workspace
+	Distribution, //--dist (deprecated)
+	Workspace, //--workspace
+	MakeAMess bool //--make-a-mess
 
 var IncludeDir string
 var GCArgs []string
@@ -620,19 +621,24 @@ func CheckFlags() bool {
 			switch arg {
 			case "--gofmt":
 				GoFMT = true
+				HardArgs++
 			case "--gofix":
 				GoFix = true
+				HardArgs++
 			case "--dist":
 				Distribution = true
 			case "--makefiles":
 				GenMake = true
+				HardArgs++
 			case "--workspace":
 				Workspace = true
+				HardArgs++
+			case "--make-a-mess":
+				MakeAMess = true
 			default:
 				Usage()
 				return false
 			}
-			HardArgs++
 		} else if strings.HasPrefix(arg, "-") {
 			for _, flag := range arg[1:] {
 				switch flag {
