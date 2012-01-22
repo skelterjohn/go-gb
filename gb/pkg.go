@@ -602,7 +602,7 @@ func (this *Package) GetTarget() (err error) {
 	}
 
 	this.Base = path.Clean(this.Base)
-	this.Target = path.Clean(this.Target)
+	this.Target = pathClean(this.Target)
 
 	err = nil
 
