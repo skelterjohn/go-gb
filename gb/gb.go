@@ -141,27 +141,33 @@ var OSFiltersMust = map[string]string{
 	"wingui": "windows",
 }
 
-func ScanDirectory(base, dir string, inTestData string) (err2 error) {
-	_, basedir := filepath.Split(dir)
+type SDData struct {
+	base, dir  string
+	inTestData string
+	gopaths    []string
+}
+
+func ScanDirectory(sdd SDData /*base, dir string, inTestData string*/ ) (err2 error) {
+	_, basedir := filepath.Split(sdd.dir)
 	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
 	}
 
 	if basedir == "testdata" {
 		// if gb isn't actually run from within here, ignore it all
-		if !HasPathPrefix(OSWD, GetAbs(dir, CWD)) {
+		if !HasPathPrefix(OSWD, GetAbs(sdd.dir, CWD)) {
 			return
 		}
 		// all stuff within is for testing
-		inTestData = dir
+		sdd.inTestData = sdd.dir
 		// and it starts from scratch with the target name
-		base = "."
+		sdd.base = "."
 	}
 
-	cfg := ReadConfig(dir)
+	cfg := ReadConfig(sdd.dir)
 
 	if Workspace {
-		absdir := GetAbs(dir, CWD)
+		absdir := GetAbs(sdd.dir, CWD)
 		relworkspace := GetRelative(absdir, CWD, CWD)
 
 		cfg["workspace"] = relworkspace
@@ -179,7 +185,7 @@ func ScanDirectory(base, dir string, inTestData string) (err2 error) {
 	var pkg *Package
 
 	if ignore, ok := cfg.Ignore(); !(ignore && ok) {
-		pkg, err = NewPackage(base, dir, inTestData, cfg)
+		pkg, err = NewPackage(sdd.base, sdd.dir, sdd.inTestData, cfg)
 		if err == nil {
 			key := "\"" + pkg.Target + "\""
 			if pkg.IsCmd {
@@ -192,19 +198,24 @@ func ScanDirectory(base, dir string, inTestData string) (err2 error) {
 			} else {
 				Packages[key] = pkg
 			}
-			base = pkg.Base
+			sdd.base = pkg.Base
 		} else {
-			if tbase, terr := DirTargetGB(dir); terr == nil {
-				base = tbase
+			if tbase, terr := DirTargetGB(sdd.dir); terr == nil {
+				sdd.base = tbase
 			}
 		}
 	} else {
-		fmt.Println(dir, "ignored")
+		fmt.Println(sdd.dir, "ignored")
 	}
 
-	subdirs := GetSubDirs(dir)
+	subdirs := GetSubDirs(sdd.dir)
 	for _, subdir := range subdirs {
-		ScanDirectory(filepath.Join(base, subdir), filepath.Join(dir, subdir), inTestData)
+		subsdd := SDData{
+			base:       filepath.Join(sdd.base, subdir),
+			dir:        filepath.Join(sdd.dir, subdir),
+			inTestData: sdd.inTestData,
+		}
+		ScanDirectory(subsdd)
 	}
 
 	return
@@ -458,17 +469,28 @@ func RunGB() (err error) {
 
 	args := os.Args[1:len(os.Args)]
 
-	err = ScanDirectory(".", ".", "")
+	sdd := SDData{
+		base:       ".",
+		dir:        ".",
+		inTestData: "",
+	}
+	err = ScanDirectory(sdd)
 	if err != nil {
 		return
 	}
 	if BuildGOROOT {
 		fmt.Printf("Scanning %s...", filepath.Join("GOROOT", "src"))
-		ScanDirectory("", filepath.Join(GOROOT, "src"), "")
+		gorootsdd := SDData{
+			dir: filepath.Join(GOROOT, "src"),
+		}
+		ScanDirectory(gorootsdd)
 		fmt.Printf("done\n")
 		for _, gp := range GOPATHS {
 			fmt.Printf("Scanning %s...", filepath.Join(gp, "src"))
-			ScanDirectory("", filepath.Join(gp, "src"), "")
+			gopathsdd := SDData{
+				dir: filepath.Join(gp, "src"),
+			}
+			ScanDirectory(gopathsdd)
 			fmt.Printf("done\n")
 		}
 	}
