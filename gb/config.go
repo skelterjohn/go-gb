@@ -144,17 +144,25 @@ func ReadConfig(dir string) (cfg Config) {
 				continue
 			}
 
-			split := bytes.Index(line, []byte("="))
-			if split == -1 {
-				ErrLog.Println(errors.New(fmt.Sprintf("config line malformed: %s", path)))
-				break
-			}
-			key, val := line[:split], line[split+1:]
-			key = bytes.ToLower(bytes.TrimSpace(key))
-			val = bytes.TrimSpace(val)
-			cfg[string(key)] = string(val)
-			if !knownKeys[string(key)] {
-				ErrLog.Printf("Unknown key '%s' in config %s", key, path)
+			if bytes.Index(line, []byte("=")) != -1 {
+				split := bytes.Index(line, []byte("="))
+				if split == -1 {
+					ErrLog.Println(errors.New(fmt.Sprintf("config line malformed: %s", path)))
+					break
+				}
+				key, val := line[:split], line[split+1:]
+				keys := string(bytes.ToLower(bytes.TrimSpace(key)))
+				vals := string(bytes.TrimSpace(val))
+				cfg[keys] = vals
+				if !knownKeys[keys] {
+					ErrLog.Printf("Unknown key '%s' in config %s", key, path)
+				}
+			} else {
+				key := bytes.ToLower(bytes.TrimSpace(line))
+				cfg[string(key)] = "true"
+				if !knownKeys[string(key)] {
+					ErrLog.Printf("Unknown key '%s' in config %s", key, path)
+				}
 			}
 		}
 	}

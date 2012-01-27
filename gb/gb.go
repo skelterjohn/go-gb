@@ -147,7 +147,7 @@ type SDData struct {
 	gopaths    []string
 }
 
-func ScanDirectory(sdd SDData /*base, dir string, inTestData string*/ ) (err2 error) {
+func ScanDirectory(sdd SDData) (err2 error) {
 	_, basedir := filepath.Split(sdd.dir)
 	if DisallowedSourceDirectories[basedir] || (basedir != "." && strings.HasPrefix(basedir, ".")) {
 		return
@@ -165,6 +165,10 @@ func ScanDirectory(sdd SDData /*base, dir string, inTestData string*/ ) (err2 er
 	}
 
 	cfg := ReadConfig(sdd.dir)
+
+	if target, set := cfg.Target(); set {
+		sdd.base = target
+	}
 
 	if Workspace {
 		absdir := GetAbs(sdd.dir, CWD)
