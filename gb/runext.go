@@ -44,6 +44,10 @@ func FindGobinExternal(name string) (path string, err error) {
 		path = filepath.Join(GOBIN, name)
 		_, err = os.Stat(path)
 	}
+	if err != nil {
+		path = filepath.Join(GOBIN, "tool", name)
+		_, err = os.Stat(path)
+	}
 	return
 }
 
