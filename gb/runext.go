@@ -45,7 +45,7 @@ func FindGobinExternal(name string) (path string, err error) {
 		_, err = os.Stat(path)
 	}
 	if err != nil {
-		path = filepath.Join(GOBIN, "tool", name)
+		path = filepath.Join(GOBIN, "go-tool", name)
 		_, err = os.Stat(path)
 	}
 	return
@@ -70,8 +70,11 @@ func FindExternals() (err error) {
 	}
 	PackCMD, err = FindGobinExternal("gopack")
 	if err != nil {
-		fmt.Printf("Could not find 'gopack' in path\n")
-		return
+		PackCMD, err = FindGobinExternal("pack")
+		if err != nil {
+			fmt.Printf("Could not find 'gopack' in path\n")
+			return
+		}
 	}
 
 	var err2 error
@@ -93,7 +96,10 @@ func FindExternals() (err error) {
 	}
 	GoFixCMD, err2 = FindGobinExternal("gofix")
 	if err2 != nil {
-		fmt.Printf("Could not find 'gofix' in path\n")
+		GoFixCMD, err = FindGobinExternal("fix")
+		if err != nil {
+			fmt.Printf("Could not find 'gofix' in path\n")
+		}
 	}
 	GCCCMD, err2 = exec.LookPath("gcc")
 	if err2 != nil {
