@@ -96,6 +96,30 @@ ignoreall=true
   subdirectories.
 gcflags=<flag1> <flag2>...
   Include these flags on the compile line.
+proto=<plugin>
+  Set the plugin for protobuf source generation.
+
+
+Protobufs
+
+After installing the libaries and plugins available from
+http://code.google.com/p/goprotobuf, gb can convert .proto files into
+useable Go files and build them into your target. A file x.proto will
+generate a source file x.pb.go. Note that a package cannot have *only*
+.proto files - gb requires at least one .go file to work. It is allowed
+for that go file to consist only of a package declaration.
+
+The plugin used for compilation can be set using the "proto" key in
+gb.cfg.
+
+
+Goyacc
+
+gb will recognize foo.y files and run "goyacc -o foo.y.go -p foo foo.y",
+generating a new source file foo.y.go to include in the build step. There
+must be at least one valid .go file already for gb to recognize the
+target, though this source file is allowed to have only the package
+declaration.
 
 
 Tips

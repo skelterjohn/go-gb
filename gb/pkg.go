@@ -39,8 +39,15 @@ type Package struct {
 
 	ResultPath, InstallPath string
 
-	IsCGo      bool
-	IsProtobuf bool
+	IsCGo bool
+
+	IsProtobuf  bool
+	ProtoSrcs   []string // for protobufs
+	ProtoGoSrcs []string // the .go files that correspond to .proto files
+
+	IsYacc     bool
+	YaccSrcs   []string // for goyacc
+	YaccGoSrcs []string // the .go files that correspond to .y files
 
 	//these prevent multipath issues for tree following
 	built, cleaned, addedToBuild, gofmted, gofixed, scanned bool
@@ -52,10 +59,8 @@ type Package struct {
 	CSrcs      []string
 	CHeaders   []string
 	AsmSrcs    []string
-	ProtoSrcs  []string // for protobufs
 	Sources    []string // the list of all .go, .c, .s source in the target
 
-	ProtoGoSrcs []string // the .go files that correspond to .proto files
 	DeadSources []string // all .go, .c, .s files that will not be included in the build
 
 	Objects []string
@@ -203,6 +208,12 @@ func NewPackage(base, dir string, inTestData string, cfg Config) (this *Package,
 
 	if this.IsProtobuf && ProtocCMD == "" {
 		err = errors.New(fmt.Sprintf("(in %s) protoc not found for protobuf target", this.Dir))
+		ErrLog.Println(err)
+		return
+	}
+
+	if this.IsYacc && GoYaccCMD == "" {
+		err = errors.New(fmt.Sprintf("(in %s) goyacc not found for goyacc target", this.Dir))
 		ErrLog.Println(err)
 		return
 	}
@@ -365,6 +376,17 @@ func (this *Package) VisitFile(fpath string, f os.FileInfo) {
 		//otherwise it's a regular go file
 	}
 
+	//only get these from .y files, if the .y file exists
+	if strings.HasSuffix(fpath, ".y.go") {
+		dotY := fpath[:len(fpath)-len(".go")]
+		absY := filepath.Join(this.Dir, filepath.Base(dotY))
+		if _, err := os.Stat(absY); err == nil {
+			//if there is a .y file, the .y.go is an intermediate object
+			return
+		}
+		//otherwise it's a regular go file
+	}
+
 	//skip files flagged for different OS/ARCH
 	if !FilterFlag(fpath) {
 		return
@@ -393,6 +415,15 @@ func (this *Package) VisitFile(fpath string, f os.FileInfo) {
 		this.ProtoGoSrcs = append(this.ProtoGoSrcs, generatedGo)
 		this.IsProtobuf = true
 	}
+
+	if strings.HasSuffix(fpath, ".y") {
+		this.YaccSrcs = append(this.YaccSrcs, fpath)
+		this.Sources = append(this.Sources, fpath)
+		generatedGo := GoForYacc(fpath)
+		this.YaccGoSrcs = append(this.YaccGoSrcs, generatedGo)
+		this.IsYacc = true
+	}
+
 	if strings.HasSuffix(fpath, ".s") {
 		this.AsmSrcs = append(this.AsmSrcs, fpath)
 		this.Objects = append(this.Objects, fpath[:len(fpath)-2]+GetObjSuffix())
@@ -926,6 +957,16 @@ func (this *Package) Build() (err error) {
 
 		if this.IsProtobuf {
 			err = GenerateProtobufSource(this)
+			if err != nil {
+				return
+			}
+		}
+
+		if this.IsYacc {
+			err = GenerateGoyaccSource(this)
+			if err != nil {
+				return
+			}
 		}
 
 		if err == nil {

@@ -16,6 +16,7 @@ GOFILES=\
 	gofix.go\
 	gofmt.go\
 	goinstall.go\
+	goyacc.go\
 	make.go\
 	pkg.go\
 	protobuf.go\

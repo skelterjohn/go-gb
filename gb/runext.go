@@ -36,7 +36,8 @@ var MakeCMD,
 	GoFixCMD,
 	CGoCMD,
 	GCCCMD,
-	ProtocCMD string
+	ProtocCMD,
+	GoYaccCMD string
 
 func FindGobinExternal(name string) (path string, err error) {
 	path, err = exec.LookPath(name)
@@ -109,10 +110,9 @@ func FindExternals() (err error) {
 	if err2 != nil {
 		fmt.Printf("Could not find '%' in path\n", GetCCompilerName())
 	}
-	ProtocCMD, err2 = exec.LookPath("protoc")
-	if err2 != nil {
-		//fmt.Printf("Could not find 'protoc' in path\n")
-	}
+
+	ProtocCMD, _ = exec.LookPath("protoc")
+	GoYaccCMD, _ = exec.LookPath("goyacc")
 
 	CopyCMD, _ = exec.LookPath("cp")
 
