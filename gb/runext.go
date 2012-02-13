@@ -34,6 +34,7 @@ var MakeCMD,
 	GoInstallCMD,
 	GoFMTCMD,
 	GoFixCMD,
+	GoCMD,
 	CGoCMD,
 	GCCCMD,
 	ProtocCMD,
@@ -46,13 +47,18 @@ func FindGobinExternal(name string) (path string, err error) {
 		_, err = os.Stat(path)
 	}
 	if err != nil {
-		path = filepath.Join(GOBIN, "go-tool", name)
+		path = filepath.Join(GOBIN, "tool", name)
 		_, err = os.Stat(path)
 	}
 	return
 }
 
 func FindExternals() (err error) {
+	GoCMD, err = FindGobinExternal("go")
+	if err != nil {
+		fmt.Printf("Could not find 'go' in path\n")
+		return
+	}
 
 	CompileCMD, err = FindGobinExternal(GetCompilerName())
 	if err != nil {
