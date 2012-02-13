@@ -153,7 +153,7 @@ func BuildTest(pkg *Package) (err error) {
 
 		testSrcs := pkg.TestSrc[testName]
 
-		argv := []string{GetCompilerName()}
+		argv := []string{}
 		argv = append(argv, "-I", filepath.Join("_test", "_obj"))
 		argv = append(argv, "-I", pkgDest)
 		if GCFLAGS != nil {
@@ -209,7 +209,7 @@ func BuildTest(pkg *Package) (err error) {
 
 	testmainib := filepath.Join("_test", "_testmain"+GetObjSuffix())
 
-	argv := []string{GetCompilerName()}
+	argv := []string{}
 	argv = append(argv, "-I", filepath.Join("_test", "_obj"))
 	argv = append(argv, "-I", pkgDest)
 	if GCFLAGS != nil {
