@@ -29,7 +29,7 @@ func GenerateGoyaccSource(this *Package) (err error) {
 	for _, ys := range this.YaccSrcs {
 		base := ys[:len(ys)-len(".y")]
 		gosrc := GoForYacc(ys)
-		args := []string{"goyacc", "-o", gosrc, "-p", base, ys}
+		args := []string{"-o", gosrc, "-p", base, ys}
 
 		err = RunExternal(GoYaccCMD, this.Dir, args)
 		if err != nil {

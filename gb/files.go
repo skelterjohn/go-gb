@@ -260,7 +260,7 @@ func Copy(cwd, src, dst string) (err error) {
 		return CopyTheHardWay(cwd, src, dst)
 	}
 
-	argv := append([]string{"cp", "-f", src, dst})
+	argv := append([]string{"-f", src, dst})
 
 	if err = RunExternal(CopyCMD, cwd, argv); err != nil {
 		return

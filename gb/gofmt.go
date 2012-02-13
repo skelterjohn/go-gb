@@ -17,7 +17,7 @@
 package main
 
 func RunGoFMT(dir, file string) (err error) {
-	margs := []string{"gofmt", "-w", file}
+	margs := []string{"-w", file}
 	err = RunExternal(GoFMTCMD, dir, margs)
 	return
 }

@@ -91,18 +91,18 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err error) {
 
 	if strings.Index(cmd, " ") != -1 {
 		cmds := strings.Fields(cmd)
-		argv = append(cmds, argv[1:]...)
-
+		argv = append(cmds[1:], argv...)
+		if cmds[0] == "go" {
+			cmd = GoCMD
+		}
 	}
 
-	if argv[0] == "go" {
-		cmd = GoCMD
-	}
 	if Verbose {
-		fmt.Printf("%s\n", argv)
+		basecmd := filepath.Base(cmd)
+		fmt.Printf("%s\n", append([]string{basecmd}, argv...))
 	}
 
-	c := exec.Command(cmd, argv[1:]...)
+	c := exec.Command(cmd, argv...)
 	c.Dir = wd
 	c.Env = os.Environ()
 

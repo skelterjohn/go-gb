@@ -26,7 +26,7 @@ func MakeBuild(pkg *Package) (err error) {
 		return
 	}
 
-	margs := []string{"gomake", "clean"}
+	margs := []string{"clean"}
 	if Install || pkg.IsInGOROOT {
 		margs = append(margs, "install")
 	} else {
@@ -47,7 +47,7 @@ func MakeClean(pkg *Package) (err error) {
 		fmt.Printf("(in %s) Can't use make to clean %s\n", pkg.Dir, pkg.Target)
 		return
 	}
-	margs := []string{"gomake", "clean"}
+	margs := []string{"clean"}
 	if Nuke {
 		margs = append(margs, "nuke")
 	}
@@ -58,7 +58,7 @@ func MakeClean(pkg *Package) (err error) {
 }
 
 func MakeTest(pkg *Package) (err error) {
-	margs := []string{"gomake", "test"}
+	margs := []string{"test"}
 	fmt.Printf("(in %v)\n", pkg.Dir)
 	fmt.Printf("%v\n", margs)
 	err = RunExternal(MakeCMD, pkg.Dir, margs)

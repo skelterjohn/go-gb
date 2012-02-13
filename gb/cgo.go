@@ -106,7 +106,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 
 	//first run cgo
 	//CGOPKGPATH= cgo --  e1.go e2.go
-	cgo_argv := []string{"cgo", "--", "-I.."}
+	cgo_argv := []string{"--", "-I.."}
 	for _, cgosrc := range pkg.CGoSources {
 		cgb := filepath.Base(cgosrc)
 		cgobases = append(cgobases, cgb)
@@ -161,7 +161,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 
 	gorootObj := filepath.Join(GOROOT, "pkg", GOOS+"_"+GOARCH)
 
-	cdefargv := []string{GetCCompilerName(), "-FVw", "-I" + gorootObj}
+	cdefargv := []string{"-FVw", "-I" + gorootObj}
 
 	for _, objdst := range GOPATH_OBJDSTS {
 		cdefargv = append(cdefargv, "-I"+objdst)
@@ -185,7 +185,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 		gcc -m64 -g -fPIC -O2 -o _cgo_export.o -c   _cgo_export.c
 	*/
 	gccCompile := func(src, obj string) (err error) {
-		gccargv := []string{"gcc", "-I..", "-I."}
+		gccargv := []string{"-I..", "-I."}
 		gccargv = append(gccargv, CFLAGS...)
 		gccargv = append(gccargv, []string{"-g", "-fPIC", "-O2", "-o", obj, "-c"}...)
 		gccargv = append(gccargv, pkg.CGoCFlags[pkg.Name]...)
@@ -232,7 +232,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 	/* and link them
 	gcc -m64 -g -fPIC -O2 -o _cgo1_.o _cgo_main.o e1.cgo2.o e2.cgo2.o _cgo_export.o
 	*/
-	gcclargv := []string{"gcc"}
+	gcclargv := []string{}
 	gcclargv = append(gcclargv, CFLAGS...)
 	gcclargv = append(gcclargv, []string{"-g", "-fPIC", "-O2", "-o", "_cgo1_.o"}...)
 	gcclargv = append(gcclargv, "_cgo_main.o")
@@ -248,7 +248,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 	}
 
 	//cgo -dynimport _cgo1_.o >__cgo_import.c && mv -f __cgo_import.c _cgo_import.c
-	dynargv := []string{"cgo", "-dynimport", "_cgo1_.o"}
+	dynargv := []string{"-dynimport", "_cgo1_.o"}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
 		fmt.Printf("writing to %s\n", "__cgo_import.c")
@@ -278,7 +278,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 	/* compile the C bits
 	6c -FVw _cgo_import.c
 	*/
-	ccargv := []string{GetCCompilerName(), "-FVw", "_cgo_import.c"}
+	ccargv := []string{"-FVw", "_cgo_import.c"}
 	if Verbose {
 		fmt.Printf("%s:", cgodir)
 	}
@@ -310,7 +310,7 @@ func BuildCgoPackage(pkg *Package) (err error) {
 	for _, cobj := range cobjs {
 		relobjs = append(relobjs, filepath.Join("_cgo", cobj))
 	}
-	packargv := []string{"gopack", "grc", reldst, GetIBName(),
+	packargv := []string{"grc", reldst, GetIBName(),
 		filepath.Join("_cgo", "_cgo_defun"+GetObjSuffix()),
 		filepath.Join("_cgo", "_cgo_import"+GetObjSuffix())}
 	packargv = append(packargv, relobjs...)

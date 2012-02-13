@@ -27,7 +27,7 @@ import (
 
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {
 
-	argv := []string{GetCompilerName()}
+	argv := []string{}
 	if !pkg.IsInGOROOT {
 		argv = append(argv, "-I", pkgDest)
 	}
@@ -79,7 +79,7 @@ func BuildPackage(pkg *Package) (err error) {
 		base := asm[0 : len(asm)-2] // definitely ends with '.s', so this is safe
 		asmObj := base + GetObjSuffix()
 		asmObjs = append(asmObjs, asmObj)
-		sargv := []string{GetAssemblerName(), asm}
+		sargv := []string{asm}
 
 		err = RunExternal(AsmCMD, pkg.Dir, sargv)
 		if err != nil {
@@ -91,7 +91,7 @@ func BuildPackage(pkg *Package) (err error) {
 
 	if pkg.IsCmd {
 
-		largs := []string{GetLinkerName()}
+		largs := []string{}
 
 		if len(GLDFLAGS) > 0 {
 			largs = append(largs, GLDFLAGS...)
@@ -124,7 +124,7 @@ func BuildPackage(pkg *Package) (err error) {
 		}
 		os.MkdirAll(dstDir, 0755)
 
-		argv := []string{"gopack", "grc", dst, GetIBName()}
+		argv := []string{"grc", dst, GetIBName()}
 		argv = append(argv, asmObjs...)
 
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
@@ -183,7 +183,7 @@ func BuildTest(pkg *Package) (err error) {
 		dstDir, _ := filepath.Split(mkdirdst)
 		os.MkdirAll(dstDir, 0755)
 
-		argv = []string{"gopack", "grc", dst, testIB}
+		argv = []string{"grc", dst, testIB}
 
 		if err = RunExternal(PackCMD, pkg.Dir, argv); err != nil {
 			return
@@ -227,7 +227,7 @@ func BuildTest(pkg *Package) (err error) {
 		testBinary += ".exe"
 	}
 
-	largs := []string{GetLinkerName()}
+	largs := []string{}
 	largs = append(largs, "-L", filepath.Join("_test", "_obj"))
 	largs = append(largs, "-L", pkgDest)
 	if len(GLDFLAGS) > 0 {
@@ -240,9 +240,8 @@ func BuildTest(pkg *Package) (err error) {
 	}
 	var testBinaryAbs string
 	testBinaryAbs = GetAbs(filepath.Join(pkg.Dir, testBinary), CWD)
-	testargs := append([]string{testBinary}, TestArgs...)
 
-	if err = RunExternal(testBinaryAbs, pkg.Dir, testargs); err != nil {
+	if err = RunExternal(testBinaryAbs, pkg.Dir, TestArgs); err != nil {
 		ReturnFailCode = true
 		return
 	}

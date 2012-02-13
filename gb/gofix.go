@@ -17,7 +17,6 @@
 package main
 
 func RunGoFix(dir string, files []string) (err error) {
-	margs := append([]string{"gofix"}, files...)
-	err = RunExternal(GoFixCMD, dir, margs)
+	err = RunExternal(GoFixCMD, dir, files)
 	return
 }

@@ -19,7 +19,7 @@ func GenerateProtobufSource(this *Package) (err error) {
 	pluginArg := fmt.Sprintf("--%s_out=.", plugin)
 
 	for _, pbs := range this.ProtoSrcs {
-		args := []string{"protoc", pluginArg, pbs}
+		args := []string{pluginArg, pbs}
 
 		err = RunExternal(ProtocCMD, this.Dir, args)
 		if err != nil {

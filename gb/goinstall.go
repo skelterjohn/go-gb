@@ -67,9 +67,9 @@ func GoInstallPkg(target string) (touched int64) {
 
 	target = strings.Trim(target, "\"")
 
-	argv := []string{"go", "get", target}
+	argv := []string{target}
 	if GoInstallUpdate {
-		argv = []string{"go", "get", "-u", target}
+		argv = []string{"-u", target}
 	}
 
 	fmt.Printf("%v\n", argv)
