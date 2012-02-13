@@ -67,14 +67,14 @@ func GoInstallPkg(target string) (touched int64) {
 
 	target = strings.Trim(target, "\"")
 
-	argv := []string{"goinstall", target}
+	argv := []string{"go", "get", target}
 	if GoInstallUpdate {
-		argv = []string{"goinstall", "-u", "-clean", target}
+		argv = []string{"go", "get", "-u", target}
 	}
 
 	fmt.Printf("%v\n", argv)
 
-	err := RunExternal(GoInstallCMD, ".", argv)
+	err := RunExternal(GoCMD, ".", argv)
 	if err != nil {
 		return
 	}

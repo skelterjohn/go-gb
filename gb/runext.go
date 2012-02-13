@@ -60,65 +60,18 @@ func FindExternals() (err error) {
 		return
 	}
 
-	CompileCMD, err = FindGobinExternal(GetCompilerName())
-	if err != nil {
-		fmt.Printf("Could not find '%s' in path\n", GetCompilerName())
-		return
-	}
-	AsmCMD, err = FindGobinExternal(GetAssemblerName())
-	if err != nil {
-		fmt.Printf("Could not find '%s' in path\n", GetAssemblerName())
-		return
-	}
-	LinkCMD, err = FindGobinExternal(GetLinkerName())
-	if err != nil {
-		fmt.Printf("Could not find '%s' in path\n", GetLinkerName())
-		return
-	}
-	PackCMD, err = FindGobinExternal("gopack")
-	if err != nil {
-		PackCMD, err = FindGobinExternal("pack")
-		if err != nil {
-			fmt.Printf("Could not find 'gopack' in path\n")
-			return
-		}
-	}
-
-	var err2 error
-	CGoCMD, err2 = FindGobinExternal("cgo")
-	if err2 != nil {
-		fmt.Printf("Could not find 'cgo' in path\n")
-	}
-	MakeCMD, err2 = FindGobinExternal("gomake")
-	if err2 != nil {
-		fmt.Printf("Could not find 'gomake' in path\n")
-	}
-	GoInstallCMD, err2 = FindGobinExternal("goinstall")
-	if err2 != nil {
-		fmt.Printf("Could not find 'goinstall' in path\n")
-	}
-	GoFMTCMD, err2 = FindGobinExternal("gofmt")
-	if err2 != nil {
-		fmt.Printf("Could not find 'gofmt' in path\n")
-	}
-	GoFixCMD, err2 = FindGobinExternal("gofix")
-	if err2 != nil {
-		GoFixCMD, err = FindGobinExternal("fix")
-		if err != nil {
-			fmt.Printf("Could not find 'gofix' in path\n")
-		}
-	}
-	GCCCMD, err2 = exec.LookPath("gcc")
-	if err2 != nil {
-		//fmt.Printf("Could not find 'gcc' in path\n")
-	}
-	CCMD, err2 = FindGobinExternal(GetCCompilerName())
-	if err2 != nil {
-		fmt.Printf("Could not find '%' in path\n", GetCCompilerName())
-	}
+	CompileCMD = "go tool " + GetCompilerName()
+	AsmCMD = "go tool " + GetAssemblerName()
+	LinkCMD = "go tool " + GetLinkerName()
+	PackCMD = "go tool pack"
+	CGoCMD = "go tool cgo"
+	GoFMTCMD = "go fmt"
+	GoFixCMD = "go fix"
+	GCCCMD, _ = exec.LookPath("gcc")
+	CCMD = "go tool " + GetCCompilerName()
+	GoYaccCMD = "go tool yacc"
 
 	ProtocCMD, _ = exec.LookPath("protoc")
-	GoYaccCMD, _ = exec.LookPath("goyacc")
 
 	CopyCMD, _ = exec.LookPath("cp")
 
@@ -136,6 +89,15 @@ func SplitArgs(args []string) (sargs []string) {
 func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err error) {
 	argv = SplitArgs(argv)
 
+	if strings.Index(cmd, " ") != -1 {
+		cmds := strings.Fields(cmd)
+		argv = append(cmds, argv[1:]...)
+
+	}
+
+	if argv[0] == "go" {
+		cmd = GoCMD
+	}
 	if Verbose {
 		fmt.Printf("%s\n", argv)
 	}
