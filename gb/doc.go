@@ -191,9 +191,7 @@ Options:
  -m		Use makefiles. If this flag is set, and a target contains a
 		makefile, that makefile will be used to build.
 
- -f		For use with "-M", force overwriting of makefiles. Otherwise
-		you will be prompted when attempting to create a makefile for
-		a target that already has one.
+ -f		Don't ask questions (ie "really remove installed binary xxx?")
 
  -P		Build/clean/install only packages. Useful if you have a set of
 		helper commands to test your packages, but don't want to install
@@ -206,13 +204,6 @@ Options:
 		dependence on a target in $GOROOT/src, it will be brought up to
 		date. This works with the "-s" option. Using "-Rs" will list
 		any targets in $GOROOT/src that the local targets depend on.
-
- --makefiles
- 		Generate makefiles and a build script. In each relevant target,
-		create a makefile that supports incremental building with the
-		rest of the targets. The build script invokes each of the
-		makefiles in a topological order, ensuring that running "./build"
-		will always result in a correct build.
 
  --workspace
  		Create workspace.gb files for all listed targets. Doing this

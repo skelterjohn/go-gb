@@ -44,8 +44,6 @@ Options:
  -v verbose
  --gofmt
      run gofmt on source files in targeted directories
- --makefiles
-     generate standard makefiles without building
  --workspace
      create workspace.gb files in all directories
  --make-a-mess
