@@ -112,7 +112,7 @@ func RunExternalDump(cmd, wd string, argv []string, dump *os.File) (err error) {
 	err = c.Run()
 
 	if wmsg, ok := err.(*exec.ExitError); ok {
-		if wmsg.ExitStatus() != 0 {
+		if wmsg.Success() {
 			err = errors.New(fmt.Sprintf("%v: %s\n", argv, wmsg.String()))
 		} else {
 			err = nil
