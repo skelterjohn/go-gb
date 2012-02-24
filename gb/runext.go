@@ -64,9 +64,10 @@ func FindExternals() (err error) {
 	AsmCMD = "go tool " + GetAssemblerName()
 	LinkCMD = "go tool " + GetLinkerName()
 	PackCMD = "go tool pack"
+	GoInstallCMD = "go get"
 	CGoCMD = "go tool cgo"
 	GoFMTCMD, _ = FindGobinExternal("gofmt")
-	GoFixCMD = "go fix"
+	GoFixCMD = "go tool fix"
 	GCCCMD, _ = exec.LookPath("gcc")
 	CCMD = "go tool " + GetCCompilerName()
 	GoYaccCMD = "go tool yacc"
