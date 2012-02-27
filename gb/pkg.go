@@ -163,10 +163,12 @@ func NewPackage(base, dir string, inTestData string, cfg Config) (this *Package,
 		this.HasMakefile = true
 	}
 
-	if !this.HasMakefile && this.IsInGOROOT {
-		err = errors.New("GOROOT pkg without makefile - not meant to be built")
-		return
-	}
+	/*
+		if !this.HasMakefile && this.IsInGOROOT {
+			err = errors.New("GOROOT pkg without makefile - not meant to be built")
+			return
+		}
+	*/
 
 	if this.IsInGOROOT && DoNotBuildGOROOT[GetRelative(GOROOT, this.Dir, CWD)] {
 		err = errors.New("can't build GOROOT core tools")

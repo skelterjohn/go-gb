@@ -28,7 +28,7 @@ import (
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {
 
 	argv := []string{}
-	if !pkg.IsInGOROOT {
+	if !pkg.IsInGOROOT && pkg.IsInGOPATH == "" {
 		argv = append(argv, "-I", pkgDest)
 	}
 	if testDest != "" {
