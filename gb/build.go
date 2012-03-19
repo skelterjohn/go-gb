@@ -26,7 +26,6 @@ import (
 )
 
 func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (err error) {
-
 	argv := []string{}
 	if !pkg.IsInGOROOT && pkg.IsInGOPATH == "" {
 		argv = append(argv, "-I", pkgDest)
@@ -41,6 +40,8 @@ func CompilePkgSrc(pkg *Package, src []string, obj, pkgDest, testDest string) (e
 	if gcflags, set := pkg.Cfg.GCFlags(); set {
 		argv = append(argv, strings.Fields(gcflags)...)
 	}
+	absDst := GetAbs(filepath.Join(pkgDest, pkg.Base), filepath.Join(CWD, pkg.Base))
+	argv = append(argv, "-D", absDst)
 	argv = append(argv, src...)
 
 	err = RunExternal(CompileCMD, pkg.Dir, argv)

@@ -785,9 +785,6 @@ func (this *Package) ResolveDeps() (err error) {
 				this.IsCGo = true
 				continue
 			}
-			if strings.HasPrefix(dep, "\"./") {
-				WarnLog.Printf("(in %s) gb does not support relative import %s", this.Dir, dep)
-			}
 			if pkg, ok := Packages[dep]; ok {
 				if test {
 					this.TestDepPkgs = append(this.TestDepPkgs, pkg)
@@ -826,9 +823,25 @@ func (this *Package) ResolveDeps() (err error) {
 		}
 		return
 	}
+	for i, dep := range this.Deps {
+		if strings.HasPrefix(dep, "\"./") {
+			//WarnLog.Printf("(in %s) gb does not support relative import %s", this.Dir, dep)
+			unquoted := dep[1 : len(dep)-1]
+			dep = "\"" + path.Join(this.Base, unquoted) + "\""
+		}
+		this.Deps[i] = dep
+	}
 	err = CheckDeps(this.Deps, false)
 	if err != nil {
 		return
+	}
+	for i, dep := range this.TestDeps {
+		if strings.HasPrefix(dep, "\"./") {
+			//WarnLog.Printf("(in %s) gb does not support relative import %s", this.Dir, dep)
+			unquoted := dep[1 : len(dep)-1]
+			dep = "\"" + path.Join(this.Base, unquoted) + "\""
+		}
+		this.TestDeps[i] = dep
 	}
 	err = CheckDeps(this.TestDeps, true)
 	return
@@ -884,7 +897,9 @@ func (this *Package) Build() (err error) {
 	defer func() {
 		if err != nil {
 			this.FailedToBuild = true
-			this.CleanFiles()
+			if !MakeAMess {
+				this.CleanFiles()
+			}
 		}
 	}()
 
