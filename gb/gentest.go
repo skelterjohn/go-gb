@@ -38,11 +38,11 @@ import "testing"
 import __regexp__ "regexp"
 
 var tests = []testing.InternalTest{
-{{range .TestPkgs}}{{if $PkgName=.PkgName}}{{if $PkgAlias=.PkgAlias}}{{range .TestFuncs}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
+{{range .TestPkgs}}{{if $PkgName:=.PkgName}}{{if $PkgAlias:=.PkgAlias}}{{range .TestFuncs}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
 }
 
 var benchmarks = []testing.InternalBenchmark{
-{{range .TestPkgs}}{{if $PkgName=.PkgName}}{{if $PkgAlias=.PkgAlias}}{{range .TestBenchmarks}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
+{{range .TestPkgs}}{{if $PkgName:=.PkgName}}{{if $PkgAlias:=.PkgAlias}}{{range .TestBenchmarks}}	{"{{$PkgName}}.{{.}}", {{$PkgAlias}}.{{.}}},{{end}}{{end}}{{end}}{{end}}
 }
 
 var matchPat string
